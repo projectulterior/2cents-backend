@@ -11,14 +11,54 @@ import (
 	"github.com/projectulterior/2cents-backend/graph/model"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// UserUpdate is the resolver for the userUpdate field.
+func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserUpdate - userUpdate"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// PostCreate is the resolver for the postCreate field.
+func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreateInput) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: PostCreate - postCreate"))
+}
+
+// LikeCreate is the resolver for the likeCreate field.
+func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*model.Like, error) {
+	panic(fmt.Errorf("not implemented: LikeCreate - likeCreate"))
+}
+
+// UserFollow is the resolver for the userFollow field.
+func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserFollow - userFollow"))
+}
+
+// User is the resolver for the user field.
+func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
+}
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context, page model.Pagination) (*model.Users, error) {
+	panic(fmt.Errorf("not implemented: Users - users"))
+}
+
+// Post is the resolver for the post field.
+func (r *queryResolver) Post(ctx context.Context, id *string) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: Post - post"))
+}
+
+// Posts is the resolver for the posts field.
+func (r *queryResolver) Posts(ctx context.Context, page model.Pagination) (*model.Posts, error) {
+	panic(fmt.Errorf("not implemented: Posts - posts"))
+}
+
+// Channel is the resolver for the channel field.
+func (r *queryResolver) Channel(ctx context.Context, id *string) (*model.Channel, error) {
+	panic(fmt.Errorf("not implemented: Channel - channel"))
+}
+
+// OnUserUpdated is the resolver for the onUserUpdated field.
+func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<-chan *model.User, error) {
+	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -27,5 +67,9 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

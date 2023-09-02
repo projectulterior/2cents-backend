@@ -2,19 +2,176 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+	"time"
+)
+
+type Content interface {
+	IsContent()
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Media interface {
+	IsMedia()
 }
+
+type Birthday struct {
+	Month int `json:"month"`
+	Day   int `json:"day"`
+	Year  int `json:"year"`
+}
+
+type Cents struct {
+	Total     int `json:"total"`
+	Deposited int `json:"deposited"`
+	Earned    int `json:"earned"`
+	Given     int `json:"given"`
+}
+
+type Channel struct {
+	ID       string    `json:"id"`
+	Members  []*User   `json:"members,omitempty"`
+	Messages *Messages `json:"messages,omitempty"`
+}
+
+type Image struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+func (Image) IsMedia() {}
+
+func (Image) IsContent() {}
+
+type Like struct {
+	Post      *Post      `json:"post,omitempty"`
+	Liker     *User      `json:"liker,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+}
+
+type Likes struct {
+	Likes []*Like `json:"likes"`
+	Next  string  `json:"next"`
+}
+
+type Message struct {
+	Content   Content    `json:"content,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	Sender    *User      `json:"sender,omitempty"`
+}
+
+type Messages struct {
+	Messages []*Message `json:"messages,omitempty"`
+	Next     *string    `json:"next,omitempty"`
+}
+
+type Pagination struct {
+	Cursor string `json:"cursor"`
+	Limit  int    `json:"limit"`
+}
+
+type Post struct {
+	ID         string      `json:"id"`
+	Visibility *Visibility `json:"visibility,omitempty"`
+	Content    string      `json:"content"`
+	Media      Media       `json:"media,omitempty"`
+	CreatedAt  string      `json:"createdAt"`
+	Published  bool        `json:"published"`
+	Author     *User       `json:"author,omitempty"`
+	Likes      *Likes      `json:"likes,omitempty"`
+}
+
+type PostCreateInput struct {
+	Visibility *Visibility `json:"Visibility,omitempty"`
+}
+
+type Posts struct {
+	Posts []*Post `json:"posts"`
+	Next  string  `json:"next"`
+}
+
+type Text struct {
+	Text *string `json:"text,omitempty"`
+}
+
+func (Text) IsContent() {}
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID         string    `json:"id"`
+	Username   string    `json:"username"`
+	Birthday   *Birthday `json:"birthday"`
+	Cents      *Cents    `json:"cents"`
+	Name       string    `json:"name"`
+	Email      *string   `json:"email,omitempty"`
+	Bio        *string   `json:"bio,omitempty"`
+	Followers  *Users    `json:"followers,omitempty"`
+	Posts      *Posts    `json:"posts,omitempty"`
+	TotalLikes int       `json:"totalLikes"`
+}
+
+type UserUpdateInput struct {
+	First *string `json:"first,omitempty"`
+	Last  *string `json:"last,omitempty"`
+	Email *string `json:"email,omitempty"`
+	Bio   *string `json:"bio,omitempty"`
+}
+
+type Users struct {
+	Users []*User `json:"users"`
+	Next  string  `json:"next"`
+}
+
+type Video struct {
+	ID       string `json:"id"`
+	URL      string `json:"url"`
+	Duration int    `json:"duration"`
+}
+
+func (Video) IsMedia() {}
+
+func (Video) IsContent() {}
+
+type Visibility string
+
+const (
+	VisibilityPublic  Visibility = "PUBLIC"
+	VisibilityFriends Visibility = "FRIENDS"
+	VisibilityPrivate Visibility = "PRIVATE"
+)
+
+var AllVisibility = []Visibility{
+	VisibilityPublic,
+	VisibilityFriends,
+	VisibilityPrivate,
+}
+
+func (e Visibility) IsValid() bool {
+	switch e {
+	case VisibilityPublic, VisibilityFriends, VisibilityPrivate:
+		return true
+	}
+	return false
+}
+
+func (e Visibility) String() string {
+	return string(e)
+}
+
+func (e *Visibility) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Visibility(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Visibility", str)
+	}
+	return nil
+}
+
+func (e Visibility) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

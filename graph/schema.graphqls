@@ -4,31 +4,59 @@ schema {
   subscription: Subscription
 }
 
+scalar Time
+
 type Query {
   user(id: ID): User!
+  users(page: Pagination!): Users!
+  post(id: ID): Post!
+  posts(page: Pagination!): Posts!
+  channel(id:ID): Channel!
 }
 type Mutation {
-  userUpdate(id: ID, input: UserUpdateInput!): User!
+  userUpdate(input: UserUpdateInput!): User!
+  postCreate(input: PostCreateInput!): Post! 
+  likeCreate(id: ID!): Like
+  userFollow(id: ID!): User
 }
-type Subscription {}
+type Subscription {
+  onUserUpdated(id: ID): User!
+}
 
 type User {
   id: ID!
-  
+
+  username: String!
+  birthday: Birthday!
+  cents: Cents!
   # User Info
-  first: String
-  last: String
+  name: String!
   email: String
   bio: String
 
-  followers: Users
+  followers(page: Pagination): Users
   posts(page: Pagination): Posts
   totalLikes: Int!
+
+}
+
+type Cents {
+  total: Int!
+  deposited: Int!
+  earned: Int!
+  given: Int!
+
 }
 
 type Users {
   users: [User!]!
   next: String!
+}
+
+type Birthday {
+  month: Int!
+  day: Int!
+  year: Int!
 }
 
 type Posts {
@@ -38,7 +66,68 @@ type Posts {
 
 type Post {
   id: ID!
+  visibility: Visibility
+  content: String!
+  media: Media
+  createdAt: String!
+  published: Boolean!
+  author: User
+  likes(page: Pagination!): Likes
 }
+
+type Like {
+  post: Post
+  liker: User
+  createdAt: Time
+
+}
+
+type Likes {
+  likes: [Like!]!
+  next: String!
+}
+
+union Media = Image | Video
+
+type Image {
+  id: ID!
+  url: String!
+}
+
+type Video {
+  id: ID!
+  url: String!
+  duration: Int!
+}
+
+type Channel {
+  id: ID!
+  members: [User!]
+  messages(page: Pagination!): Messages
+}
+
+type Message {
+  content: Content
+  createdAt: Time
+  sender: User
+}
+
+type Messages {
+  messages: [Message!]
+  next: String
+}
+
+type Text {
+  text: String
+}
+
+enum Visibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+union Content = Text | Image | Video
 
 ### Inputs
 
@@ -52,4 +141,8 @@ input UserUpdateInput {
   last: String
   email: String
   bio: String
+}
+
+input PostCreateInput {
+  Visibility: Visibility
 }
