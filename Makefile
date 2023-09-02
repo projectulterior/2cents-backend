@@ -1,7 +1,10 @@
-.PHONY: gen
+.PHONY: gen run
 
 gen:
 	go run github.com/99designs/gqlgen generate
+
+run: gen
+	go run server.go
 
 build: gen-pb
 	rm -rf bin
