@@ -52,8 +52,13 @@ func (r *queryResolver) Posts(ctx context.Context, page model.Pagination) (*mode
 }
 
 // Channel is the resolver for the channel field.
-func (r *queryResolver) Channel(ctx context.Context, id *string) (*model.Channel, error) {
+func (r *queryResolver) Channel(ctx context.Context, id string) (*model.Channel, error) {
 	panic(fmt.Errorf("not implemented: Channel - channel"))
+}
+
+// ChannelByMembers is the resolver for the channelByMembers field.
+func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) (*model.Channel, error) {
+	panic(fmt.Errorf("not implemented: ChannelByMembers - channelByMembers"))
 }
 
 // OnUserUpdated is the resolver for the onUserUpdated field.

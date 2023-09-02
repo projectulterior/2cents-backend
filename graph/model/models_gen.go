@@ -9,14 +9,6 @@ import (
 	"time"
 )
 
-type Content interface {
-	IsContent()
-}
-
-type Media interface {
-	IsMedia()
-}
-
 type Birthday struct {
 	Month int `json:"month"`
 	Day   int `json:"day"`
@@ -36,15 +28,6 @@ type Channel struct {
 	Messages *Messages `json:"messages,omitempty"`
 }
 
-type Image struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
-}
-
-func (Image) IsMedia() {}
-
-func (Image) IsContent() {}
-
 type Like struct {
 	Post      *Post      `json:"post,omitempty"`
 	Liker     *User      `json:"liker,omitempty"`
@@ -57,9 +40,10 @@ type Likes struct {
 }
 
 type Message struct {
-	Content   Content    `json:"content,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	Sender    *User      `json:"sender,omitempty"`
+	Content     *string      `json:"content,omitempty"`
+	ContentType *ContentType `json:"contentType,omitempty"`
+	CreatedAt   *time.Time   `json:"createdAt,omitempty"`
+	Sender      *User        `json:"sender,omitempty"`
 }
 
 type Messages struct {
@@ -73,30 +57,26 @@ type Pagination struct {
 }
 
 type Post struct {
-	ID         string      `json:"id"`
-	Visibility *Visibility `json:"visibility,omitempty"`
-	Content    string      `json:"content"`
-	Media      Media       `json:"media,omitempty"`
-	CreatedAt  string      `json:"createdAt"`
-	Published  bool        `json:"published"`
-	Author     *User       `json:"author,omitempty"`
-	Likes      *Likes      `json:"likes,omitempty"`
+	ID          string       `json:"id"`
+	Visibility  *Visibility  `json:"visibility,omitempty"`
+	Content     string       `json:"content"`
+	ContentType *ContentType `json:"contentType,omitempty"`
+	CreatedAt   string       `json:"createdAt"`
+	Published   bool         `json:"published"`
+	Author      *User        `json:"author,omitempty"`
+	Likes       *Likes       `json:"likes,omitempty"`
 }
 
 type PostCreateInput struct {
-	Visibility *Visibility `json:"Visibility,omitempty"`
+	Visibility  *Visibility  `json:"visibility,omitempty"`
+	Content     *string      `json:"content,omitempty"`
+	ContentType *ContentType `json:"contentType,omitempty"`
 }
 
 type Posts struct {
 	Posts []*Post `json:"posts"`
 	Next  string  `json:"next"`
 }
-
-type Text struct {
-	Text *string `json:"text,omitempty"`
-}
-
-func (Text) IsContent() {}
 
 type User struct {
 	ID         string    `json:"id"`
@@ -123,15 +103,48 @@ type Users struct {
 	Next  string  `json:"next"`
 }
 
-type Video struct {
-	ID       string `json:"id"`
-	URL      string `json:"url"`
-	Duration int    `json:"duration"`
+type ContentType string
+
+const (
+	ContentTypeText  ContentType = "TEXT"
+	ContentTypeImage ContentType = "IMAGE"
+	ContentTypeVideo ContentType = "VIDEO"
+)
+
+var AllContentType = []ContentType{
+	ContentTypeText,
+	ContentTypeImage,
+	ContentTypeVideo,
 }
 
-func (Video) IsMedia() {}
+func (e ContentType) IsValid() bool {
+	switch e {
+	case ContentTypeText, ContentTypeImage, ContentTypeVideo:
+		return true
+	}
+	return false
+}
 
-func (Video) IsContent() {}
+func (e ContentType) String() string {
+	return string(e)
+}
+
+func (e *ContentType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentType", str)
+	}
+	return nil
+}
+
+func (e ContentType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type Visibility string
 

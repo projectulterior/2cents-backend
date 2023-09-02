@@ -11,14 +11,17 @@ type Query {
   users(page: Pagination!): Users!
   post(id: ID): Post!
   posts(page: Pagination!): Posts!
-  channel(id:ID): Channel!
+  channel(id: ID!): Channel!
+  channelByMembers(members: [ID!]!): Channel!
 }
+
 type Mutation {
   userUpdate(input: UserUpdateInput!): User!
   postCreate(input: PostCreateInput!): Post! 
   likeCreate(id: ID!): Like
   userFollow(id: ID!): User
 }
+
 type Subscription {
   onUserUpdated(id: ID): User!
 }
@@ -68,7 +71,7 @@ type Post {
   id: ID!
   visibility: Visibility
   content: String!
-  media: Media
+  contentType: ContentType
   createdAt: String!
   published: Boolean!
   author: User
@@ -87,18 +90,6 @@ type Likes {
   next: String!
 }
 
-union Media = Image | Video
-
-type Image {
-  id: ID!
-  url: String!
-}
-
-type Video {
-  id: ID!
-  url: String!
-  duration: Int!
-}
 
 type Channel {
   id: ID!
@@ -107,7 +98,8 @@ type Channel {
 }
 
 type Message {
-  content: Content
+  content: String
+  contentType: ContentType
   createdAt: Time
   sender: User
 }
@@ -117,17 +109,17 @@ type Messages {
   next: String
 }
 
-type Text {
-  text: String
-}
-
 enum Visibility {
   PUBLIC
   FRIENDS
   PRIVATE
 }
 
-union Content = Text | Image | Video
+enum ContentType {
+  TEXT
+  IMAGE
+  VIDEO
+}
 
 ### Inputs
 
@@ -144,5 +136,7 @@ input UserUpdateInput {
 }
 
 input PostCreateInput {
-  Visibility: Visibility
+  visibility: Visibility
+  content: String
+  contentType: ContentType
 }
