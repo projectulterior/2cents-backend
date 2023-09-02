@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func HandleCreateToken(client *auth.Service) http.HandlerFunc {
+func HandleCreateToken(svc *auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request auth.CreateTokenRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
@@ -20,6 +20,7 @@ func HandleCreateToken(client *auth.Service) http.HandlerFunc {
 			return
 		}
 
+		reply, err := svc.CreateToken(r.Context(), request)
 		st, ok := status.FromError(err)
 		if !ok {
 			httputil.JSONError(w, http.StatusInternalServerError, "error in decoding response", nil)
@@ -28,7 +29,7 @@ func HandleCreateToken(client *auth.Service) http.HandlerFunc {
 
 		switch st.Code() {
 		case codes.OK:
-			httputil.JSONSuccess(w, http.StatusOK, nil)
+			httputil.JSONSuccess(w, http.StatusOK, reply)
 		case codes.PermissionDenied:
 			httputil.JSONError(w, http.StatusForbidden, err.Error(), nil)
 		case codes.NotFound:
@@ -39,7 +40,7 @@ func HandleCreateToken(client *auth.Service) http.HandlerFunc {
 	}
 }
 
-func HandleRefreshToken(client *auth.Service) http.HandlerFunc {
+func HandleRefreshToken(svc *auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request auth.RefreshTokenRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
@@ -48,7 +49,7 @@ func HandleRefreshToken(client *auth.Service) http.HandlerFunc {
 			return
 		}
 
-		reply, err := client.RefreshToken(r.Context(), request)
+		reply, err := svc.RefreshToken(r.Context(), request)
 		st, ok := status.FromError(err)
 		if !ok {
 			httputil.JSONError(w, http.StatusInternalServerError, "error in decoding response", nil)
@@ -57,10 +58,7 @@ func HandleRefreshToken(client *auth.Service) http.HandlerFunc {
 
 		switch st.Code() {
 		case codes.OK:
-			httputil.JSONSuccess(w, http.StatusOK, auth.RefreshTokenResponse{
-				AuthToken:    reply.AuthToken,
-				RefreshToken: reply.RefreshToken,
-			})
+			httputil.JSONSuccess(w, http.StatusOK, reply)
 		case codes.PermissionDenied:
 			httputil.JSONError(w, http.StatusForbidden, err.Error(), nil)
 		case codes.InvalidArgument:
