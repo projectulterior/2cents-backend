@@ -3,7 +3,7 @@ This repository contains the GraphQL backend server for 2cents written in Golang
 
 ## Running
 ```sh
-make run
+make up
 ```
 
 ## Authentication (JWT)
@@ -11,7 +11,7 @@ make run
     ```sh
     curl -X POST http://localhost:8080/auth/create_token \
         --header 'Content-Type: application/json' \
-        --data '{ "username": "username", "password": "password" }'
+        --data '{ "username": "username", "password": "password1" }'
     ```
 
 # Resources

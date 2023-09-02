@@ -1,0 +1,67 @@
+
+
+version: '3'
+
+services:
+    backend:
+        build: .
+        environment:
+            - HOST=http://localhost:8080
+            - PORT=8080
+            - SECRET=testing-test-token
+            - MONGO=mongodb://mongodb:27017/?replicaSet=rs0&tlsInsecure=true
+        depends_on:
+            - mongo-init
+            - mongodb
+        ports:
+            - 8080:8080
+        networks:
+            - broker
+
+    mongodb:
+        image: mongo:latest
+        command: --replSet rs0 --noauth
+        ports:
+            - 27017:27017
+        networks:
+            - broker
+        healthcheck:
+            test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
+            interval: 2s
+            timeout: 3s
+            retries: 5
+
+    mongo-init:
+        image: mongo:latest
+        restart: "no"
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        command: >
+            mongosh mongodb:27017 --eval
+            '
+            rs.initiate( {
+                _id : "rs0",
+                members: [
+                    { _id: 0, host: "mongodb:27017" }
+                ]
+            })
+            '
+        networks:
+            - broker
+
+    monogo-express:
+        image: mongo-express
+        environment:
+            - ME_CONFIG_MONGODB_SERVER=mongodb
+        ports:
+            - 8081:8081
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        networks:
+            - broker
+
+networks:
+    broker:
+        driver: bridge

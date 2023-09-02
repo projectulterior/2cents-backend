@@ -13,6 +13,8 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/os/process"
 	http_server "github.com/projectulterior/2cents-backend/pkg/server/http"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -31,6 +33,7 @@ type Config struct {
 	Host   string `envconfig:"HOST" default:"http://localhost:8080"`
 	Port   int    `envconfig:"PORT" default:"8080"`
 	Secret string `envconfig:"SECRET" default:"secret"`
+	Mongo  string `evnconfig:"MONGO"`
 }
 
 func main() {
@@ -42,12 +45,21 @@ func main() {
 		panic(fmt.Errorf("failed to process configs: %s", err))
 	}
 
+	// logs
 	log, err := logger("")
 	if err != nil {
 		panic(err)
 	}
 
-	svc, err := services(context.Background())
+	// mongo
+	m, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Mongo))
+	if err != nil {
+		panic(err)
+	}
+	defer m.Disconnect(ctx)
+
+	// services
+	svc, err := services(ctx, cfg.Secret, m, log)
 	if err != nil {
 		panic(err)
 	}

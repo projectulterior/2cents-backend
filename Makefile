@@ -6,10 +6,9 @@ gen:
 run: gen
 	go run ./...
 
-build: gen-pb
+build: gen
 	rm -rf bin
 	CGO_ENABLED=0 \
-	GOPRIVATE=github.com/RightStuffAppInc/* \
 	go build -v \
 		-ldflags="-s -w" \
 		-o bin/ \
