@@ -26,6 +26,11 @@ func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*model.Li
 	panic(fmt.Errorf("not implemented: LikeCreate - likeCreate"))
 }
 
+// CommentCreate is the resolver for the commentCreate field.
+func (r *mutationResolver) CommentCreate(ctx context.Context, input model.CommentCreateInput) (*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: CommentCreate - commentCreate"))
+}
+
 // UserFollow is the resolver for the userFollow field.
 func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: UserFollow - userFollow"))

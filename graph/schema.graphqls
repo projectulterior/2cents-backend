@@ -19,6 +19,7 @@ type Mutation {
   userUpdate(input: UserUpdateInput!): User!
   postCreate(input: PostCreateInput!): Post! 
   likeCreate(id: ID!): Like
+  commentCreate(input: CommentCreateInput!): Comment!
   userFollow(id: ID!): User
 }
 
@@ -32,6 +33,7 @@ type User {
   username: String!
   birthday: Birthday!
   cents: Cents!
+
   # User Info
   name: String!
   email: String
@@ -76,6 +78,7 @@ type Post {
   published: Boolean!
   author: User
   likes(page: Pagination!): Likes
+  comments(page: Pagination!): Comments
 }
 
 type Like {
@@ -87,6 +90,18 @@ type Like {
 
 type Likes {
   likes: [Like!]!
+  next: String!
+}
+
+type Comment {
+  post: Post
+  content: String!
+  commenter: User
+  createdAt: Time
+}
+
+type Comments {
+  comments: [Comment!]!
   next: String!
 }
 
@@ -137,6 +152,11 @@ input UserUpdateInput {
 
 input PostCreateInput {
   visibility: Visibility
+  content: String
+  contentType: ContentType
+}
+
+input CommentCreateInput {
   content: String
   contentType: ContentType
 }

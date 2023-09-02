@@ -28,6 +28,23 @@ type Channel struct {
 	Messages *Messages `json:"messages,omitempty"`
 }
 
+type Comment struct {
+	Post      *Post      `json:"post,omitempty"`
+	Content   string     `json:"content"`
+	Commenter *User      `json:"commenter,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+}
+
+type CommentCreateInput struct {
+	Content     *string      `json:"content,omitempty"`
+	ContentType *ContentType `json:"contentType,omitempty"`
+}
+
+type Comments struct {
+	Comments []*Comment `json:"comments"`
+	Next     string     `json:"next"`
+}
+
 type Like struct {
 	Post      *Post      `json:"post,omitempty"`
 	Liker     *User      `json:"liker,omitempty"`
@@ -65,6 +82,7 @@ type Post struct {
 	Published   bool         `json:"published"`
 	Author      *User        `json:"author,omitempty"`
 	Likes       *Likes       `json:"likes,omitempty"`
+	Comments    *Comments    `json:"comments,omitempty"`
 }
 
 type PostCreateInput struct {
