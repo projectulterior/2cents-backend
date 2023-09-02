@@ -4,7 +4,7 @@ gen:
 	go run github.com/99designs/gqlgen generate
 
 run: gen
-	go run server.go
+	go run ./...
 
 build: gen-pb
 	rm -rf bin
