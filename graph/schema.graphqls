@@ -17,6 +17,8 @@ type Query {
 
 type Mutation {
   userUpdate(input: UserUpdateInput!): User!
+  userDelete: User!
+
   postCreate(input: PostCreateInput!): Post! 
   likeCreate(id: ID!): Like
   commentCreate(input: CommentCreateInput!): Comment!

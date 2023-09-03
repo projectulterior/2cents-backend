@@ -12,6 +12,7 @@ type Services struct {
 	Auth *auth.Service
 }
 
+// setup services
 func services(ctx context.Context, secret string, m *mongo.Client, log *zap.Logger) (*Services, error) {
 	authService := &auth.Service{
 		Secret:   secret,

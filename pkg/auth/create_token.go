@@ -33,8 +33,9 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 			bson.M{"_id": req.Username},
 			bson.M{
 				"$setOnInsert": bson.M{
-					"password": req.Password,
-					"user_id":  format.NewUserID(),
+					"password":   req.Password,
+					"user_id":    format.NewUserID(),
+					"created_at": time.Now(),
 				},
 			},
 			options.FindOneAndUpdate().
