@@ -14,17 +14,14 @@ type AuthType string
 const (
 	AUTH_TOKEN_TYPE    = "auth"
 	REFRESH_TOKEN_TYPE = "refresh"
-
-	AUTH_TOKEN_TTL    = 10 * time.Minute
-	REFRESH_TOKEN_TTL = 24 * time.Hour
 )
 
-func generateTokens(secret string, tokenID format.TokenID, userID format.UserID) (string, string, error) {
+func generateTokens(secret string, authTTL, refreshTTL time.Duration, tokenID format.TokenID, userID format.UserID) (string, string, error) {
 	token, err := generateToken(secret, jwt.MapClaims{
 		"token_id":   tokenID.String(),
 		"user_id":    userID.String(),
 		"token_type": AUTH_TOKEN_TYPE,
-		"exp":        time.Now().Add(AUTH_TOKEN_TTL).Unix(),
+		"exp":        time.Now().Add(authTTL).Unix(),
 	})
 	if err != nil {
 		return "", "", err
@@ -34,7 +31,7 @@ func generateTokens(secret string, tokenID format.TokenID, userID format.UserID)
 		"token_id":   tokenID.String(),
 		"user_id":    userID.String(),
 		"token_type": REFRESH_TOKEN_TYPE,
-		"exp":        time.Now().Add(REFRESH_TOKEN_TTL).Unix(),
+		"exp":        time.Now().Add(refreshTTL).Unix(),
 	})
 	if err != nil {
 		return "", "", err

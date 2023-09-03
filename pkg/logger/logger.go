@@ -1,4 +1,4 @@
-package main
+package logger
 
 import (
 	"go.uber.org/zap"
@@ -7,7 +7,7 @@ import (
 
 // InitLogger sets up a standardized logger according to standards setup by the search.
 // Based on the `appenv` argument, the debugging level will be set to Info ("production") or Debug (anything else).
-func logger(appenv string) (*zap.Logger, error) {
+func InitLogger(appenv string) (*zap.Logger, error) {
 	logConf := zap.NewProductionConfig()
 
 	switch appenv {
