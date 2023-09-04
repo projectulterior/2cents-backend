@@ -4,7 +4,7 @@ const (
 	LIKE_ID_PREFIX = "ilke"
 )
 
-type LikeIDType struct{}
+type LikeIDType int
 
 func (t LikeIDType) IDMethod() IDMethod {
 	return IDMETHOD_HASH
@@ -18,12 +18,29 @@ func (t LikeIDType) Size() uint {
 	return 48
 }
 
-type LikeID = ID[LikeIDType]
+type LikeID string
 
 func NewLikeID(postID PostID, likerID UserID) LikeID {
-	return NewID(LikeIDType{}, postID, likerID)
+	return LikeID(NewID(LikeIDType(0), postID, likerID).String())
+}
+
+func NewLikeIDFromIdentifier(id string) LikeID {
+	return LikeID(LIKE_ID_PREFIX + id)
 }
 
 func ParseLikeID(id string) (LikeID, error) {
-	return ParseID(LikeIDType{}, id)
+	parsed, err := ParseID(LikeIDType(0), id)
+	if err != nil {
+		return "", err
+	}
+
+	return LikeID(parsed.String()), nil
+}
+
+func (u LikeID) String() string {
+	return string(u)
+}
+
+func (u LikeID) Identifier() string {
+	return string(u[len(LIKE_ID_PREFIX):])
 }
