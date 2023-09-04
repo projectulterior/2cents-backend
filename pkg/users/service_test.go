@@ -16,7 +16,7 @@ import (
 )
 
 type Config struct {
-	Service string `envconfig:"SERVICE": default:"users"`
+	Service string `envconfig:"SERVICE" default:"users"`
 	Mongo   string `envconfig:"MONGO" default:"mongodb://localhost:27017/?replicaSet=rs0&tlsInsecure=true&directConnection=true"`
 }
 
