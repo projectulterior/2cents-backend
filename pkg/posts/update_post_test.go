@@ -17,6 +17,7 @@ func TestUpdatePost(t *testing.T) {
 	visibilityFriends := format.FRIENDS
 	visibilityPrivate := format.PRIVATE
 	content := "hello"
+	newContent := "new comment"
 	contentType := format.TEXT
 
 	reply1, err := svc.CreatePost(context.Background(), posts.CreatePostRequest{
@@ -51,11 +52,9 @@ func TestUpdatePost(t *testing.T) {
 	assert.False(t, updatedFriends.Post.CreatedAt.IsZero())
 
 	updatedPrivate, err := svc.UpdatePost(context.Background(), posts.UpdatePostRequest{
-		PostID:      reply1.PostID,
-		AuthorID:    reply1.AuthorID,
-		Visibility:  &visibilityPrivate,
-		Content:     &reply1.Content,
-		ContentType: &reply1.ContentType,
+		PostID:     reply1.PostID,
+		AuthorID:   reply1.AuthorID,
+		Visibility: &visibilityPrivate,
 	})
 
 	assert.Nil(t, err)
@@ -65,4 +64,18 @@ func TestUpdatePost(t *testing.T) {
 	assert.Equal(t, contentType, updatedPrivate.Post.ContentType)
 	assert.NotEmpty(t, updatedPrivate.Post.PostID)
 	assert.False(t, updatedPrivate.Post.CreatedAt.IsZero())
+
+	updatedContent, err := svc.UpdatePost(context.Background(), posts.UpdatePostRequest{
+		PostID:   reply1.PostID,
+		AuthorID: reply1.AuthorID,
+		Content:  &newContent,
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, authorid, updatedContent.Post.AuthorID)
+	assert.Equal(t, visibilityPrivate, updatedContent.Post.Visibility)
+	assert.Equal(t, newContent, updatedContent.Post.Content)
+	assert.Equal(t, contentType, updatedContent.Post.ContentType)
+	assert.NotEmpty(t, updatedContent.Post.PostID)
+	assert.False(t, updatedContent.Post.CreatedAt.IsZero())
 }
