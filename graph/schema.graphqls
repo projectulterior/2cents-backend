@@ -83,6 +83,7 @@ type Post {
 }
 
 type Like {
+  id: ID!
   post: Post
   liker: User
   createdAt: Time
