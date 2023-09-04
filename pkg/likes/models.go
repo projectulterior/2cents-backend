@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	LIKES_COLLECTION = "posts"
+	LIKES_COLLECTION = "likes"
 )
 
 type Like struct {
+	LikeID    format.LikeID `bson:"_id"`
+	PostID    format.PostID `bson:"post_id"`
 	LikerID   format.UserID `bson:"liker_id"`
 	CreatedAt time.Time     `bson:"created_at"`
 }
