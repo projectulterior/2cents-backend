@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateFollow(t *testing.T) {
+func TestDeleteFollow(t *testing.T) {
 	svc := setup(t)
 
 	followerID := format.NewUserID()
@@ -27,5 +27,12 @@ func TestCreateFollow(t *testing.T) {
 	assert.Equal(t, followerID, reply.FollowerID)
 	assert.Equal(t, followeeID, reply.FolloweeID)
 	assert.NotEmpty(t, reply.CreatedAt)
+
+	delete, err := svc.DeleteFollow(context.Background(), follow.DeleteFollowRequest{
+		FollowID: followID,
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, followID, delete.FollowID)
 
 }
