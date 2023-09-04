@@ -53,11 +53,13 @@ func TestMain(m *testing.M) {
 }
 
 func setup(t *testing.T) *auth.Service {
+	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
+
 	return &auth.Service{
 		Secret:          secret,
 		AuthTokenTTL:    time.Minute,
 		RefreshTokenTTL: time.Hour,
-		Database:        client.Database(t.Name()),
+		Database:        client.Database(name),
 		Logger:          log,
 	}
 }

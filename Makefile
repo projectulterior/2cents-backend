@@ -27,3 +27,6 @@ build-docker:
 
 up:
 	docker compose up --detach --build
+
+test: up
+	go test ./...
