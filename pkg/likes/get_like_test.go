@@ -2,7 +2,6 @@ package likes_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -28,7 +27,7 @@ func TestGetLike(t *testing.T) {
 	_, err = svc.GetLike(context.Background(), likes.GetLikeRequest{
 		LikeID: reply.LikeID,
 	})
-	fmt.Println(err)
 	assert.Nil(t, err)
+	// TODO: finish test
 	// assert.Equal(t, reply, user)
 }
