@@ -13,9 +13,7 @@ import (
 type GetUserRequest struct {
 	UserID format.UserID
 }
-type GetUserResponse struct {
-	User User
-}
+type GetUserResponse = User
 
 func (s *Service) GetUser(ctx context.Context, req GetUserRequest) (*GetUserResponse, error) {
 	var user User
@@ -30,7 +28,5 @@ func (s *Service) GetUser(ctx context.Context, req GetUserRequest) (*GetUserResp
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	return &GetUserResponse{
-		User: user,
-	}, nil
+	return &user, nil
 }

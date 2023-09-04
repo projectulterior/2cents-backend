@@ -17,9 +17,7 @@ type UpdateUserRequest struct {
 	Email  *string
 	Bio    *string
 }
-type UpdateUserResponse struct {
-	User User
-}
+type UpdateUserResponse = User
 
 func (s *Service) UpdateUser(ctx context.Context, req UpdateUserRequest) (*UpdateUserResponse, error) {
 	set := bson.M{}
@@ -57,7 +55,5 @@ func (s *Service) UpdateUser(ctx context.Context, req UpdateUserRequest) (*Updat
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	return &UpdateUserResponse{
-		User: user,
-	}, nil
+	return &user, nil
 }
