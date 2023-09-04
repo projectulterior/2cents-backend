@@ -41,7 +41,7 @@ type User {
   email: String
   bio: String
 
-  followers(page: Pagination): Users
+  follows(page: Pagination): Follows
   posts(page: Pagination): Posts
   totalLikes: Int!
 
@@ -80,6 +80,18 @@ type Post {
   author: User
   likes(page: Pagination!): Likes
   comments(page: Pagination!): Comments
+}
+
+type Follow {
+  id: ID!
+  follower: User
+  followee: User
+  createdAt: Time
+}
+
+type Follows {
+  follows: [Follow!]!
+  next: String
 }
 
 type Like {

@@ -16,9 +16,7 @@ type CreatePostRequest struct {
 	ContentType format.ContentType
 }
 
-type CreatePostResponse struct {
-	Post Post
-}
+type CreatePostResponse = Post
 
 func (s *Service) CreatePost(ctx context.Context, req CreatePostRequest) (*CreatePostResponse, error) {
 	now := time.Now()
@@ -39,7 +37,5 @@ func (s *Service) CreatePost(ctx context.Context, req CreatePostRequest) (*Creat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &CreatePostResponse{
-		Post: post,
-	}, nil
+	return &post, nil
 }
