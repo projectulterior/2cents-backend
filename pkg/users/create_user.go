@@ -14,9 +14,7 @@ import (
 type CreateUserRequest struct {
 	UserID format.UserID
 }
-type CreateUserResponse struct {
-	User User
-}
+type CreateUserResponse = User
 
 func (s *Service) CreateUser(ctx context.Context, req CreateUserRequest) (*CreateUserResponse, error) {
 	now := time.Now()
@@ -40,7 +38,5 @@ func (s *Service) CreateUser(ctx context.Context, req CreateUserRequest) (*Creat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &CreateUserResponse{
-		User: user,
-	}, nil
+	return &user, nil
 }
