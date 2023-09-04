@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/logger"
 	"github.com/projectulterior/2cents-backend/pkg/users"
@@ -49,8 +50,10 @@ func TestMain(m *testing.M) {
 }
 
 func setup(t *testing.T) *users.Service {
+	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
+
 	return &users.Service{
-		Database: client.Database(t.Name()),
+		Database: client.Database(name),
 		Logger:   log,
 	}
 }
