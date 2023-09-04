@@ -14,10 +14,7 @@ import (
 type RefreshTokenRequest struct {
 	Token string `json:"token"`
 }
-type RefreshTokenResponse struct {
-	AuthToken    string `json:"auth_token"`
-	RefreshToken string `json:"refresh_token"`
-}
+type RefreshTokenResponse = TokenResponse
 
 func (s *Service) RefreshToken(ctx context.Context, req RefreshTokenRequest) (*RefreshTokenResponse, error) {
 	e := func(err error) error { return status.Error(codes.PermissionDenied, err.Error()) }
@@ -69,13 +66,13 @@ func (s *Service) RefreshToken(ctx context.Context, req RefreshTokenRequest) (*R
 		return nil, e(err)
 	}
 
-	auth, refresh, err := generateTokens(s.Secret, tokenID, userID)
+	auth, refresh, err := generateTokens(s.Secret, s.AuthTokenTTL, s.RefreshTokenTTL, tokenID, userID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &RefreshTokenResponse{
-		AuthToken:    auth,
-		RefreshToken: refresh,
+		Auth:    auth,
+		Refresh: refresh,
 	}, nil
 }

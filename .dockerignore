@@ -1,0 +1,6 @@
+**/*_test.go
+/vendor
+/testing
+setup.sh
+docker-compose.yaml
+/.github

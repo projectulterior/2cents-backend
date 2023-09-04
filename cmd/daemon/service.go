@@ -13,11 +13,13 @@ type Services struct {
 }
 
 // setup services
-func services(ctx context.Context, secret string, m *mongo.Client, log *zap.Logger) (*Services, error) {
+func services(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger) (*Services, error) {
 	authService := &auth.Service{
-		Secret:   secret,
-		Database: m.Database("auth"),
-		Logger:   log,
+		Secret:          cfg.Secret,
+		AuthTokenTTL:    cfg.AuthTokenTTL,
+		RefreshTokenTTL: cfg.RefreshTokenTTL,
+		Database:        m.Database("auth"),
+		Logger:          log,
 	}
 	if err := authService.Setup(ctx); err != nil {
 		return nil, err

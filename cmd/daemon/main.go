@@ -11,10 +11,9 @@ import (
 	"github.com/projectulterior/2cents-backend/cmd/daemon/middleware"
 	"github.com/projectulterior/2cents-backend/graph"
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/logger"
 	"github.com/projectulterior/2cents-backend/pkg/os/process"
 	http_server "github.com/projectulterior/2cents-backend/pkg/server/http"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -24,16 +23,20 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
 	"go.elastic.co/apm/module/apmhttp/v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type Config struct {
-	Host   string `envconfig:"HOST" default:"http://localhost:8080"`
-	Port   int    `envconfig:"PORT" default:"8080"`
-	Secret string `envconfig:"SECRET" default:"secret"`
-	Mongo  string `evnconfig:"MONGO"`
+	Host            string        `envconfig:"HOST" default:"http://localhost:8080"`
+	Port            int           `envconfig:"PORT" default:"8080"`
+	Secret          string        `envconfig:"SECRET" default:"secret"`
+	AuthTokenTTL    time.Duration `envconfig:"AUTH_TOKEN_TTL" default:"10m"`
+	RefreshTokenTTL time.Duration `envconfig:"REFRESH_TOKEN_TTL" default:"1h"`
+	Mongo           string        `evnconfig:"MONGO"`
 }
 
 func main() {
@@ -46,7 +49,7 @@ func main() {
 	}
 
 	// logs
-	log, err := logger("")
+	log, err := logger.InitLogger("")
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +62,7 @@ func main() {
 	defer m.Disconnect(ctx)
 
 	// services
-	svc, err := services(ctx, cfg.Secret, m, log)
+	svc, err := services(ctx, cfg, m, log)
 	if err != nil {
 		panic(err)
 	}

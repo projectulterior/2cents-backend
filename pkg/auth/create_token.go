@@ -17,10 +17,7 @@ type CreateTokenRequest struct {
 	Password string `json:"password"`
 }
 
-type CreateTokenResponse struct {
-	Auth    string `json:"auth"`
-	Refresh string `json:"refresh"`
-}
+type CreateTokenResponse = TokenResponse
 
 func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*CreateTokenResponse, error) {
 	if !verifyUsername(req.Username) {
@@ -74,11 +71,11 @@ func (s *Service) createToken(ctx context.Context, userID format.UserID) (string
 			UserID:      userID,
 			CreatedAt:   time.Now(),
 			RefreshedAt: time.Now(),
-			ExpiredAt:   time.Now().Add(AUTH_TOKEN_TTL),
+			ExpiredAt:   time.Now().Add(s.AuthTokenTTL),
 		})
 	if err != nil {
 		return "", "", status.Error(codes.Internal, err.Error())
 	}
 
-	return generateTokens(s.Secret, tokenID, userID)
+	return generateTokens(s.Secret, s.AuthTokenTTL, s.RefreshTokenTTL, tokenID, userID)
 }
