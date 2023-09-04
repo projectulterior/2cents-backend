@@ -77,7 +77,6 @@ type Post {
   content: String!
   contentType: ContentType
   createdAt: String!
-  published: Boolean!
   author: User
   likes(page: Pagination!): Likes
   comments(page: Pagination!): Comments

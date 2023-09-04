@@ -16,6 +16,11 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	panic(fmt.Errorf("not implemented: UserUpdate - userUpdate"))
 }
 
+// UserDelete is the resolver for the userDelete field.
+func (r *mutationResolver) UserDelete(ctx context.Context) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserDelete - userDelete"))
+}
+
 // PostCreate is the resolver for the postCreate field.
 func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreateInput) (*model.Post, error) {
 	panic(fmt.Errorf("not implemented: PostCreate - postCreate"))

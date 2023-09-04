@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 		CommentCreate func(childComplexity int, input model.CommentCreateInput) int
 		LikeCreate    func(childComplexity int, id string) int
 		PostCreate    func(childComplexity int, input model.PostCreateInput) int
+		UserDelete    func(childComplexity int) int
 		UserFollow    func(childComplexity int, id string) int
 		UserUpdate    func(childComplexity int, input model.UserUpdateInput) int
 	}
@@ -118,7 +119,6 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Likes       func(childComplexity int, page model.Pagination) int
-		Published   func(childComplexity int) int
 		Visibility  func(childComplexity int) int
 	}
 
@@ -161,6 +161,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
+	UserDelete(ctx context.Context) (*model.User, error)
 	PostCreate(ctx context.Context, input model.PostCreateInput) (*model.Post, error)
 	LikeCreate(ctx context.Context, id string) (*model.Like, error)
 	CommentCreate(ctx context.Context, input model.CommentCreateInput) (*model.Comment, error)
@@ -423,6 +424,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PostCreate(childComplexity, args["input"].(model.PostCreateInput)), true
 
+	case "Mutation.userDelete":
+		if e.complexity.Mutation.UserDelete == nil {
+			break
+		}
+
+		return e.complexity.Mutation.UserDelete(childComplexity), true
+
 	case "Mutation.userFollow":
 		if e.complexity.Mutation.UserFollow == nil {
 			break
@@ -505,13 +513,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Post.Likes(childComplexity, args["page"].(model.Pagination)), true
-
-	case "Post.published":
-		if e.complexity.Post.Published == nil {
-			break
-		}
-
-		return e.complexity.Post.Published(childComplexity), true
 
 	case "Post.visibility":
 		if e.complexity.Post.Visibility == nil {
@@ -1684,8 +1685,6 @@ func (ec *executionContext) fieldContext_Comment_post(ctx context.Context, field
 				return ec.fieldContext_Post_contentType(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Post_createdAt(ctx, field)
-			case "published":
-				return ec.fieldContext_Post_published(ctx, field)
 			case "author":
 				return ec.fieldContext_Post_author(ctx, field)
 			case "likes":
@@ -1991,8 +1990,6 @@ func (ec *executionContext) fieldContext_Like_post(ctx context.Context, field gr
 				return ec.fieldContext_Post_contentType(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Post_createdAt(ctx, field)
-			case "published":
-				return ec.fieldContext_Post_published(ctx, field)
 			case "author":
 				return ec.fieldContext_Post_author(ctx, field)
 			case "likes":
@@ -2561,6 +2558,72 @@ func (ec *executionContext) fieldContext_Mutation_userUpdate(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_userDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_userDelete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UserDelete(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_userDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "bio":
+				return ec.fieldContext_User_bio(ctx, field)
+			case "followers":
+				return ec.fieldContext_User_followers(ctx, field)
+			case "posts":
+				return ec.fieldContext_User_posts(ctx, field)
+			case "totalLikes":
+				return ec.fieldContext_User_totalLikes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_postCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_postCreate(ctx, field)
 	if err != nil {
@@ -2610,8 +2673,6 @@ func (ec *executionContext) fieldContext_Mutation_postCreate(ctx context.Context
 				return ec.fieldContext_Post_contentType(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Post_createdAt(ctx, field)
-			case "published":
-				return ec.fieldContext_Post_published(ctx, field)
 			case "author":
 				return ec.fieldContext_Post_author(ctx, field)
 			case "likes":
@@ -3049,50 +3110,6 @@ func (ec *executionContext) fieldContext_Post_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Post_published(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Post_published(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Published, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Post_published(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Post",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Post_author(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Post_author(ctx, field)
 	if err != nil {
@@ -3321,8 +3338,6 @@ func (ec *executionContext) fieldContext_Posts_posts(ctx context.Context, field 
 				return ec.fieldContext_Post_contentType(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Post_createdAt(ctx, field)
-			case "published":
-				return ec.fieldContext_Post_published(ctx, field)
 			case "author":
 				return ec.fieldContext_Post_author(ctx, field)
 			case "likes":
@@ -3567,8 +3582,6 @@ func (ec *executionContext) fieldContext_Query_post(ctx context.Context, field g
 				return ec.fieldContext_Post_contentType(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Post_createdAt(ctx, field)
-			case "published":
-				return ec.fieldContext_Post_published(ctx, field)
 			case "author":
 				return ec.fieldContext_Post_author(ctx, field)
 			case "likes":
@@ -6975,6 +6988,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "userDelete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_userDelete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "postCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_postCreate(ctx, field)
@@ -7047,11 +7067,6 @@ func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Post_contentType(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Post_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "published":
-			out.Values[i] = ec._Post_published(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

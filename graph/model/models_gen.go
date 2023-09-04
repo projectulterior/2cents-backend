@@ -79,7 +79,6 @@ type Post struct {
 	Content     string       `json:"content"`
 	ContentType *ContentType `json:"contentType,omitempty"`
 	CreatedAt   string       `json:"createdAt"`
-	Published   bool         `json:"published"`
 	Author      *User        `json:"author,omitempty"`
 	Likes       *Likes       `json:"likes,omitempty"`
 	Comments    *Comments    `json:"comments,omitempty"`
