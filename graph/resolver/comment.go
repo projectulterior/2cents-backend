@@ -33,11 +33,11 @@ func (c *Comment) ID(ctx context.Context) (string, error) {
 	return c.commentID.String(), nil
 }
 
-// func (c *Comment) PostID(ctx context.Context) (string, error) {
-// 	reply, err := c.getter.Call(ctx)
-// 	if err != nil {
-// 		return "", err
-// 	}
+func (c *Comment) Post(ctx context.Context) (*Post, error) {
+	reply, err := c.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return reply.PostID, nil
-// }
+	return NewPostByID(c.svc, reply.PostID), nil
+}
