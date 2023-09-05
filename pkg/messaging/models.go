@@ -15,6 +15,7 @@ type Channel struct {
 	ChannelID format.ChannelID `bson:"_id"`
 	MemberIDs []format.UserID  `bson:"member_ids"`
 	CreatedAt time.Time        `bson:"created_at"`
+	UpdatedAt time.Time        `bson:"updated_at"`
 }
 
 type Message struct {
