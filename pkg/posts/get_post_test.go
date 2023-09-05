@@ -37,11 +37,11 @@ func TestGetPost(t *testing.T) {
 		PostID: reply1.PostID,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, authorid, get.Post.AuthorID)
-	assert.Equal(t, visibilityPublic, get.Post.Visibility)
-	assert.Equal(t, content, get.Post.Content)
-	assert.Equal(t, contentType, get.Post.ContentType)
-	assert.Equal(t, reply1.PostID, get.Post.PostID)
-	assert.NotEmpty(t, get.Post.CreatedAt)
-	assert.NotEmpty(t, get.Post.UpdatedAt)
+	assert.Equal(t, authorid, get.AuthorID)
+	assert.Equal(t, visibilityPublic, get.Visibility)
+	assert.Equal(t, content, get.Content)
+	assert.Equal(t, contentType, get.ContentType)
+	assert.Equal(t, reply1.PostID, get.PostID)
+	assert.NotEmpty(t, get.CreatedAt)
+	assert.NotEmpty(t, get.UpdatedAt)
 }
