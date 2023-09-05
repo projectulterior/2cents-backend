@@ -24,7 +24,7 @@ func TestGetPost(t *testing.T) {
 		ContentType: contentType,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, reply1.AuthorID)
 	assert.Equal(t, visibilityPublic, reply1.Visibility)
 	assert.Equal(t, content, reply1.Content)
@@ -36,7 +36,7 @@ func TestGetPost(t *testing.T) {
 	get, err := svc.GetPost(context.Background(), posts.GetPostRequest{
 		PostID: reply1.PostID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, get.Post.AuthorID)
 	assert.Equal(t, visibilityPublic, get.Post.Visibility)
 	assert.Equal(t, content, get.Post.Content)

@@ -20,7 +20,7 @@ func TestCreateMessage(t *testing.T) {
 	channel, err := svc.CreateChannel(context.Background(), messaging.CreateChannelRequest{
 		MemberIDs: []format.UserID{senderID, receiverID},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	content := "message"
 
@@ -30,7 +30,7 @@ func TestCreateMessage(t *testing.T) {
 		Content:     content,
 		ContentType: format.TEXT,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.MessageID)
 	assert.NotEmpty(t, reply.SenderID)
 	assert.False(t, reply.CreatedAt.IsZero())
@@ -56,7 +56,7 @@ func TestCreateMessage_NotFound(t *testing.T) {
 		channel, err := svc.CreateChannel(context.Background(), messaging.CreateChannelRequest{
 			MemberIDs: []format.UserID{senderID, receiverID},
 		})
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 
 		_, err = svc.CreateMessage(context.Background(), messaging.CreateMessageRequest{
 			ChannelID:   channel.ChannelID,

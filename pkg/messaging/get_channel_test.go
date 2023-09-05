@@ -12,22 +12,25 @@ import (
 func TestGetChannel(t *testing.T) {
 	svc := setup(t)
 
+	senderID := format.NewUserID()
+	receiverID := format.NewUserID()
+
 	reply, err := svc.CreateChannel(context.Background(), messaging.CreateChannelRequest{
 		MemberIDs: []format.UserID{
-			format.NewUserID(),
-			format.NewUserID(),
+			senderID,
+			receiverID,
 		},
 	})
 
-	assert.Nil(t, err)
-	assert.NotEmpty(t, reply.ChannelID)
-	assert.NotEmpty(t, reply.MemberIDs)
+	assert.NoError(t, err)
+	assert.Contains(t, reply.MemberIDs, senderID)
+	assert.Contains(t, reply.MemberIDs, receiverID)
 	assert.False(t, reply.CreatedAt.IsZero())
 
 	get, err := svc.GetChannel(context.Background(), messaging.GetChannelRequest{
 		ChannelID: reply.ChannelID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.ChannelID, get.ChannelID)
 	assert.Equal(t, reply.MemberIDs, get.MemberIDs)
 	assert.NotEmpty(t, get.CreatedAt)

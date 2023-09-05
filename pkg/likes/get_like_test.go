@@ -19,7 +19,7 @@ func TestGetLike(t *testing.T) {
 		PostID:  postID,
 		LikerID: likerID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, likerID, reply.LikerID)
 	assert.NotEmpty(t, reply.LikeID)
 	assert.Equal(t, postID, reply.PostID)
@@ -27,7 +27,7 @@ func TestGetLike(t *testing.T) {
 	_, err = svc.GetLike(context.Background(), likes.GetLikeRequest{
 		LikeID: reply.LikeID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	// TODO: finish test
 	// assert.Equal(t, reply, user)
 }

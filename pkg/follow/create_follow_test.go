@@ -22,7 +22,7 @@ func TestCreateFollow(t *testing.T) {
 		FolloweeID: followeeID,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, followID, reply.FollowID)
 	assert.Equal(t, followerID, reply.FollowerID)
 	assert.Equal(t, followeeID, reply.FolloweeID)

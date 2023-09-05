@@ -25,7 +25,7 @@ func TestDeleteComment(t *testing.T) {
 		Content:  content,
 		AuthorID: authorid,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.CommentID)
 	assert.Equal(t, postid, reply.PostID)
 	assert.Equal(t, content, reply.Content)
@@ -36,7 +36,7 @@ func TestDeleteComment(t *testing.T) {
 	deleted, err := svc.DeleteComment(context.Background(), comments.DeleteCommentRequest{
 		CommentID: reply.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.CommentID, deleted.CommentID)
 
 	_, err = svc.GetComment(context.Background(), comments.GetCommentRequest{
@@ -49,7 +49,7 @@ func TestDeleteComment(t *testing.T) {
 		Content:  content,
 		AuthorID: authorid,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply1.CommentID)
 	assert.Equal(t, postid, reply1.PostID)
 	assert.Equal(t, content, reply1.Content)
@@ -61,19 +61,19 @@ func TestDeleteComment(t *testing.T) {
 		Content:   newcontent1,
 	})
 	fmt.Println(err)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent1, updated1.Content)
 
 	get1, err := svc.GetComment(context.Background(), comments.GetCommentRequest{
 		CommentID: reply1.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent1, get1.Content)
 
 	deleted1, err := svc.DeleteComment(context.Background(), comments.DeleteCommentRequest{
 		CommentID: reply1.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply1.CommentID, deleted1.CommentID)
 
 	_, err = svc.GetComment(context.Background(), comments.GetCommentRequest{

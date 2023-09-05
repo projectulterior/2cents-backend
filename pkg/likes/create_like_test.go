@@ -21,7 +21,7 @@ func TestCreateLike(t *testing.T) {
 		PostID:  postID,
 		LikerID: likerID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, likeID, reply.LikeID)
 	assert.Equal(t, postID, reply.PostID)
 	assert.Equal(t, likerID, reply.LikerID)
@@ -31,6 +31,6 @@ func TestCreateLike(t *testing.T) {
 		PostID:  postID,
 		LikerID: likerID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.LikeID, same.LikeID)
 }
