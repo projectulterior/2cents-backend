@@ -7,25 +7,23 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func TestGetMessage(t *testing.T) {
+func TestDeleteMessage(t *testing.T) {
 	svc := setup(t)
 
 	senderID := format.NewUserID()
-	receiverID := format.NewUserID()
 
 	channel, err := svc.CreateChannel(context.Background(), messaging.CreateChannelRequest{
 		MemberIDs: []format.UserID{
 			senderID,
-			receiverID,
+			format.NewUserID(),
 		},
 	})
 
 	assert.NoError(t, err)
-	assert.Contains(t, channel.MemberIDs, senderID)
-	assert.Contains(t, channel.MemberIDs, receiverID)
-	assert.False(t, channel.CreatedAt.IsZero())
 
 	content := "message"
 
@@ -35,17 +33,22 @@ func TestGetMessage(t *testing.T) {
 		Content:     content,
 		ContentType: format.TEXT,
 	})
-
 	assert.NoError(t, err)
-	assert.NotEmpty(t, message.MessageID)
-	assert.NotEmpty(t, message.SenderID)
-	assert.False(t, message.CreatedAt.IsZero())
 
-	get, err := svc.GetMessage(context.Background(), messaging.GetMessageRequest{
+	_, err = svc.GetMessage(context.Background(), messaging.GetMessageRequest{
 		MessageID: message.MessageID,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, message.MessageID, get.MessageID)
-	assert.Equal(t, message.SenderID, get.SenderID)
-	assert.NotEmpty(t, get.CreatedAt)
+
+	deleted, err := svc.DeleteMessage(context.Background(), messaging.DeleteMessageRequest{
+		MessageID: message.MessageID,
+		SenderID:  message.SenderID,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, message.MessageID, deleted.MessageID)
+
+	_, err = svc.GetMessage(context.Background(), messaging.GetMessageRequest{
+		MessageID: message.MessageID,
+	})
+	assert.Equal(t, codes.NotFound, status.Code(err))
 }

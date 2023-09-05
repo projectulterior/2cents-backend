@@ -33,6 +33,7 @@ func TestCreateMessage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.MessageID)
 	assert.NotEmpty(t, reply.SenderID)
+	assert.Equal(t, content, reply.Content)
 	assert.False(t, reply.CreatedAt.IsZero())
 }
 
