@@ -83,3 +83,12 @@ models:
   User:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.User
+  Visibility:
+    model:
+      - github.com/projectulterior/2cents-backend/pkg/format.Visibility
+  ContentType:
+    model:
+      - github.com/projectulterior/2cents-backend/pkg/format.ContentType
+  Post:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Post

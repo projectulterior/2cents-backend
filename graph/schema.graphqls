@@ -9,7 +9,7 @@ scalar Time
 type Query {
   user(id: ID): User!
   users(page: Pagination!): Users!
-  post(id: ID): Post!
+  post(id: ID!): Post!
   posts(page: Pagination!): Posts!
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
@@ -74,9 +74,10 @@ type Posts {
 type Post {
   id: ID!
   visibility: Visibility
-  content: String!
+  content: String
   contentType: ContentType
-  createdAt: String!
+  createdAt: Time
+  updatedAt: Time
   author: User
   likes(page: Pagination!): Likes
   comments(page: Pagination!): Comments

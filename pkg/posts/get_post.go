@@ -14,9 +14,7 @@ type GetPostRequest struct {
 	PostID format.PostID
 }
 
-type GetPostResponse struct {
-	Post Post
-}
+type GetPostResponse = Post
 
 func (s *Service) GetPost(ctx context.Context, req GetPostRequest) (*GetPostResponse, error) {
 	var post Post
@@ -32,7 +30,5 @@ func (s *Service) GetPost(ctx context.Context, req GetPostRequest) (*GetPostResp
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	return &GetPostResponse{
-		Post: post,
-	}, nil
+	return &post, nil
 }

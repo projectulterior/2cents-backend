@@ -3,9 +3,6 @@
 package model
 
 import (
-	"fmt"
-	"io"
-	"strconv"
 	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/resolver"
@@ -27,15 +24,15 @@ type Channel struct {
 
 type Comment struct {
 	ID        string         `json:"id"`
-	Post      *Post          `json:"post,omitempty"`
+	Post      *resolver.Post `json:"post,omitempty"`
 	Content   string         `json:"content"`
 	Commenter *resolver.User `json:"commenter,omitempty"`
 	CreatedAt *time.Time     `json:"createdAt,omitempty"`
 }
 
 type CommentCreateInput struct {
-	Content     *string      `json:"content,omitempty"`
-	ContentType *ContentType `json:"contentType,omitempty"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
 type Comments struct {
@@ -57,7 +54,7 @@ type Follows struct {
 
 type Like struct {
 	ID        string         `json:"id"`
-	Post      *Post          `json:"post,omitempty"`
+	Post      *resolver.Post `json:"post,omitempty"`
 	Liker     *resolver.User `json:"liker,omitempty"`
 	CreatedAt *time.Time     `json:"createdAt,omitempty"`
 }
@@ -68,10 +65,10 @@ type Likes struct {
 }
 
 type Message struct {
-	Content     *string        `json:"content,omitempty"`
-	ContentType *ContentType   `json:"contentType,omitempty"`
-	CreatedAt   *time.Time     `json:"createdAt,omitempty"`
-	Sender      *resolver.User `json:"sender,omitempty"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
+	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
+	Sender      *resolver.User      `json:"sender,omitempty"`
 }
 
 type Messages struct {
@@ -84,26 +81,15 @@ type Pagination struct {
 	Limit  int    `json:"limit"`
 }
 
-type Post struct {
-	ID          string         `json:"id"`
-	Visibility  *Visibility    `json:"visibility,omitempty"`
-	Content     string         `json:"content"`
-	ContentType *ContentType   `json:"contentType,omitempty"`
-	CreatedAt   string         `json:"createdAt"`
-	Author      *resolver.User `json:"author,omitempty"`
-	Likes       *Likes         `json:"likes,omitempty"`
-	Comments    *Comments      `json:"comments,omitempty"`
-}
-
 type PostCreateInput struct {
-	Visibility  *Visibility  `json:"visibility,omitempty"`
-	Content     *string      `json:"content,omitempty"`
-	ContentType *ContentType `json:"contentType,omitempty"`
+	Visibility  *format.Visibility  `json:"visibility,omitempty"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
 type Posts struct {
-	Posts []*Post `json:"posts"`
-	Next  string  `json:"next"`
+	Posts []*resolver.Post `json:"posts"`
+	Next  string           `json:"next"`
 }
 
 type UserUpdateInput struct {
@@ -116,90 +102,4 @@ type UserUpdateInput struct {
 type Users struct {
 	Users []*resolver.User `json:"users"`
 	Next  string           `json:"next"`
-}
-
-type ContentType string
-
-const (
-	ContentTypeText  ContentType = "TEXT"
-	ContentTypeImage ContentType = "IMAGE"
-	ContentTypeVideo ContentType = "VIDEO"
-)
-
-var AllContentType = []ContentType{
-	ContentTypeText,
-	ContentTypeImage,
-	ContentTypeVideo,
-}
-
-func (e ContentType) IsValid() bool {
-	switch e {
-	case ContentTypeText, ContentTypeImage, ContentTypeVideo:
-		return true
-	}
-	return false
-}
-
-func (e ContentType) String() string {
-	return string(e)
-}
-
-func (e *ContentType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ContentType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ContentType", str)
-	}
-	return nil
-}
-
-func (e ContentType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Visibility string
-
-const (
-	VisibilityPublic  Visibility = "PUBLIC"
-	VisibilityFriends Visibility = "FRIENDS"
-	VisibilityPrivate Visibility = "PRIVATE"
-)
-
-var AllVisibility = []Visibility{
-	VisibilityPublic,
-	VisibilityFriends,
-	VisibilityPrivate,
-}
-
-func (e Visibility) IsValid() bool {
-	switch e {
-	case VisibilityPublic, VisibilityFriends, VisibilityPrivate:
-		return true
-	}
-	return false
-}
-
-func (e Visibility) String() string {
-	return string(e)
-}
-
-func (e *Visibility) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Visibility(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Visibility", str)
-	}
-	return nil
-}
-
-func (e Visibility) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
 }

@@ -54,7 +54,7 @@ func (r *mutationResolver) UserDelete(ctx context.Context) (*resolver.User, erro
 }
 
 // PostCreate is the resolver for the postCreate field.
-func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreateInput) (*model.Post, error) {
+func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreateInput) (*resolver.Post, error) {
 	panic(fmt.Errorf("not implemented: PostCreate - postCreate"))
 }
 
@@ -71,6 +71,16 @@ func (r *mutationResolver) CommentCreate(ctx context.Context, input model.Commen
 // UserFollow is the resolver for the userFollow field.
 func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*resolver.User, error) {
 	panic(fmt.Errorf("not implemented: UserFollow - userFollow"))
+}
+
+// Likes is the resolver for the likes field.
+func (r *postResolver) Likes(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Likes, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
+}
+
+// Comments is the resolver for the comments field.
+func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Comments, error) {
+	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
 // User is the resolver for the user field.
@@ -100,8 +110,18 @@ func (r *queryResolver) Users(ctx context.Context, page model.Pagination) (*mode
 }
 
 // Post is the resolver for the post field.
-func (r *queryResolver) Post(ctx context.Context, id *string) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Post - post"))
+func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	postID, err := format.ParsePostID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewPostByID(r.Services, postID), nil
 }
 
 // Posts is the resolver for the posts field.
@@ -162,6 +182,9 @@ func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int,
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -172,6 +195,7 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/services"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 
@@ -32,8 +33,17 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 		return nil, err
 	}
 
+	postsService := &posts.Service{
+		Database: m.Database("posts"),
+		Logger:   log,
+	}
+	if err := postsService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
 	return &services.Services{
 		Auth:  authService,
 		Users: usersService,
+		Posts: postsService,
 	}, nil
 }
