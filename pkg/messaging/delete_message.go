@@ -11,6 +11,7 @@ import (
 
 type DeleteMessageRequest struct {
 	MessageID format.MessageID
+	SenderID  format.UserID
 }
 
 type DeleteMessageResponse struct {
@@ -19,7 +20,10 @@ type DeleteMessageResponse struct {
 
 func (s *Service) DeleteMessage(ctx context.Context, req DeleteMessageRequest) (*DeleteMessageResponse, error) {
 	_, err := s.Collection(MESSAGES_COLLECTION).
-		DeleteOne(ctx, bson.M{"_id": req.MessageID.String()})
+		DeleteOne(ctx, bson.M{
+			"_id":       req.MessageID.String(),
+			"sender_id": req.SenderID.String(),
+		})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
