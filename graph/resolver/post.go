@@ -30,6 +30,18 @@ func NewPostByID(svc *services.Services, postID format.PostID) *Post {
 	}
 }
 
+func NewPostWithData(svc *services.Services, data *posts.Post) *Post {
+	return &Post{
+		svc:    svc,
+		postID: data.PostID,
+		getter: NewGetter(
+			func(ctx context.Context) (*posts.Post, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
 func (p *Post) ID(ctx context.Context) (string, error) {
 	return p.postID.String(), nil
 }

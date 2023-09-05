@@ -11,6 +11,8 @@ type Query {
   users(page: Pagination!): Users!
   post(id: ID!): Post!
   posts(page: Pagination!): Posts!
+  comment(id: ID!): Comment!
+  comments(page: Pagination!): Comments!
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
 }
@@ -20,8 +22,14 @@ type Mutation {
   userDelete: User!
 
   postCreate(input: PostCreateInput!): Post! 
-  likeCreate(id: ID!): Like
+  postUpdate(id: ID!, input: PostUpdateInput!): Post!
+  postDelete(id: ID!): Post!
+
   commentCreate(input: CommentCreateInput!): Comment!
+  commentUpdate(id:ID!, input: CommentUpdateInput!): Comment!
+  commentDelete(id: ID!): Comment!
+
+  likeCreate(id: ID!): Like
   userFollow(id: ID!): User
 }
 
@@ -178,7 +186,18 @@ input PostCreateInput {
   contentType: ContentType
 }
 
+input PostUpdateInput {
+  visibility: Visibility
+  content: String
+  contentType: ContentType
+}
+
 input CommentCreateInput {
+  content: String
+  contentType: ContentType
+}
+
+input CommentUpdateInput {
   content: String
   contentType: ContentType
 }

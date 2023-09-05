@@ -35,6 +35,11 @@ type CommentCreateInput struct {
 	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
+type CommentUpdateInput struct {
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
+}
+
 type Comments struct {
 	Comments []*Comment `json:"comments"`
 	Next     string     `json:"next"`
@@ -82,6 +87,12 @@ type Pagination struct {
 }
 
 type PostCreateInput struct {
+	Visibility  *format.Visibility  `json:"visibility,omitempty"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
+}
+
+type PostUpdateInput struct {
 	Visibility  *format.Visibility  `json:"visibility,omitempty"`
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`

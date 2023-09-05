@@ -12,6 +12,7 @@ import (
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 )
 
@@ -55,17 +56,84 @@ func (r *mutationResolver) UserDelete(ctx context.Context) (*resolver.User, erro
 
 // PostCreate is the resolver for the postCreate field.
 func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreateInput) (*resolver.Post, error) {
-	panic(fmt.Errorf("not implemented: PostCreate - postCreate"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	reply, err := r.Posts.CreatePost(ctx, posts.CreatePostRequest{
+		AuthorID:    authID,
+		Visibility:  *input.Visibility,
+		Content:     *input.Content,
+		ContentType: *input.ContentType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewPostWithData(r.Services, reply), nil
 }
 
-// LikeCreate is the resolver for the likeCreate field.
-func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*model.Like, error) {
-	panic(fmt.Errorf("not implemented: LikeCreate - likeCreate"))
+// PostUpdate is the resolver for the postUpdate field.
+func (r *mutationResolver) PostUpdate(ctx context.Context, id string, input model.PostUpdateInput) (*resolver.Post, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	postID, err := format.ParsePostID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	post, err := r.Posts.UpdatePost(ctx, posts.UpdatePostRequest{
+		PostID:      postID,
+		AuthorID:    authID,
+		Visibility:  input.Visibility,
+		Content:     input.Content,
+		ContentType: input.ContentType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewPostWithData(r.Services, post), nil
+}
+
+// PostDelete is the resolver for the postDelete field.
+func (r *mutationResolver) PostDelete(ctx context.Context, id string) (*resolver.Post, error) {
+	postID, err := format.ParsePostID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Posts.DeletePost(ctx, posts.DeletePostRequest{
+		PostID: postID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resolver.NewPostByID(r.Services, postID), nil
 }
 
 // CommentCreate is the resolver for the commentCreate field.
 func (r *mutationResolver) CommentCreate(ctx context.Context, input model.CommentCreateInput) (*model.Comment, error) {
 	panic(fmt.Errorf("not implemented: CommentCreate - commentCreate"))
+}
+
+// CommentUpdate is the resolver for the commentUpdate field.
+func (r *mutationResolver) CommentUpdate(ctx context.Context, id string, input model.CommentUpdateInput) (*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: CommentUpdate - commentUpdate"))
+}
+
+// CommentDelete is the resolver for the commentDelete field.
+func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: CommentDelete - commentDelete"))
+}
+
+// LikeCreate is the resolver for the likeCreate field.
+func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*model.Like, error) {
+	panic(fmt.Errorf("not implemented: LikeCreate - likeCreate"))
 }
 
 // UserFollow is the resolver for the userFollow field.
@@ -127,6 +195,16 @@ func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, er
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, page model.Pagination) (*model.Posts, error) {
 	panic(fmt.Errorf("not implemented: Posts - posts"))
+}
+
+// Comment is the resolver for the comment field.
+func (r *queryResolver) Comment(ctx context.Context, id string) (*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: Comment - comment"))
+}
+
+// Comments is the resolver for the comments field.
+func (r *queryResolver) Comments(ctx context.Context, page model.Pagination) (*model.Comments, error) {
+	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
 // Channel is the resolver for the channel field.
