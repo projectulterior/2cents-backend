@@ -5,6 +5,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/services"
+	"github.com/projectulterior/2cents-backend/pkg/users"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -23,7 +24,16 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 		return nil, err
 	}
 
+	usersService := &users.Service{
+		Database: m.Database("users"),
+		Logger:   log,
+	}
+	if err := usersService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
 	return &services.Services{
-		Auth: authService,
+		Auth:  authService,
+		Users: usersService,
 	}, nil
 }

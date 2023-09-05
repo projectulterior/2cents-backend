@@ -32,12 +32,12 @@ type Subscription {
 type User {
   id: ID!
 
-  username: String!
-  birthday: Birthday!
-  cents: Cents!
+  username: String
+  birthday: Birthday
+  cents: Cents
 
   # User Info
-  name: String!
+  name: String
   email: String
   bio: String
 
@@ -158,11 +158,17 @@ input Pagination {
   limit: Int!
 }
 
+input BirthdayInput {
+  day: Int
+  month: Int
+  year: Int
+}
+
 input UserUpdateInput {
-  first: String
-  last: String
+  name: String
   email: String
   bio: String
+  birthday: BirthdayInput
 }
 
 input PostCreateInput {

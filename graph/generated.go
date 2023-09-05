@@ -18,6 +18,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/format"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -195,8 +196,8 @@ type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
 }
 type UserResolver interface {
-	Username(ctx context.Context, obj *resolver.User) (string, error)
-	Birthday(ctx context.Context, obj *resolver.User) (*model.Birthday, error)
+	Username(ctx context.Context, obj *resolver.User) (*string, error)
+	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
 	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
 
 	Email(ctx context.Context, obj *resolver.User) (*string, error)
@@ -804,6 +805,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputBirthdayInput,
 		ec.unmarshalInputCommentCreateInput,
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPostCreateInput,
@@ -1249,7 +1251,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Birthday_month(ctx context.Context, field graphql.CollectedField, obj *model.Birthday) (ret graphql.Marshaler) {
+func (ec *executionContext) _Birthday_month(ctx context.Context, field graphql.CollectedField, obj *format.Birthday) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Birthday_month(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1293,7 +1295,7 @@ func (ec *executionContext) fieldContext_Birthday_month(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Birthday_day(ctx context.Context, field graphql.CollectedField, obj *model.Birthday) (ret graphql.Marshaler) {
+func (ec *executionContext) _Birthday_day(ctx context.Context, field graphql.CollectedField, obj *format.Birthday) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Birthday_day(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1337,7 +1339,7 @@ func (ec *executionContext) fieldContext_Birthday_day(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Birthday_year(ctx context.Context, field graphql.CollectedField, obj *model.Birthday) (ret graphql.Marshaler) {
+func (ec *executionContext) _Birthday_year(ctx context.Context, field graphql.CollectedField, obj *format.Birthday) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Birthday_year(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4563,14 +4565,11 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_username(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4607,14 +4606,11 @@ func (ec *executionContext) _User_birthday(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Birthday)
+	res := resTmp.(*format.Birthday)
 	fc.Result = res
-	return ec.marshalNBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐBirthday(ctx, field.Selections, res)
+	return ec.marshalOBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_birthday(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4659,14 +4655,11 @@ func (ec *executionContext) _User_cents(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Cents)
 	fc.Result = res
-	return ec.marshalNCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx, field.Selections, res)
+	return ec.marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_cents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4713,14 +4706,11 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6861,6 +6851,53 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBirthdayInput(ctx context.Context, obj interface{}) (format.Birthday, error) {
+	var it format.Birthday
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"day", "month", "year"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "day":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("day"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Day = data
+		case "month":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context, obj interface{}) (model.CommentCreateInput, error) {
 	var it model.CommentCreateInput
 	asMap := map[string]interface{}{}
@@ -6991,31 +7028,22 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"first", "last", "email", "bio"}
+	fieldsInOrder := [...]string{"name", "email", "bio", "birthday"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "first":
+		case "name":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.First = data
-		case "last":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Last = data
+			it.Name = data
 		case "email":
 			var err error
 
@@ -7034,6 +7062,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.Bio = data
+		case "birthday":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("birthday"))
+			data, err := ec.unmarshalOBirthdayInput2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Birthday = data
 		}
 	}
 
@@ -7050,7 +7087,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 
 var birthdayImplementors = []string{"Birthday"}
 
-func (ec *executionContext) _Birthday(ctx context.Context, sel ast.SelectionSet, obj *model.Birthday) graphql.Marshaler {
+func (ec *executionContext) _Birthday(ctx context.Context, sel ast.SelectionSet, obj *format.Birthday) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, birthdayImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -7983,9 +8020,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_username(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -8019,9 +8053,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_birthday(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -8055,9 +8086,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_cents(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -8091,9 +8119,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_name(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -8678,20 +8703,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNBirthday2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐBirthday(ctx context.Context, sel ast.SelectionSet, v model.Birthday) graphql.Marshaler {
-	return ec._Birthday(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐBirthday(ctx context.Context, sel ast.SelectionSet, v *model.Birthday) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Birthday(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8705,20 +8716,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNCents2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx context.Context, sel ast.SelectionSet, v model.Cents) graphql.Marshaler {
-	return ec._Cents(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx context.Context, sel ast.SelectionSet, v *model.Cents) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Cents(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNChannel2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannel(ctx context.Context, sel ast.SelectionSet, v model.Channel) graphql.Marshaler {
@@ -9405,6 +9402,21 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx context.Context, sel ast.SelectionSet, v *format.Birthday) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Birthday(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBirthdayInput2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx context.Context, v interface{}) (*format.Birthday, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBirthdayInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9429,6 +9441,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx context.Context, sel ast.SelectionSet, v *model.Cents) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Cents(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx context.Context, sel ast.SelectionSet, v *model.Comments) graphql.Marshaler {
@@ -9474,6 +9493,16 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 	res := graphql.MarshalID(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	return res
 }
 

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -18,4 +19,8 @@ type User struct {
 	Birthday  format.Birthday `bson:"birthday"`
 	CreatedAt time.Time       `bson:"created_at"`
 	UpdatedAt time.Time       `bson:"updated_at"`
+}
+
+func (s *Service) Setup(ctx context.Context) error {
+	return nil
 }

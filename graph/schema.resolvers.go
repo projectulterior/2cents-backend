@@ -12,16 +12,45 @@ import (
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"github.com/projectulterior/2cents-backend/pkg/users"
 )
 
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
-	panic(fmt.Errorf("not implemented: UserUpdate - userUpdate"))
+	userID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	user, err := r.Users.UpdateUser(ctx, users.UpdateUserRequest{
+		UserID:   userID,
+		Name:     input.Name,
+		Email:    input.Email,
+		Bio:      input.Bio,
+		Birthday: input.Birthday,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewUserWithData(r.Services, user), nil
 }
 
 // UserDelete is the resolver for the userDelete field.
 func (r *mutationResolver) UserDelete(ctx context.Context) (*resolver.User, error) {
-	panic(fmt.Errorf("not implemented: UserDelete - userDelete"))
+	userID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	_, err = r.Users.DeleteUser(ctx, users.DeleteUserRequest{
+		UserID: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewUserByID(r.Services, userID), nil
 }
 
 // PostCreate is the resolver for the postCreate field.
@@ -96,12 +125,12 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 }
 
 // Username is the resolver for the username field.
-func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (string, error) {
+func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (*string, error) {
 	panic(fmt.Errorf("not implemented: Username - username"))
 }
 
 // Birthday is the resolver for the birthday field.
-func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*model.Birthday, error) {
+func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error) {
 	panic(fmt.Errorf("not implemented: Birthday - birthday"))
 }
 

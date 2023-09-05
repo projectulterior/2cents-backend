@@ -50,6 +50,18 @@ func NewMyUser(svc *services.Services, userID format.UserID) *User {
 	}
 }
 
+func NewUserWithData(svc *services.Services, data *users.User) *User {
+	return &User{
+		svc:    svc,
+		userID: data.UserID,
+		getter: NewGetter(
+			func(ctx context.Context) (*users.User, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
 func (u *User) ID(ctx context.Context) (string, error) {
 	return u.userID.String(), nil
 }

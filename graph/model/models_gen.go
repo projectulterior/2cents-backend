@@ -9,13 +9,8 @@ import (
 	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/format"
 )
-
-type Birthday struct {
-	Month int `json:"month"`
-	Day   int `json:"day"`
-	Year  int `json:"year"`
-}
 
 type Cents struct {
 	Total     int `json:"total"`
@@ -112,10 +107,10 @@ type Posts struct {
 }
 
 type UserUpdateInput struct {
-	First *string `json:"first,omitempty"`
-	Last  *string `json:"last,omitempty"`
-	Email *string `json:"email,omitempty"`
-	Bio   *string `json:"bio,omitempty"`
+	Name     *string          `json:"name,omitempty"`
+	Email    *string          `json:"email,omitempty"`
+	Bio      *string          `json:"bio,omitempty"`
+	Birthday *format.Birthday `json:"birthday,omitempty"`
 }
 
 type Users struct {

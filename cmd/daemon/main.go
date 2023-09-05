@@ -68,7 +68,9 @@ func main() {
 	}
 
 	c := graph.Config{
-		Resolvers: &graph.Resolver{},
+		Resolvers: &graph.Resolver{
+			Services: svc,
+		},
 	}
 
 	ready := httputil.NewReady(
