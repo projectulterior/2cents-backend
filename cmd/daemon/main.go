@@ -62,7 +62,7 @@ func main() {
 	defer m.Disconnect(ctx)
 
 	// services
-	svc, err := services(ctx, cfg, m, log)
+	svc, err := initServices(ctx, cfg, m, log)
 	if err != nil {
 		panic(err)
 	}

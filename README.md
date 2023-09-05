@@ -6,6 +6,8 @@ This repository contains the GraphQL backend server for 2cents written in Golang
 make up
 ```
 
+- [Explorer](http://localhost:8080/explorer)
+
 ## Authentication (JWT)
 - Create Token
     ```sh

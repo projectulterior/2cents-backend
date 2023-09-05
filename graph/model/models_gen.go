@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/projectulterior/2cents-backend/graph/resolver"
 )
 
 type Birthday struct {
@@ -23,16 +25,17 @@ type Cents struct {
 }
 
 type Channel struct {
-	ID       string    `json:"id"`
-	Members  []*User   `json:"members,omitempty"`
-	Messages *Messages `json:"messages,omitempty"`
+	ID       string           `json:"id"`
+	Members  []*resolver.User `json:"members,omitempty"`
+	Messages *Messages        `json:"messages,omitempty"`
 }
 
 type Comment struct {
-	Post      *Post      `json:"post,omitempty"`
-	Content   string     `json:"content"`
-	Commenter *User      `json:"commenter,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	ID        string         `json:"id"`
+	Post      *Post          `json:"post,omitempty"`
+	Content   string         `json:"content"`
+	Commenter *resolver.User `json:"commenter,omitempty"`
+	CreatedAt *time.Time     `json:"createdAt,omitempty"`
 }
 
 type CommentCreateInput struct {
@@ -45,10 +48,23 @@ type Comments struct {
 	Next     string     `json:"next"`
 }
 
+type Follow struct {
+	ID        string         `json:"id"`
+	Follower  *resolver.User `json:"follower,omitempty"`
+	Followee  *resolver.User `json:"followee,omitempty"`
+	CreatedAt *time.Time     `json:"createdAt,omitempty"`
+}
+
+type Follows struct {
+	Follows []*Follow `json:"follows"`
+	Next    *string   `json:"next,omitempty"`
+}
+
 type Like struct {
-	Post      *Post      `json:"post,omitempty"`
-	Liker     *User      `json:"liker,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	ID        string         `json:"id"`
+	Post      *Post          `json:"post,omitempty"`
+	Liker     *resolver.User `json:"liker,omitempty"`
+	CreatedAt *time.Time     `json:"createdAt,omitempty"`
 }
 
 type Likes struct {
@@ -57,10 +73,10 @@ type Likes struct {
 }
 
 type Message struct {
-	Content     *string      `json:"content,omitempty"`
-	ContentType *ContentType `json:"contentType,omitempty"`
-	CreatedAt   *time.Time   `json:"createdAt,omitempty"`
-	Sender      *User        `json:"sender,omitempty"`
+	Content     *string        `json:"content,omitempty"`
+	ContentType *ContentType   `json:"contentType,omitempty"`
+	CreatedAt   *time.Time     `json:"createdAt,omitempty"`
+	Sender      *resolver.User `json:"sender,omitempty"`
 }
 
 type Messages struct {
@@ -74,14 +90,14 @@ type Pagination struct {
 }
 
 type Post struct {
-	ID          string       `json:"id"`
-	Visibility  *Visibility  `json:"visibility,omitempty"`
-	Content     string       `json:"content"`
-	ContentType *ContentType `json:"contentType,omitempty"`
-	CreatedAt   string       `json:"createdAt"`
-	Author      *User        `json:"author,omitempty"`
-	Likes       *Likes       `json:"likes,omitempty"`
-	Comments    *Comments    `json:"comments,omitempty"`
+	ID          string         `json:"id"`
+	Visibility  *Visibility    `json:"visibility,omitempty"`
+	Content     string         `json:"content"`
+	ContentType *ContentType   `json:"contentType,omitempty"`
+	CreatedAt   string         `json:"createdAt"`
+	Author      *resolver.User `json:"author,omitempty"`
+	Likes       *Likes         `json:"likes,omitempty"`
+	Comments    *Comments      `json:"comments,omitempty"`
 }
 
 type PostCreateInput struct {
@@ -95,19 +111,6 @@ type Posts struct {
 	Next  string  `json:"next"`
 }
 
-type User struct {
-	ID         string    `json:"id"`
-	Username   string    `json:"username"`
-	Birthday   *Birthday `json:"birthday"`
-	Cents      *Cents    `json:"cents"`
-	Name       string    `json:"name"`
-	Email      *string   `json:"email,omitempty"`
-	Bio        *string   `json:"bio,omitempty"`
-	Followers  *Users    `json:"followers,omitempty"`
-	Posts      *Posts    `json:"posts,omitempty"`
-	TotalLikes int       `json:"totalLikes"`
-}
-
 type UserUpdateInput struct {
 	First *string `json:"first,omitempty"`
 	Last  *string `json:"last,omitempty"`
@@ -116,8 +119,8 @@ type UserUpdateInput struct {
 }
 
 type Users struct {
-	Users []*User `json:"users"`
-	Next  string  `json:"next"`
+	Users []*resolver.User `json:"users"`
+	Next  string           `json:"next"`
 }
 
 type ContentType string

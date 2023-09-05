@@ -4,16 +4,14 @@ import (
 	"context"
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/services"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
 
-type Services struct {
-	Auth *auth.Service
-}
-
 // setup services
-func services(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger) (*Services, error) {
+func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger) (*services.Services, error) {
 	authService := &auth.Service{
 		Secret:          cfg.Secret,
 		AuthTokenTTL:    cfg.AuthTokenTTL,
@@ -25,7 +23,7 @@ func services(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger)
 		return nil, err
 	}
 
-	return &Services{
+	return &services.Services{
 		Auth: authService,
 	}, nil
 }

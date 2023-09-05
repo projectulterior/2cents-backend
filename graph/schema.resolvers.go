@@ -7,17 +7,20 @@ package graph
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
+	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/format"
 )
 
 // UserUpdate is the resolver for the userUpdate field.
-func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
+func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
 	panic(fmt.Errorf("not implemented: UserUpdate - userUpdate"))
 }
 
 // UserDelete is the resolver for the userDelete field.
-func (r *mutationResolver) UserDelete(ctx context.Context) (*model.User, error) {
+func (r *mutationResolver) UserDelete(ctx context.Context) (*resolver.User, error) {
 	panic(fmt.Errorf("not implemented: UserDelete - userDelete"))
 }
 
@@ -37,13 +40,29 @@ func (r *mutationResolver) CommentCreate(ctx context.Context, input model.Commen
 }
 
 // UserFollow is the resolver for the userFollow field.
-func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*model.User, error) {
+func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*resolver.User, error) {
 	panic(fmt.Errorf("not implemented: UserFollow - userFollow"))
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, id *string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+func (r *queryResolver) User(ctx context.Context, id *string) (*resolver.User, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	if id != nil {
+		// not their own user, but someone else
+		userID, err := format.ParseUserID(*id)
+		if err != nil {
+			return nil, e(ctx, http.StatusBadRequest, err.Error())
+		}
+
+		return resolver.NewUserByID(r.Services, userID), nil
+	}
+
+	// their own user
+	return resolver.NewMyUser(r.Services, authID), nil
 }
 
 // Users is the resolver for the users field.
@@ -72,8 +91,43 @@ func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) 
 }
 
 // OnUserUpdated is the resolver for the onUserUpdated field.
-func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<-chan *model.User, error) {
+func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error) {
 	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
+}
+
+// Username is the resolver for the username field.
+func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (string, error) {
+	panic(fmt.Errorf("not implemented: Username - username"))
+}
+
+// Birthday is the resolver for the birthday field.
+func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*model.Birthday, error) {
+	panic(fmt.Errorf("not implemented: Birthday - birthday"))
+}
+
+// Cents is the resolver for the cents field.
+func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error) {
+	panic(fmt.Errorf("not implemented: Cents - cents"))
+}
+
+// Email is the resolver for the email field.
+func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
+	panic(fmt.Errorf("not implemented: Email - email"))
+}
+
+// Follows is the resolver for the follows field.
+func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error) {
+	panic(fmt.Errorf("not implemented: Follows - follows"))
+}
+
+// Posts is the resolver for the posts field.
+func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Posts, error) {
+	panic(fmt.Errorf("not implemented: Posts - posts"))
+}
+
+// TotalLikes is the resolver for the totalLikes field.
+func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int, error) {
+	panic(fmt.Errorf("not implemented: TotalLikes - totalLikes"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -85,6 +139,10 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+// User returns UserResolver implementation.
+func (r *Resolver) User() UserResolver { return &userResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }
