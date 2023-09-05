@@ -43,13 +43,13 @@ func TestUpdatePost(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, authorid, updatedFriends.Post.AuthorID)
-	assert.Equal(t, visibilityFriends, updatedFriends.Post.Visibility)
-	assert.NotEqual(t, updatedFriends.Post.UpdatedAt, updatedFriends.Post.CreatedAt)
-	assert.Equal(t, content, updatedFriends.Post.Content)
-	assert.Equal(t, contentType, updatedFriends.Post.ContentType)
-	assert.NotEmpty(t, updatedFriends.Post.PostID)
-	assert.False(t, updatedFriends.Post.CreatedAt.IsZero())
+	assert.Equal(t, authorid, updatedFriends.AuthorID)
+	assert.Equal(t, visibilityFriends, updatedFriends.Visibility)
+	assert.NotEqual(t, updatedFriends.UpdatedAt, updatedFriends.CreatedAt)
+	assert.Equal(t, content, updatedFriends.Content)
+	assert.Equal(t, contentType, updatedFriends.ContentType)
+	assert.NotEmpty(t, updatedFriends.PostID)
+	assert.False(t, updatedFriends.CreatedAt.IsZero())
 
 	updatedPrivate, err := svc.UpdatePost(context.Background(), posts.UpdatePostRequest{
 		PostID:     reply1.PostID,
@@ -58,12 +58,12 @@ func TestUpdatePost(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, authorid, updatedPrivate.Post.AuthorID)
-	assert.Equal(t, visibilityPrivate, updatedPrivate.Post.Visibility)
-	assert.Equal(t, content, updatedPrivate.Post.Content)
-	assert.Equal(t, contentType, updatedPrivate.Post.ContentType)
-	assert.NotEmpty(t, updatedPrivate.Post.PostID)
-	assert.False(t, updatedPrivate.Post.CreatedAt.IsZero())
+	assert.Equal(t, authorid, updatedPrivate.AuthorID)
+	assert.Equal(t, visibilityPrivate, updatedPrivate.Visibility)
+	assert.Equal(t, content, updatedPrivate.Content)
+	assert.Equal(t, contentType, updatedPrivate.ContentType)
+	assert.NotEmpty(t, updatedPrivate.PostID)
+	assert.False(t, updatedPrivate.CreatedAt.IsZero())
 
 	updatedContent, err := svc.UpdatePost(context.Background(), posts.UpdatePostRequest{
 		PostID:   reply1.PostID,
@@ -72,10 +72,10 @@ func TestUpdatePost(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, authorid, updatedContent.Post.AuthorID)
-	assert.Equal(t, visibilityPrivate, updatedContent.Post.Visibility)
-	assert.Equal(t, newContent, updatedContent.Post.Content)
-	assert.Equal(t, contentType, updatedContent.Post.ContentType)
-	assert.NotEmpty(t, updatedContent.Post.PostID)
-	assert.False(t, updatedContent.Post.CreatedAt.IsZero())
+	assert.Equal(t, authorid, updatedContent.AuthorID)
+	assert.Equal(t, visibilityPrivate, updatedContent.Visibility)
+	assert.Equal(t, newContent, updatedContent.Content)
+	assert.Equal(t, contentType, updatedContent.ContentType)
+	assert.NotEmpty(t, updatedContent.PostID)
+	assert.False(t, updatedContent.CreatedAt.IsZero())
 }

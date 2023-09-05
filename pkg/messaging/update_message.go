@@ -1,4 +1,4 @@
-package posts
+package messaging
 
 import (
 	"context"
@@ -11,47 +11,36 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type UpdatePostRequest struct {
-	PostID      format.PostID
-	AuthorID    format.UserID
-	Visibility  *format.Visibility
+type UpdateMessageRequest struct {
+	MessageID   format.MessageID
+	SenderID    format.UserID
 	Content     *string
 	ContentType *format.ContentType
 }
 
-type UpdatePostResponse = Post
+type UpdateMessageResponse = Message
 
-func (s *Service) UpdatePost(ctx context.Context, req UpdatePostRequest) (*UpdatePostResponse, error) {
-	set := bson.M{}
+func (s *Service) UpdateMessage(ctx context.Context, req UpdateMessageRequest) (*UpdateMessageResponse, error) {
+	var message Message
 
-	if req.Visibility != nil {
-		set["visibility"] = *req.Visibility
-	}
-
-	if req.Content != nil {
-		set["content"] = *req.Content
-	}
-
-	if req.ContentType != nil {
-		set["content_type"] = *req.ContentType
-	}
-
-	var post Post
-	err := s.Collection(POSTS_COLLECTION).
+	err := s.Collection(MESSAGES_COLLECTION).
 		FindOneAndUpdate(ctx,
 			bson.M{
-				"_id":       req.PostID.String(),
-				"author_id": req.AuthorID.String(),
+				"_id":       req.MessageID.String(),
+				"sender_id": req.SenderID.String(),
 			},
 			bson.M{
-				"$set": set,
+				"$set": bson.M{
+					"content":      req.Content,
+					"content_type": req.ContentType,
+				},
 				"$currentDate": bson.M{
 					"updated_at": true,
 				},
 			},
 			options.FindOneAndUpdate().
 				SetReturnDocument(options.After),
-		).Decode(&post)
+		).Decode(&message)
 
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
@@ -61,5 +50,5 @@ func (s *Service) UpdatePost(ctx context.Context, req UpdatePostRequest) (*Updat
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	return &post, nil
+	return &message, nil
 }

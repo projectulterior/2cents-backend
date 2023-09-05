@@ -18,6 +18,10 @@ type Channel struct {
 }
 
 type Message struct {
-	MessageID format.MessageID `bson:"_id"`
-	SenderID  format.UserID    `bson:"sender_id"`
+	MessageID   format.MessageID   `bson:"_id"`
+	SenderID    format.UserID      `bson:"sender_id"`
+	ChannelID   format.ChannelID   `bson:"channel_id"`
+	Content     string             `bson:"content"`
+	ContentType format.ContentType `bson:"content_type"`
+	CreatedAt   time.Time          `bson:"created_at"`
 }
