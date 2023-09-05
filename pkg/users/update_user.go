@@ -12,10 +12,11 @@ import (
 )
 
 type UpdateUserRequest struct {
-	UserID format.UserID
-	Name   *string
-	Email  *string
-	Bio    *string
+	UserID   format.UserID
+	Name     *string
+	Email    *string
+	Bio      *string
+	Birthday *format.Birthday
 }
 type UpdateUserResponse = User
 
@@ -32,6 +33,10 @@ func (s *Service) UpdateUser(ctx context.Context, req UpdateUserRequest) (*Updat
 
 	if req.Bio != nil {
 		set["bio"] = *req.Bio
+	}
+
+	if req.Birthday != nil {
+		set["birthday"] = *req.Birthday
 	}
 
 	var user User
