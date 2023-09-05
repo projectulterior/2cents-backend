@@ -21,12 +21,12 @@ func TestVerifyAuth(t *testing.T) {
 		Username: username,
 		Password: password,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	user, err := svc.VerifyToken(context.Background(), auth.VerifyTokenRequest{
 		Token: reply.Auth,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, user.UserID)
 }
 
@@ -44,7 +44,7 @@ func TestVerifyAuth_Expired(t *testing.T) {
 		Username: username,
 		Password: password,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	time.Sleep(duration)
 

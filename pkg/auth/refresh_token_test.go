@@ -25,7 +25,7 @@ func TestRefreshToken(t *testing.T) {
 		Username: username,
 		Password: password,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	time.Sleep(duration)
 
@@ -39,10 +39,10 @@ func TestRefreshToken(t *testing.T) {
 	reply, err = svc.RefreshToken(context.Background(), auth.RefreshTokenRequest{
 		Token: reply.Refresh,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	_, err = svc.VerifyToken(context.Background(), auth.VerifyTokenRequest{
 		Token: reply.Auth,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

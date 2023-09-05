@@ -21,7 +21,7 @@ func TestAddMembers(t *testing.T) {
 			receiverID,
 		},
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	memberID := format.NewUserID()
 

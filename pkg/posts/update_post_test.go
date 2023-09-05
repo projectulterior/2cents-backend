@@ -27,7 +27,7 @@ func TestUpdatePost(t *testing.T) {
 		ContentType: contentType,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, reply1.AuthorID)
 	assert.Equal(t, visibilityPublic, reply1.Visibility)
 	assert.Equal(t, content, reply1.Content)
@@ -42,7 +42,7 @@ func TestUpdatePost(t *testing.T) {
 		Visibility: &visibilityFriends,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, updatedFriends.AuthorID)
 	assert.Equal(t, visibilityFriends, updatedFriends.Visibility)
 	assert.NotEqual(t, updatedFriends.UpdatedAt, updatedFriends.CreatedAt)
@@ -57,7 +57,7 @@ func TestUpdatePost(t *testing.T) {
 		Visibility: &visibilityPrivate,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, updatedPrivate.AuthorID)
 	assert.Equal(t, visibilityPrivate, updatedPrivate.Visibility)
 	assert.Equal(t, content, updatedPrivate.Content)
@@ -71,7 +71,7 @@ func TestUpdatePost(t *testing.T) {
 		Content:  &newContent,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, updatedContent.AuthorID)
 	assert.Equal(t, visibilityPrivate, updatedContent.Visibility)
 	assert.Equal(t, newContent, updatedContent.Content)

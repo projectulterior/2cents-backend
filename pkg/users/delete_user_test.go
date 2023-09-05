@@ -19,13 +19,13 @@ func TestDeleteUser(t *testing.T) {
 	reply, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
 
 	delete, err := svc.DeleteUser(context.Background(), users.DeleteUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userID, delete.UserID)
 
 	_, err = svc.GetUser(context.Background(), users.GetUserRequest{

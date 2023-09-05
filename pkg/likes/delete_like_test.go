@@ -19,13 +19,13 @@ func TestDeleteLike(t *testing.T) {
 	reply, err := svc.CreateLike(context.Background(), likes.CreateLikeRequest{
 		LikerID: likerID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, likerID, reply.LikerID)
 
 	delete, err := svc.DeleteLike(context.Background(), likes.DeleteLikeRequest{
 		LikeID: reply.LikeID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.LikeID, delete.LikeID)
 
 	_, err = svc.GetLike(context.Background(), likes.GetLikeRequest{
@@ -38,7 +38,7 @@ func TestDeleteLike(t *testing.T) {
 	delete, err = svc.DeleteLike(context.Background(), likes.DeleteLikeRequest{
 		LikeID: reply.LikeID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.LikeID, delete.LikeID)
 
 	_, err = svc.GetLike(context.Background(), likes.GetLikeRequest{

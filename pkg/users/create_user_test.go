@@ -17,6 +17,6 @@ func TestCreateUser(t *testing.T) {
 	reply, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
 }

@@ -19,7 +19,7 @@ func TestCreateChannel(t *testing.T) {
 		},
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.ChannelID)
 	assert.NotEmpty(t, reply.MemberIDs)
 	assert.False(t, reply.CreatedAt.IsZero())

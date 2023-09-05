@@ -21,7 +21,7 @@ func TestGetComment(t *testing.T) {
 		Content:  content,
 		AuthorID: authorid,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.CommentID)
 	assert.Equal(t, postid, reply.PostID)
 	assert.Equal(t, content, reply.Content)
@@ -32,7 +32,7 @@ func TestGetComment(t *testing.T) {
 	get, err := svc.GetComment(context.Background(), comments.GetCommentRequest{
 		CommentID: reply.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.PostID, get.PostID)
 	assert.Equal(t, reply.Content, get.Content)
 	assert.Equal(t, reply.AuthorID, get.AuthorID)

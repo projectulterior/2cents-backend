@@ -21,7 +21,7 @@ func TestDeleteChannel(t *testing.T) {
 		},
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.ChannelID)
 	assert.NotEmpty(t, reply.MemberIDs)
 	assert.False(t, reply.CreatedAt.IsZero())
@@ -30,7 +30,7 @@ func TestDeleteChannel(t *testing.T) {
 		ChannelID: reply.ChannelID,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply.ChannelID, deleted.ChannelID)
 
 	_, err = svc.GetChannel(context.Background(), messaging.GetChannelRequest{

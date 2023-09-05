@@ -17,7 +17,7 @@ func TestUpdateUser(t *testing.T) {
 	_, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	name := "name"
 	bio := "bio"
@@ -29,7 +29,7 @@ func TestUpdateUser(t *testing.T) {
 		Email:  &email,
 		Bio:    &bio,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
 	assert.Equal(t, name, reply.Name)
 	assert.Equal(t, email, reply.Email)
@@ -38,6 +38,6 @@ func TestUpdateUser(t *testing.T) {
 	same, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply, same)
 }

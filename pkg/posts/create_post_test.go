@@ -24,7 +24,7 @@ func TestCreatePost(t *testing.T) {
 		ContentType: contentType,
 	})
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, authorid, reply1.AuthorID)
 	assert.Equal(t, visibilityPublic, reply1.Visibility)
 	assert.Equal(t, content, reply1.Content)

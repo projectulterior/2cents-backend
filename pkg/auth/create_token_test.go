@@ -20,7 +20,7 @@ func TestCreateToken(t *testing.T) {
 		Username: username,
 		Password: password,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.Auth)
 	assert.NotEmpty(t, resp.Refresh)
 

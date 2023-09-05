@@ -17,12 +17,12 @@ func TestGetUser(t *testing.T) {
 	reply, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	user, err := svc.GetUser(context.Background(), users.GetUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply, user)
 
 	name := "name"
@@ -35,7 +35,7 @@ func TestGetUser(t *testing.T) {
 		Email:  &email,
 		Bio:    &bio,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
 	assert.Equal(t, name, reply.Name)
 	assert.Equal(t, email, reply.Email)
@@ -44,6 +44,6 @@ func TestGetUser(t *testing.T) {
 	user, err = svc.GetUser(context.Background(), users.GetUserRequest{
 		UserID: userID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, reply, user)
 }

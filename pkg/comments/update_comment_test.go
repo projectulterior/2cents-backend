@@ -24,7 +24,7 @@ func TestUpdateComment(t *testing.T) {
 		Content:  content,
 		AuthorID: authorid,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.CommentID)
 	assert.Equal(t, postid, reply.PostID)
 	assert.Equal(t, content, reply.Content)
@@ -38,13 +38,13 @@ func TestUpdateComment(t *testing.T) {
 		Content:   newcontent1,
 	})
 	fmt.Println(err)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent1, updated1.Content)
 
 	get1, err := svc.GetComment(context.Background(), comments.GetCommentRequest{
 		CommentID: reply.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent1, get1.Content)
 
 	updated2, err := svc.UpdateComment(context.Background(), comments.UpdateCommentRequest{
@@ -52,12 +52,12 @@ func TestUpdateComment(t *testing.T) {
 		AuthorID:  reply.AuthorID,
 		Content:   newcontent2,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent2, updated2.Content)
 
 	get2, err := svc.GetComment(context.Background(), comments.GetCommentRequest{
 		CommentID: reply.CommentID,
 	})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, newcontent2, get2.Content)
 }
