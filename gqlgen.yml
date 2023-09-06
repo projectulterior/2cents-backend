@@ -92,3 +92,6 @@ models:
   Post:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Post
+  Like:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Like

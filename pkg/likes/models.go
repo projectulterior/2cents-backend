@@ -1,6 +1,7 @@
 package likes
 
 import (
+	"context"
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -15,4 +16,8 @@ type Like struct {
 	PostID    format.PostID `bson:"post_id"`
 	LikerID   format.UserID `bson:"liker_id"`
 	CreatedAt time.Time     `bson:"created_at"`
+}
+
+func (s *Service) Setup(ctx context.Context) error {
+	return nil
 }

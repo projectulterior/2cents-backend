@@ -9,10 +9,16 @@ scalar Time
 type Query {
   user(id: ID): User!
   users(page: Pagination!): Users!
+
   post(id: ID!): Post!
   posts(page: Pagination!): Posts!
+
   comment(id: ID!): Comment!
   comments(page: Pagination!): Comments!
+
+  like(id:ID!): Like!
+  likes(page:Pagination!): Likes!
+  
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
 }
@@ -29,7 +35,9 @@ type Mutation {
   commentUpdate(id:ID!, input: CommentUpdateInput!): Comment!
   commentDelete(id: ID!): Comment!
 
-  likeCreate(id: ID!): Like
+  likeCreate(id: ID!): Like!
+  likeDelete(id: ID!): Like!
+
   userFollow(id: ID!): User
 }
 
