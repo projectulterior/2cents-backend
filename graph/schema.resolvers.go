@@ -32,6 +32,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 		Email:    input.Email,
 		Bio:      input.Bio,
 		Birthday: input.Birthday,
+		Profile:  input.Profile,
 	})
 	if err != nil {
 		return nil, err
@@ -370,19 +371,24 @@ func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (*strin
 	panic(fmt.Errorf("not implemented: Username - username"))
 }
 
+// Email is the resolver for the email field.
+func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
+	panic(fmt.Errorf("not implemented: Email - email"))
+}
+
 // Birthday is the resolver for the birthday field.
 func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error) {
 	panic(fmt.Errorf("not implemented: Birthday - birthday"))
 }
 
+// Profile is the resolver for the profile field.
+func (r *userResolver) Profile(ctx context.Context, obj *resolver.User) (*string, error) {
+	panic(fmt.Errorf("not implemented: Profile - profile"))
+}
+
 // Cents is the resolver for the cents field.
 func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error) {
 	panic(fmt.Errorf("not implemented: Cents - cents"))
-}
-
-// Email is the resolver for the email field.
-func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
 // Follows is the resolver for the follows field.
@@ -395,9 +401,9 @@ func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *mode
 	panic(fmt.Errorf("not implemented: Posts - posts"))
 }
 
-// TotalLikes is the resolver for the totalLikes field.
-func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int, error) {
-	panic(fmt.Errorf("not implemented: TotalLikes - totalLikes"))
+// Likes is the resolver for the likes field.
+func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Likes, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -420,3 +426,13 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int, error) {
+	panic(fmt.Errorf("not implemented: TotalLikes - totalLikes"))
+}
