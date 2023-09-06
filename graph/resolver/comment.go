@@ -30,6 +30,18 @@ func NewCommentByID(svc *services.Services, commentID format.CommentID) *Comment
 	}
 }
 
+func NewCommentWithData(svc *services.Services, data *comments.Comment) *Comment {
+	return &Comment{
+		svc:       svc,
+		commentID: data.CommentID,
+		getter: NewGetter(
+			func(ctx context.Context) (*comments.Comment, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
 func (c *Comment) ID(ctx context.Context) (string, error) {
 	return c.commentID.String(), nil
 }

@@ -64,9 +64,9 @@ func (r *mutationResolver) PostCreate(ctx context.Context, input model.PostCreat
 
 	reply, err := r.Posts.CreatePost(ctx, posts.CreatePostRequest{
 		AuthorID:    authID,
-		Visibility:  *input.Visibility,
-		Content:     *input.Content,
-		ContentType: *input.ContentType,
+		Visibility:  input.Visibility,
+		Content:     input.Content,
+		ContentType: input.ContentType,
 	})
 	if err != nil {
 		return nil, err

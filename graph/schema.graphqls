@@ -189,9 +189,9 @@ input UserUpdateInput {
 }
 
 input PostCreateInput {
-  visibility: Visibility
-  content: String
-  contentType: ContentType
+  visibility: Visibility!
+  content: String!
+  contentType: ContentType!
 }
 
 input PostUpdateInput {
@@ -201,8 +201,8 @@ input PostUpdateInput {
 }
 
 input CommentCreateInput {
-  content: String
-  contentType: ContentType
+  content: String!
+  contentType: ContentType!
 }
 
 input CommentUpdateInput {
