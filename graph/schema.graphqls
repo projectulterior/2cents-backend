@@ -119,8 +119,8 @@ type Likes {
 type Comment {
   id: ID!
   post: Post
-  content: String!
-  commenter: User
+  content: String
+  author: User
   createdAt: Time
 }
 

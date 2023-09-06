@@ -72,7 +72,7 @@ type ComplexityRoot struct {
 	}
 
 	Comment struct {
-		Commenter func(childComplexity int) int
+		Author    func(childComplexity int) int
 		Content   func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -315,12 +315,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Channel.Messages(childComplexity, args["page"].(model.Pagination)), true
 
-	case "Comment.commenter":
-		if e.complexity.Comment.Commenter == nil {
+	case "Comment.author":
+		if e.complexity.Comment.Author == nil {
 			break
 		}
 
-		return e.complexity.Comment.Commenter(childComplexity), true
+		return e.complexity.Comment.Author(childComplexity), true
 
 	case "Comment.content":
 		if e.complexity.Comment.Content == nil {
@@ -2057,14 +2057,11 @@ func (ec *executionContext) _Comment_content(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2080,8 +2077,8 @@ func (ec *executionContext) fieldContext_Comment_content(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Comment_commenter(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comment_commenter(ctx, field)
+func (ec *executionContext) _Comment_author(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Comment_author(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2094,7 +2091,7 @@ func (ec *executionContext) _Comment_commenter(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Commenter, nil
+		return obj.Author, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2108,7 +2105,7 @@ func (ec *executionContext) _Comment_commenter(ctx context.Context, field graphq
 	return ec.marshalOUser2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Comment_commenter(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Comment_author(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Comment",
 		Field:      field,
@@ -2229,8 +2226,8 @@ func (ec *executionContext) fieldContext_Comments_comments(ctx context.Context, 
 				return ec.fieldContext_Comment_post(ctx, field)
 			case "content":
 				return ec.fieldContext_Comment_content(ctx, field)
-			case "commenter":
-				return ec.fieldContext_Comment_commenter(ctx, field)
+			case "author":
+				return ec.fieldContext_Comment_author(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Comment_createdAt(ctx, field)
 			}
@@ -3588,8 +3585,8 @@ func (ec *executionContext) fieldContext_Mutation_commentCreate(ctx context.Cont
 				return ec.fieldContext_Comment_post(ctx, field)
 			case "content":
 				return ec.fieldContext_Comment_content(ctx, field)
-			case "commenter":
-				return ec.fieldContext_Comment_commenter(ctx, field)
+			case "author":
+				return ec.fieldContext_Comment_author(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Comment_createdAt(ctx, field)
 			}
@@ -3655,8 +3652,8 @@ func (ec *executionContext) fieldContext_Mutation_commentUpdate(ctx context.Cont
 				return ec.fieldContext_Comment_post(ctx, field)
 			case "content":
 				return ec.fieldContext_Comment_content(ctx, field)
-			case "commenter":
-				return ec.fieldContext_Comment_commenter(ctx, field)
+			case "author":
+				return ec.fieldContext_Comment_author(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Comment_createdAt(ctx, field)
 			}
@@ -3722,8 +3719,8 @@ func (ec *executionContext) fieldContext_Mutation_commentDelete(ctx context.Cont
 				return ec.fieldContext_Comment_post(ctx, field)
 			case "content":
 				return ec.fieldContext_Comment_content(ctx, field)
-			case "commenter":
-				return ec.fieldContext_Comment_commenter(ctx, field)
+			case "author":
+				return ec.fieldContext_Comment_author(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Comment_createdAt(ctx, field)
 			}
@@ -4735,8 +4732,8 @@ func (ec *executionContext) fieldContext_Query_comment(ctx context.Context, fiel
 				return ec.fieldContext_Comment_post(ctx, field)
 			case "content":
 				return ec.fieldContext_Comment_content(ctx, field)
-			case "commenter":
-				return ec.fieldContext_Comment_commenter(ctx, field)
+			case "author":
+				return ec.fieldContext_Comment_author(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Comment_createdAt(ctx, field)
 			}
@@ -8000,11 +7997,8 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Comment_post(ctx, field, obj)
 		case "content":
 			out.Values[i] = ec._Comment_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "commenter":
-			out.Values[i] = ec._Comment_commenter(ctx, field, obj)
+		case "author":
+			out.Values[i] = ec._Comment_author(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Comment_createdAt(ctx, field, obj)
 		default:

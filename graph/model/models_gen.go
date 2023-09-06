@@ -25,8 +25,8 @@ type Channel struct {
 type Comment struct {
 	ID        string         `json:"id"`
 	Post      *resolver.Post `json:"post,omitempty"`
-	Content   string         `json:"content"`
-	Commenter *resolver.User `json:"commenter,omitempty"`
+	Content   *string        `json:"content,omitempty"`
+	Author    *resolver.User `json:"author,omitempty"`
 	CreatedAt *time.Time     `json:"createdAt,omitempty"`
 }
 

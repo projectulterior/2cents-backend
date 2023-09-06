@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -40,4 +41,31 @@ func (c *Comment) Post(ctx context.Context) (*Post, error) {
 	}
 
 	return NewPostByID(c.svc, reply.PostID), nil
+}
+
+func (c *Comment) Content(ctx context.Context) (*string, error) {
+	reply, err := c.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &reply.Content, nil
+}
+
+func (c *Comment) Author(ctx context.Context) (*User, error) {
+	reply, err := c.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewUserByID(c.svc, reply.AuthorID), nil
+}
+
+func (c *Comment) CreatedAt(ctx context.Context) (*time.Time, error) {
+	reply, err := c.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &reply.CreatedAt, nil
 }
