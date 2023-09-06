@@ -38,16 +38,9 @@ type Comments struct {
 	Next     string              `json:"next"`
 }
 
-type Follow struct {
-	ID        string         `json:"id"`
-	Follower  *resolver.User `json:"follower,omitempty"`
-	Followee  *resolver.User `json:"followee,omitempty"`
-	CreatedAt *time.Time     `json:"createdAt,omitempty"`
-}
-
 type Follows struct {
-	Follows []*Follow `json:"follows"`
-	Next    *string   `json:"next,omitempty"`
+	Follows []*resolver.Follow `json:"follows"`
+	Next    *string            `json:"next,omitempty"`
 }
 
 type Likes struct {

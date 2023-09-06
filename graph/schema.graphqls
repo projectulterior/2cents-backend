@@ -18,7 +18,7 @@ type Query {
 
   like(id:ID!): Like!
   likes(page:Pagination!): Likes!
-  
+
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
 }
@@ -38,7 +38,7 @@ type Mutation {
   likeCreate(id: ID!): Like!
   likeDelete(id: ID!): Like!
 
-  userFollow(id: ID!): User
+  userFollow(id: ID!, isFollow: Boolean!): Follow!
 }
 
 type Subscription {

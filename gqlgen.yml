@@ -98,3 +98,6 @@ models:
   Comment:
       model:
         - github.com/projectulterior/2cents-backend/graph/resolver.Comment
+  Follow:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Follow
