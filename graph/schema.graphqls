@@ -55,6 +55,7 @@ type User {
   bio: String
 
   profile: String
+  cover: String
 
   cents: Cents
 
@@ -185,7 +186,9 @@ input UserUpdateInput {
   email: String
   bio: String
   birthday: BirthdayInput
+  
   profile: String
+  cover: String
 }
 
 input PostCreateInput {

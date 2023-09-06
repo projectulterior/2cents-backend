@@ -88,6 +88,7 @@ type UserUpdateInput struct {
 	Bio      *string          `json:"bio,omitempty"`
 	Birthday *format.Birthday `json:"birthday,omitempty"`
 	Profile  *string          `json:"profile,omitempty"`
+	Cover    *string          `json:"cover,omitempty"`
 }
 
 type Users struct {

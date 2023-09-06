@@ -172,6 +172,7 @@ type ComplexityRoot struct {
 		Bio      func(childComplexity int) int
 		Birthday func(childComplexity int) int
 		Cents    func(childComplexity int) int
+		Cover    func(childComplexity int) int
 		Email    func(childComplexity int) int
 		Follows  func(childComplexity int, page *model.Pagination) int
 		ID       func(childComplexity int) int
@@ -221,12 +222,9 @@ type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
 }
 type UserResolver interface {
-	Username(ctx context.Context, obj *resolver.User) (*string, error)
-
 	Email(ctx context.Context, obj *resolver.User) (*string, error)
 	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
 
-	Profile(ctx context.Context, obj *resolver.User) (*string, error)
 	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
 	Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error)
 	Posts(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Posts, error)
@@ -864,6 +862,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Cents(childComplexity), true
+
+	case "User.cover":
+		if e.complexity.User.Cover == nil {
+			break
+		}
+
+		return e.complexity.User.Cover(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -1985,6 +1990,8 @@ func (ec *executionContext) fieldContext_Channel_members(ctx context.Context, fi
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -2254,6 +2261,8 @@ func (ec *executionContext) fieldContext_Comment_author(ctx context.Context, fie
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -2504,6 +2513,8 @@ func (ec *executionContext) fieldContext_Follow_follower(ctx context.Context, fi
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -2569,6 +2580,8 @@ func (ec *executionContext) fieldContext_Follow_followee(ctx context.Context, fi
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -2875,6 +2888,8 @@ func (ec *executionContext) fieldContext_Like_liker(ctx context.Context, field g
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -3202,6 +3217,8 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -3362,6 +3379,8 @@ func (ec *executionContext) fieldContext_Mutation_userUpdate(ctx context.Context
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -3441,6 +3460,8 @@ func (ec *executionContext) fieldContext_Mutation_userDelete(ctx context.Context
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -4376,6 +4397,8 @@ func (ec *executionContext) fieldContext_Post_author(ctx context.Context, field 
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -4668,6 +4691,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -5467,6 +5492,8 @@ func (ec *executionContext) fieldContext_Subscription_onUserUpdated(ctx context.
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -5551,7 +5578,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Username(rctx, obj)
+		return obj.Username(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5570,7 +5597,7 @@ func (ec *executionContext) fieldContext_User_username(ctx context.Context, fiel
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -5764,7 +5791,7 @@ func (ec *executionContext) _User_profile(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Profile(rctx, obj)
+		return obj.Profile(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5783,7 +5810,48 @@ func (ec *executionContext) fieldContext_User_profile(ctx context.Context, field
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_cover(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_cover(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cover(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_cover(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -6069,6 +6137,8 @@ func (ec *executionContext) fieldContext_Users_users(ctx context.Context, field 
 				return ec.fieldContext_User_bio(ctx, field)
 			case "profile":
 				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
 			case "cents":
 				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
@@ -8172,7 +8242,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email", "bio", "birthday", "profile"}
+	fieldsInOrder := [...]string{"name", "email", "bio", "birthday", "profile", "cover"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8224,6 +8294,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.Profile = data
+		case "cover":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cover"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Cover = data
 		}
 	}
 
@@ -10142,6 +10221,39 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_profile(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "cover":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_cover(ctx, field, obj)
 				return res
 			}
 

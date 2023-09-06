@@ -18,6 +18,7 @@ type User struct {
 	Bio    string        `bson:"bio"`
 
 	Profile string `bson:"profile"`
+	Cover   string `bson:"cover"`
 
 	Birthday  format.Birthday `bson:"birthday"`
 	CreatedAt time.Time       `bson:"created_at"`

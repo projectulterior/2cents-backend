@@ -10,6 +10,8 @@ services:
             - PORT=8080
             - SECRET=testing-test-token
             - MONGO=mongodb://mongodb:27017/?replicaSet=rs0&tlsInsecure=true
+            - AUTH_TOKEN_TTL=10s
+            - REFRESH_TOKEN_TTL=1h
         depends_on:
             - mongo-init
             - mongodb

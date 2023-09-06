@@ -366,11 +366,6 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
 }
 
-// Username is the resolver for the username field.
-func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Username - username"))
-}
-
 // Email is the resolver for the email field.
 func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
 	panic(fmt.Errorf("not implemented: Email - email"))
@@ -379,11 +374,6 @@ func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, 
 // Birthday is the resolver for the birthday field.
 func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error) {
 	panic(fmt.Errorf("not implemented: Birthday - birthday"))
-}
-
-// Profile is the resolver for the profile field.
-func (r *userResolver) Profile(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Profile - profile"))
 }
 
 // Cents is the resolver for the cents field.
@@ -426,13 +416,3 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int, error) {
-	panic(fmt.Errorf("not implemented: TotalLikes - totalLikes"))
-}

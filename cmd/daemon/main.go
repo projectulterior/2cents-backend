@@ -34,7 +34,7 @@ type Config struct {
 	Host            string        `envconfig:"HOST" default:"http://localhost:8080"`
 	Port            int           `envconfig:"PORT" default:"8080"`
 	Secret          string        `envconfig:"SECRET" default:"secret"`
-	AuthTokenTTL    time.Duration `envconfig:"AUTH_TOKEN_TTL" default:"10m"`
+	AuthTokenTTL    time.Duration `envconfig:"AUTH_TOKEN_TTL" default:"10s"`
 	RefreshTokenTTL time.Duration `envconfig:"REFRESH_TOKEN_TTL" default:"1h"`
 	Mongo           string        `evnconfig:"MONGO"`
 }
