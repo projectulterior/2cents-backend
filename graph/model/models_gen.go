@@ -57,16 +57,9 @@ type Follows struct {
 	Next    *string   `json:"next,omitempty"`
 }
 
-type Like struct {
-	ID        string         `json:"id"`
-	Post      *resolver.Post `json:"post,omitempty"`
-	Liker     *resolver.User `json:"liker,omitempty"`
-	CreatedAt *time.Time     `json:"createdAt,omitempty"`
-}
-
 type Likes struct {
-	Likes []*Like `json:"likes"`
-	Next  string  `json:"next"`
+	Likes []*resolver.Like `json:"likes"`
+	Next  string           `json:"next"`
 }
 
 type Message struct {

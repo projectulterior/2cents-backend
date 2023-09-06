@@ -12,6 +12,7 @@ import (
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 )
@@ -132,8 +133,31 @@ func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*model
 }
 
 // LikeCreate is the resolver for the likeCreate field.
-func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*model.Like, error) {
-	panic(fmt.Errorf("not implemented: LikeCreate - likeCreate"))
+func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*resolver.Like, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	postID, err := format.ParsePostID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	reply, err := r.Likes.CreateLike(ctx, likes.CreateLikeRequest{
+		PostID:  postID,
+		LikerID: authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewLikeWithData(r.Services, reply), nil
+}
+
+// LikeDelete is the resolver for the likeDelete field.
+func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver.Like, error) {
+	panic(fmt.Errorf("not implemented: LikeDelete - likeDelete"))
 }
 
 // UserFollow is the resolver for the userFollow field.
@@ -205,6 +229,26 @@ func (r *queryResolver) Comment(ctx context.Context, id string) (*model.Comment,
 // Comments is the resolver for the comments field.
 func (r *queryResolver) Comments(ctx context.Context, page model.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
+}
+
+// Like is the resolver for the like field.
+func (r *queryResolver) Like(ctx context.Context, id string) (*resolver.Like, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	likeID, err := format.ParseLikeID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewLikeByID(r.Services, likeID), nil
+}
+
+// Likes is the resolver for the likes field.
+func (r *queryResolver) Likes(ctx context.Context, page model.Pagination) (*model.Likes, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // Channel is the resolver for the channel field.
