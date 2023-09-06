@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	COMMENT_COLLECTION = "comments"
+	COMMENTS_COLLECTION = "comments"
 )
 
 type Comment struct {

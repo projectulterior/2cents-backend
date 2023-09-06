@@ -95,3 +95,6 @@ models:
   Like:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Like
+  Comment:
+      model:
+        - github.com/projectulterior/2cents-backend/graph/resolver.Comment

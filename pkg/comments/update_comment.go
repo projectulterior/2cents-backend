@@ -22,7 +22,7 @@ type UpdateCommentResponse = Comment
 func (s *Service) UpdateComment(ctx context.Context, req UpdateCommentRequest) (*UpdateCommentResponse, error) {
 	var comment Comment
 
-	err := s.Collection(COMMENT_COLLECTION).
+	err := s.Collection(COMMENTS_COLLECTION).
 		FindOneAndUpdate(ctx,
 			bson.M{
 				"_id":       req.CommentID.String(),

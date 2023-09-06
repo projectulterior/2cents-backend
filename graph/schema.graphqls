@@ -201,6 +201,7 @@ input PostUpdateInput {
 }
 
 input CommentCreateInput {
+  postID: ID!
   content: String!
   contentType: ContentType!
 }

@@ -19,7 +19,7 @@ type GetCommentResponse = Comment
 func (s *Service) GetComment(ctx context.Context, req GetCommentRequest) (*GetCommentResponse, error) {
 	var comment Comment
 
-	err := s.Collection(COMMENT_COLLECTION).
+	err := s.Collection(COMMENTS_COLLECTION).
 		FindOne(ctx, bson.M{"_id": req.CommentID.String()}).
 		Decode(&comment)
 	if err != nil {

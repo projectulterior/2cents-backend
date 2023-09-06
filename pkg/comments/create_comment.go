@@ -29,7 +29,7 @@ func (s *Service) CreateComment(ctx context.Context, req CreateCommentRequest) (
 		UpdatedAt: now,
 	}
 
-	_, err := s.Collection(COMMENT_COLLECTION).
+	_, err := s.Collection(COMMENTS_COLLECTION).
 		InsertOne(ctx, comment)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -22,15 +22,8 @@ type Channel struct {
 	Messages *Messages        `json:"messages,omitempty"`
 }
 
-type Comment struct {
-	ID        string         `json:"id"`
-	Post      *resolver.Post `json:"post,omitempty"`
-	Content   *string        `json:"content,omitempty"`
-	Author    *resolver.User `json:"author,omitempty"`
-	CreatedAt *time.Time     `json:"createdAt,omitempty"`
-}
-
 type CommentCreateInput struct {
+	PostID      string             `json:"postID"`
 	Content     string             `json:"content"`
 	ContentType format.ContentType `json:"contentType"`
 }
@@ -41,8 +34,8 @@ type CommentUpdateInput struct {
 }
 
 type Comments struct {
-	Comments []*Comment `json:"comments"`
-	Next     string     `json:"next"`
+	Comments []*resolver.Comment `json:"comments"`
+	Next     string              `json:"next"`
 }
 
 type Follow struct {

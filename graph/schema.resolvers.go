@@ -11,6 +11,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
@@ -103,13 +104,19 @@ func (r *mutationResolver) PostUpdate(ctx context.Context, id string, input mode
 
 // PostDelete is the resolver for the postDelete field.
 func (r *mutationResolver) PostDelete(ctx context.Context, id string) (*resolver.Post, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
 	postID, err := format.ParsePostID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = r.Posts.DeletePost(ctx, posts.DeletePostRequest{
-		PostID: postID,
+		PostID:   postID,
+		AuthorID: authID,
 	})
 	if err != nil {
 		return nil, err
@@ -118,18 +125,56 @@ func (r *mutationResolver) PostDelete(ctx context.Context, id string) (*resolver
 }
 
 // CommentCreate is the resolver for the commentCreate field.
-func (r *mutationResolver) CommentCreate(ctx context.Context, input model.CommentCreateInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentCreate - commentCreate"))
+func (r *mutationResolver) CommentCreate(ctx context.Context, input model.CommentCreateInput) (*resolver.Comment, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	postID, err := format.ParsePostID(input.PostID)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	reply, err := r.Comments.CreateComment(ctx, comments.CreateCommentRequest{
+		AuthorID: authID,
+		PostID:   postID,
+		Content:  input.Content,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentWithData(r.Services, reply), nil
 }
 
 // CommentUpdate is the resolver for the commentUpdate field.
-func (r *mutationResolver) CommentUpdate(ctx context.Context, id string, input model.CommentUpdateInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentUpdate - commentUpdate"))
+func (r *mutationResolver) CommentUpdate(ctx context.Context, id string, input model.CommentUpdateInput) (*resolver.Comment, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	comment, err := r.Comments.UpdateComment(ctx, comments.UpdateCommentRequest{
+		CommentID: commentID,
+		AuthorID:  authID,
+		Content:   *input.Content,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentWithData(r.Services, comment), nil
 }
 
 // CommentDelete is the resolver for the commentDelete field.
-func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentDelete - commentDelete"))
+func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*resolver.Comment, error) {
+	return nil, nil
 }
 
 // LikeCreate is the resolver for the likeCreate field.
@@ -234,8 +279,18 @@ func (r *queryResolver) Posts(ctx context.Context, page model.Pagination) (*mode
 }
 
 // Comment is the resolver for the comment field.
-func (r *queryResolver) Comment(ctx context.Context, id string) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: Comment - comment"))
+func (r *queryResolver) Comment(ctx context.Context, id string) (*resolver.Comment, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewCommentByID(r.Services, commentID), nil
 }
 
 // Comments is the resolver for the comments field.

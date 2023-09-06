@@ -10,7 +10,8 @@ import (
 )
 
 type DeletePostRequest struct {
-	PostID format.PostID
+	PostID   format.PostID
+	AuthorID format.UserID
 }
 
 type DeletePostResponse struct {
@@ -19,7 +20,10 @@ type DeletePostResponse struct {
 
 func (s *Service) DeletePost(ctx context.Context, req DeletePostRequest) (*DeletePostResponse, error) {
 	_, err := s.Collection(POSTS_COLLECTION).
-		DeleteOne(ctx, bson.M{"_id": req.PostID.String()})
+		DeleteOne(ctx, bson.M{
+			"_id":       req.PostID.String(),
+			"author_id": req.AuthorID.String(),
+		})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
