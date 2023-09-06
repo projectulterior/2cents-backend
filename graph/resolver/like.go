@@ -30,6 +30,18 @@ func NewLikeByID(svc *services.Services, likeID format.LikeID) *Like {
 	}
 }
 
+func NewLikeWithData(svc *services.Services, data *likes.Like) *Like {
+	return &Like{
+		svc:    svc,
+		likeID: data.LikeID,
+		getter: NewGetter(
+			func(ctx context.Context) (*likes.Like, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
 func (l *Like) ID(ctx context.Context) (string, error) {
 	return l.likeID.String(), nil
 }
