@@ -7858,7 +7858,7 @@ func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7867,7 +7867,7 @@ func (ec *executionContext) unmarshalInputCommentCreateInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
-			data, err := ec.unmarshalOContentType2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx, v)
+			data, err := ec.unmarshalNContentType2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7972,7 +7972,7 @@ func (ec *executionContext) unmarshalInputPostCreateInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
-			data, err := ec.unmarshalOVisibility2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐVisibility(ctx, v)
+			data, err := ec.unmarshalNVisibility2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐVisibility(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7981,7 +7981,7 @@ func (ec *executionContext) unmarshalInputPostCreateInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7990,7 +7990,7 @@ func (ec *executionContext) unmarshalInputPostCreateInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
-			data, err := ec.unmarshalOContentType2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx, v)
+			data, err := ec.unmarshalNContentType2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10490,6 +10490,22 @@ func (ec *executionContext) marshalNComments2ᚖgithubᚗcomᚋprojectulterior�
 	return ec._Comments(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNContentType2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx context.Context, v interface{}) (format.ContentType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := format.ContentType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNContentType2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx context.Context, sel ast.SelectionSet, v format.ContentType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNFollow2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx context.Context, sel ast.SelectionSet, v resolver.Follow) graphql.Marshaler {
 	return ec._Follow(ctx, sel, &v)
 }
@@ -10869,6 +10885,22 @@ func (ec *executionContext) marshalNUsers2ᚖgithubᚗcomᚋprojectulteriorᚋ2c
 		return graphql.Null
 	}
 	return ec._Users(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNVisibility2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐVisibility(ctx context.Context, v interface{}) (format.Visibility, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := format.Visibility(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNVisibility2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐVisibility(ctx context.Context, sel ast.SelectionSet, v format.Visibility) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
