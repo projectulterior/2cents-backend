@@ -134,14 +134,14 @@ func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*model
 
 // LikeCreate is the resolver for the likeCreate field.
 func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*resolver.Like, error) {
-	authID, err := authUserID(ctx)
-	if err != nil {
-		return nil, e(ctx, http.StatusForbidden, err.Error())
-	}
-
 	postID, err := format.ParsePostID(id)
 	if err != nil {
 		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
 	}
 
 	reply, err := r.Likes.CreateLike(ctx, likes.CreateLikeRequest{
@@ -157,7 +157,19 @@ func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*resolver
 
 // LikeDelete is the resolver for the likeDelete field.
 func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver.Like, error) {
-	panic(fmt.Errorf("not implemented: LikeDelete - likeDelete"))
+	likeID, err := format.ParseLikeID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Likes.DeleteLike(ctx, likes.DeleteLikeRequest{
+		LikeID: likeID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewLikeByID(r.Services, likeID), nil
 }
 
 // UserFollow is the resolver for the userFollow field.
