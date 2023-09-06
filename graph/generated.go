@@ -130,7 +130,7 @@ type ComplexityRoot struct {
 		PostDelete    func(childComplexity int, id string) int
 		PostUpdate    func(childComplexity int, id string, input model.PostUpdateInput) int
 		UserDelete    func(childComplexity int) int
-		UserFollow    func(childComplexity int, id string) int
+		UserFollow    func(childComplexity int, id string, isFollow bool) int
 		UserUpdate    func(childComplexity int, input model.UserUpdateInput) int
 	}
 
@@ -198,7 +198,7 @@ type MutationResolver interface {
 	CommentDelete(ctx context.Context, id string) (*model.Comment, error)
 	LikeCreate(ctx context.Context, id string) (*resolver.Like, error)
 	LikeDelete(ctx context.Context, id string) (*resolver.Like, error)
-	UserFollow(ctx context.Context, id string) (*resolver.User, error)
+	UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error)
 }
 type PostResolver interface {
 	Likes(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Likes, error)
@@ -609,7 +609,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UserFollow(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.UserFollow(childComplexity, args["id"].(string), args["isFollow"].(bool)), true
 
 	case "Mutation.userUpdate":
 		if e.complexity.Mutation.UserUpdate == nil {
@@ -1249,6 +1249,15 @@ func (ec *executionContext) field_Mutation_userFollow_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	var arg1 bool
+	if tmp, ok := rawArgs["isFollow"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isFollow"))
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["isFollow"] = arg1
 	return args, nil
 }
 
@@ -2368,7 +2377,7 @@ func (ec *executionContext) fieldContext_Comments_next(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Follow_id(ctx context.Context, field graphql.CollectedField, obj *model.Follow) (ret graphql.Marshaler) {
+func (ec *executionContext) _Follow_id(ctx context.Context, field graphql.CollectedField, obj *resolver.Follow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Follow_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2382,7 +2391,7 @@ func (ec *executionContext) _Follow_id(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.ID(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2403,7 +2412,7 @@ func (ec *executionContext) fieldContext_Follow_id(ctx context.Context, field gr
 	fc = &graphql.FieldContext{
 		Object:     "Follow",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
@@ -2412,7 +2421,7 @@ func (ec *executionContext) fieldContext_Follow_id(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Follow_follower(ctx context.Context, field graphql.CollectedField, obj *model.Follow) (ret graphql.Marshaler) {
+func (ec *executionContext) _Follow_follower(ctx context.Context, field graphql.CollectedField, obj *resolver.Follow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Follow_follower(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2426,7 +2435,7 @@ func (ec *executionContext) _Follow_follower(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Follower, nil
+		return obj.Follower(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2444,7 +2453,7 @@ func (ec *executionContext) fieldContext_Follow_follower(ctx context.Context, fi
 	fc = &graphql.FieldContext{
 		Object:     "Follow",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -2475,7 +2484,7 @@ func (ec *executionContext) fieldContext_Follow_follower(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Follow_followee(ctx context.Context, field graphql.CollectedField, obj *model.Follow) (ret graphql.Marshaler) {
+func (ec *executionContext) _Follow_followee(ctx context.Context, field graphql.CollectedField, obj *resolver.Follow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Follow_followee(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2489,7 +2498,7 @@ func (ec *executionContext) _Follow_followee(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Followee, nil
+		return obj.Followee(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2507,7 +2516,7 @@ func (ec *executionContext) fieldContext_Follow_followee(ctx context.Context, fi
 	fc = &graphql.FieldContext{
 		Object:     "Follow",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -2538,7 +2547,7 @@ func (ec *executionContext) fieldContext_Follow_followee(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Follow_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Follow) (ret graphql.Marshaler) {
+func (ec *executionContext) _Follow_createdAt(ctx context.Context, field graphql.CollectedField, obj *resolver.Follow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Follow_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2552,7 +2561,7 @@ func (ec *executionContext) _Follow_createdAt(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
+		return obj.CreatedAt(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2570,7 +2579,7 @@ func (ec *executionContext) fieldContext_Follow_createdAt(ctx context.Context, f
 	fc = &graphql.FieldContext{
 		Object:     "Follow",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
@@ -2605,9 +2614,9 @@ func (ec *executionContext) _Follows_follows(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Follow)
+	res := resTmp.([]*resolver.Follow)
 	fc.Result = res
-	return ec.marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐFollowᚄ(ctx, field.Selections, res)
+	return ec.marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollowᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Follows_follows(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3972,18 +3981,21 @@ func (ec *executionContext) _Mutation_userFollow(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UserFollow(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().UserFollow(rctx, fc.Args["id"].(string), fc.Args["isFollow"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*resolver.User)
+	res := resTmp.(*resolver.Follow)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐUser(ctx, field.Selections, res)
+	return ec.marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_userFollow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3995,27 +4007,15 @@ func (ec *executionContext) fieldContext_Mutation_userFollow(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "bio":
-				return ec.fieldContext_User_bio(ctx, field)
-			case "follows":
-				return ec.fieldContext_User_follows(ctx, field)
-			case "posts":
-				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+				return ec.fieldContext_Follow_id(ctx, field)
+			case "follower":
+				return ec.fieldContext_Follow_follower(ctx, field)
+			case "followee":
+				return ec.fieldContext_Follow_followee(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Follow_createdAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Follow", field.Name)
 		},
 	}
 	defer func() {
@@ -8351,7 +8351,7 @@ func (ec *executionContext) _Comments(ctx context.Context, sel ast.SelectionSet,
 
 var followImplementors = []string{"Follow"}
 
-func (ec *executionContext) _Follow(ctx context.Context, sel ast.SelectionSet, obj *model.Follow) graphql.Marshaler {
+func (ec *executionContext) _Follow(ctx context.Context, sel ast.SelectionSet, obj *resolver.Follow) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, followImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -8361,16 +8361,140 @@ func (ec *executionContext) _Follow(ctx context.Context, sel ast.SelectionSet, o
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Follow")
 		case "id":
-			out.Values[i] = ec._Follow_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Follow_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "follower":
-			out.Values[i] = ec._Follow_follower(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Follow_follower(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "followee":
-			out.Values[i] = ec._Follow_followee(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Follow_followee(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "createdAt":
-			out.Values[i] = ec._Follow_createdAt(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Follow_createdAt(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8821,6 +8945,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_userFollow(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10363,7 +10490,11 @@ func (ec *executionContext) marshalNComments2ᚖgithubᚗcomᚋprojectulterior�
 	return ec._Comments(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐFollowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Follow) graphql.Marshaler {
+func (ec *executionContext) marshalNFollow2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx context.Context, sel ast.SelectionSet, v resolver.Follow) graphql.Marshaler {
+	return ec._Follow(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollowᚄ(ctx context.Context, sel ast.SelectionSet, v []*resolver.Follow) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10387,7 +10518,7 @@ func (ec *executionContext) marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulterior�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐFollow(ctx, sel, v[i])
+			ret[i] = ec.marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10407,7 +10538,7 @@ func (ec *executionContext) marshalNFollow2ᚕᚖgithubᚗcomᚋprojectulterior�
 	return ret
 }
 
-func (ec *executionContext) marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐFollow(ctx context.Context, sel ast.SelectionSet, v *model.Follow) graphql.Marshaler {
+func (ec *executionContext) marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx context.Context, sel ast.SelectionSet, v *resolver.Follow) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

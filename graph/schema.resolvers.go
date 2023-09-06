@@ -11,6 +11,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
@@ -173,8 +174,39 @@ func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver
 }
 
 // UserFollow is the resolver for the userFollow field.
-func (r *mutationResolver) UserFollow(ctx context.Context, id string) (*resolver.User, error) {
-	panic(fmt.Errorf("not implemented: UserFollow - userFollow"))
+func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error) {
+	followerID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	followeeID, err := format.ParseUserID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if isFollow {
+		reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
+			FollowerID: followerID,
+			FolloweeID: followeeID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewFollowWithData(r.Services, reply), nil
+	}
+
+	followID := format.NewFollowID(followerID, followeeID)
+
+	_, err = r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
+		FollowID: followID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewFollowByID(r.Services, followID), nil
 }
 
 // Likes is the resolver for the likes field.
