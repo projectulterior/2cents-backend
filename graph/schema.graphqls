@@ -36,14 +36,15 @@ type Mutation {
   postDelete(id: ID!): Post!
 
   commentCreate(input: CommentCreateInput!): Comment!
-  commentUpdate(id:ID!, input: CommentUpdateInput!): Comment!
+  commentUpdate(id: ID!, input: CommentUpdateInput!): Comment!
   commentDelete(id: ID!): Comment!
 
   likeCreate(id: ID!): Like!
   likeDelete(id: ID!): Like!
 
   messageCreate(input: MessageCreateInput!): Message!
-  messageDelete(id: ID!): Comment!
+  messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
+  messageDelete(id: ID!): Message!
 }
 
 type Subscription {
@@ -223,6 +224,13 @@ input CommentUpdateInput {
 
 input MessageCreateInput {
   channelID: ID!
+  senderID: ID!
+  content: String
+  contentType: ContentType
+}
+
+input MessageUpdateInput {
+  messageID: ID!
   senderID: ID!
   content: String
   contentType: ContentType

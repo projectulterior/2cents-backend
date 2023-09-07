@@ -314,9 +314,52 @@ func (r *mutationResolver) MessageCreate(ctx context.Context, input model.Messag
 	return resolver.NewMessageByID(r.Services, reply.MessageID), nil
 }
 
+// MessageUpdate is the resolver for the messageUpdate field.
+func (r *mutationResolver) MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	senderID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := r.Messaging.UpdateMessage(ctx, messaging.UpdateMessageRequest{
+		MessageID:   messageID,
+		SenderID:    senderID,
+		Content:     input.Content,
+		ContentType: input.ContentType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageWithData(r.Services, message), nil
+}
+
 // MessageDelete is the resolver for the messageDelete field.
-func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resolver.Comment, error) {
-	panic(fmt.Errorf("not implemented: MessageDelete - messageDelete"))
+func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Messaging.DeleteMessage(ctx, messaging.DeleteMessageRequest{
+		MessageID: messageID,
+		SenderID:  authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
 // Likes is the resolver for the likes field.

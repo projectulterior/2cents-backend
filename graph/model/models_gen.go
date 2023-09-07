@@ -47,6 +47,13 @@ type MessageCreateInput struct {
 	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
+type MessageUpdateInput struct {
+	MessageID   string              `json:"messageID"`
+	SenderID    string              `json:"senderID"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
+}
+
 type Messages struct {
 	Messages []*resolver.Message `json:"messages,omitempty"`
 	Next     *string             `json:"next,omitempty"`
