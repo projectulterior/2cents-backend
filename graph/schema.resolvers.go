@@ -175,7 +175,25 @@ func (r *mutationResolver) CommentUpdate(ctx context.Context, id string, input m
 
 // CommentDelete is the resolver for the commentDelete field.
 func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*resolver.Comment, error) {
-	return nil, nil
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Comments.DeleteComment(ctx, comments.DeleteCommentRequest{
+		CommentID: commentID,
+		DeleterID: authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentByID(r.Services, commentID), nil
 }
 
 // LikeCreate is the resolver for the likeCreate field.

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
@@ -49,7 +50,21 @@ func (s *Service) DeleteComment(ctx context.Context, req DeleteCommentRequest) (
 		}
 
 		// here: comment does exist, must check post for author_id
-		
+		post, err := s.GetPost(ctx, posts.GetPostRequest{
+			PostID: comment.PostID,
+		})
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if req.DeleterID == post.AuthorID {
+			err := s.Collection(COMMENTS_COLLECTION).
+				FindOneAndDelete(ctx, bson.M{"_id": req.CommentID.String()}).
+				Decode(&comment)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+		}
 	}
 
 SUCCESS:
