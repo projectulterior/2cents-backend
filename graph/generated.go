@@ -169,16 +169,18 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Bio        func(childComplexity int) int
-		Birthday   func(childComplexity int) int
-		Cents      func(childComplexity int) int
-		Email      func(childComplexity int) int
-		Follows    func(childComplexity int, page *model.Pagination) int
-		ID         func(childComplexity int) int
-		Name       func(childComplexity int) int
-		Posts      func(childComplexity int, page *model.Pagination) int
-		TotalLikes func(childComplexity int) int
-		Username   func(childComplexity int) int
+		Bio      func(childComplexity int) int
+		Birthday func(childComplexity int) int
+		Cents    func(childComplexity int) int
+		Cover    func(childComplexity int) int
+		Email    func(childComplexity int) int
+		Follows  func(childComplexity int, page *model.Pagination) int
+		ID       func(childComplexity int) int
+		Likes    func(childComplexity int, page *model.Pagination) int
+		Name     func(childComplexity int) int
+		Posts    func(childComplexity int, page *model.Pagination) int
+		Profile  func(childComplexity int) int
+		Username func(childComplexity int) int
 	}
 
 	Users struct {
@@ -220,15 +222,13 @@ type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
 }
 type UserResolver interface {
-	Username(ctx context.Context, obj *resolver.User) (*string, error)
-	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
-	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
-
 	Email(ctx context.Context, obj *resolver.User) (*string, error)
+	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
 
+	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
 	Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error)
 	Posts(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Posts, error)
-	TotalLikes(ctx context.Context, obj *resolver.User) (int, error)
+	Likes(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Likes, error)
 }
 
 type executableSchema struct {
@@ -863,6 +863,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Cents(childComplexity), true
 
+	case "User.cover":
+		if e.complexity.User.Cover == nil {
+			break
+		}
+
+		return e.complexity.User.Cover(childComplexity), true
+
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -889,6 +896,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.likes":
+		if e.complexity.User.Likes == nil {
+			break
+		}
+
+		args, err := ec.field_User_likes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.User.Likes(childComplexity, args["page"].(*model.Pagination)), true
+
 	case "User.name":
 		if e.complexity.User.Name == nil {
 			break
@@ -908,12 +927,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Posts(childComplexity, args["page"].(*model.Pagination)), true
 
-	case "User.totalLikes":
-		if e.complexity.User.TotalLikes == nil {
+	case "User.profile":
+		if e.complexity.User.Profile == nil {
 			break
 		}
 
-		return e.complexity.User.TotalLikes(childComplexity), true
+		return e.complexity.User.Profile(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -1501,6 +1520,21 @@ func (ec *executionContext) field_User_follows_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_User_likes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_User_posts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1946,22 +1980,26 @@ func (ec *executionContext) fieldContext_Channel_members(ctx context.Context, fi
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2213,22 +2251,26 @@ func (ec *executionContext) fieldContext_Comment_author(ctx context.Context, fie
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2461,22 +2503,26 @@ func (ec *executionContext) fieldContext_Follow_follower(ctx context.Context, fi
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2524,22 +2570,26 @@ func (ec *executionContext) fieldContext_Follow_followee(ctx context.Context, fi
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2828,22 +2878,26 @@ func (ec *executionContext) fieldContext_Like_liker(ctx context.Context, field g
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3153,22 +3207,26 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3311,22 +3369,26 @@ func (ec *executionContext) fieldContext_Mutation_userUpdate(ctx context.Context
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3388,22 +3450,26 @@ func (ec *executionContext) fieldContext_Mutation_userDelete(ctx context.Context
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -4321,22 +4387,26 @@ func (ec *executionContext) fieldContext_Post_author(ctx context.Context, field 
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -4611,22 +4681,26 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5408,22 +5482,26 @@ func (ec *executionContext) fieldContext_Subscription_onUserUpdated(ctx context.
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5500,7 +5578,7 @@ func (ec *executionContext) _User_username(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Username(rctx, obj)
+		return obj.Username(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5519,109 +5597,9 @@ func (ec *executionContext) fieldContext_User_username(ctx context.Context, fiel
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_birthday(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_birthday(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Birthday(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*format.Birthday)
-	fc.Result = res
-	return ec.marshalOBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_birthday(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "month":
-				return ec.fieldContext_Birthday_month(ctx, field)
-			case "day":
-				return ec.fieldContext_Birthday_day(ctx, field)
-			case "year":
-				return ec.fieldContext_Birthday_year(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Birthday", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_cents(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_cents(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Cents(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Cents)
-	fc.Result = res
-	return ec.marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_cents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "total":
-				return ec.fieldContext_Cents_total(ctx, field)
-			case "deposited":
-				return ec.fieldContext_Cents_deposited(ctx, field)
-			case "earned":
-				return ec.fieldContext_Cents_earned(ctx, field)
-			case "given":
-				return ec.fieldContext_Cents_given(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Cents", field.Name)
 		},
 	}
 	return fc, nil
@@ -5709,6 +5687,55 @@ func (ec *executionContext) fieldContext_User_email(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _User_birthday(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_birthday(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Birthday(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*format.Birthday)
+	fc.Result = res
+	return ec.marshalOBirthday2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐBirthday(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_birthday(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "month":
+				return ec.fieldContext_Birthday_month(ctx, field)
+			case "day":
+				return ec.fieldContext_Birthday_day(ctx, field)
+			case "year":
+				return ec.fieldContext_Birthday_year(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Birthday", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_bio(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_bio(ctx, field)
 	if err != nil {
@@ -5745,6 +5772,139 @@ func (ec *executionContext) fieldContext_User_bio(ctx context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_profile(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_profile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Profile(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_profile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_cover(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_cover(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cover(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_cover(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_cents(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_cents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Cents(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Cents)
+	fc.Result = res
+	return ec.marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_cents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_Cents_total(ctx, field)
+			case "deposited":
+				return ec.fieldContext_Cents_deposited(ctx, field)
+			case "earned":
+				return ec.fieldContext_Cents_earned(ctx, field)
+			case "given":
+				return ec.fieldContext_Cents_given(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Cents", field.Name)
 		},
 	}
 	return fc, nil
@@ -5866,8 +6026,8 @@ func (ec *executionContext) fieldContext_User_posts(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _User_totalLikes(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_totalLikes(ctx, field)
+func (ec *executionContext) _User_likes(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_likes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5880,32 +6040,46 @@ func (ec *executionContext) _User_totalLikes(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().TotalLikes(rctx, obj)
+		return ec.resolvers.User().Likes(rctx, obj, fc.Args["page"].(*model.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*model.Likes)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐLikes(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_totalLikes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_likes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			switch field.Name {
+			case "likes":
+				return ec.fieldContext_Likes_likes(ctx, field)
+			case "next":
+				return ec.fieldContext_Likes_next(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Likes", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_User_likes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -5953,22 +6127,26 @@ func (ec *executionContext) fieldContext_Users_users(ctx context.Context, field 
 				return ec.fieldContext_User_id(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
-			case "birthday":
-				return ec.fieldContext_User_birthday(ctx, field)
-			case "cents":
-				return ec.fieldContext_User_cents(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
 			case "bio":
 				return ec.fieldContext_User_bio(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "cover":
+				return ec.fieldContext_User_cover(ctx, field)
+			case "cents":
+				return ec.fieldContext_User_cents(ctx, field)
 			case "follows":
 				return ec.fieldContext_User_follows(ctx, field)
 			case "posts":
 				return ec.fieldContext_User_posts(ctx, field)
-			case "totalLikes":
-				return ec.fieldContext_User_totalLikes(ctx, field)
+			case "likes":
+				return ec.fieldContext_User_likes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -8064,7 +8242,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email", "bio", "birthday"}
+	fieldsInOrder := [...]string{"name", "email", "bio", "birthday", "profile", "cover"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8107,6 +8285,24 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.Birthday = data
+		case "profile":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profile"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Profile = data
+		case "cover":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cover"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Cover = data
 		}
 	}
 
@@ -9883,72 +10079,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "birthday":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_birthday(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "cents":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_cents(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "name":
 			field := field
 
@@ -10015,6 +10145,39 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "birthday":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_birthday(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "bio":
 			field := field
 
@@ -10025,6 +10188,105 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_bio(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "profile":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_profile(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "cover":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_cover(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "cents":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_cents(ctx, field, obj)
 				return res
 			}
 
@@ -10114,7 +10376,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "totalLikes":
+		case "likes":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -10123,10 +10385,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._User_totalLikes(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._User_likes(ctx, field, obj)
 				return res
 			}
 

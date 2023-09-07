@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -31,5 +34,18 @@ type Token struct {
 }
 
 func (s *Service) Setup(ctx context.Context) error {
+	_, err := s.Collection(USERS_COLLECTION).
+		Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "user_id", Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

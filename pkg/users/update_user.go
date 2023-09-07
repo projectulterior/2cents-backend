@@ -17,6 +17,9 @@ type UpdateUserRequest struct {
 	Email    *string
 	Bio      *string
 	Birthday *format.Birthday
+
+	Profile *string
+	Cover   *string
 }
 type UpdateUserResponse = User
 
@@ -37,6 +40,14 @@ func (s *Service) UpdateUser(ctx context.Context, req UpdateUserRequest) (*Updat
 
 	if req.Birthday != nil {
 		set["birthday"] = *req.Birthday
+	}
+
+	if req.Profile != nil {
+		set["profile"] = *req.Profile
+	}
+
+	if req.Cover != nil {
+		set["cover"] = *req.Cover
 	}
 
 	var user User

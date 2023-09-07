@@ -22,18 +22,21 @@ func TestUpdateUser(t *testing.T) {
 	name := "name"
 	bio := "bio"
 	email := "me@email.com"
+	profile := "profile"
 
 	reply, err := svc.UpdateUser(context.Background(), users.UpdateUserRequest{
-		UserID: userID,
-		Name:   &name,
-		Email:  &email,
-		Bio:    &bio,
+		UserID:  userID,
+		Name:    &name,
+		Email:   &email,
+		Bio:     &bio,
+		Profile: &profile,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
 	assert.Equal(t, name, reply.Name)
 	assert.Equal(t, email, reply.Email)
 	assert.Equal(t, bio, reply.Bio)
+	assert.Equal(t, profile, reply.Profile)
 
 	same, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
 		UserID: userID,

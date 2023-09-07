@@ -32,6 +32,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 		Email:    input.Email,
 		Bio:      input.Bio,
 		Birthday: input.Birthday,
+		Profile:  input.Profile,
 	})
 	if err != nil {
 		return nil, err
@@ -383,9 +384,9 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
 }
 
-// Username is the resolver for the username field.
-func (r *userResolver) Username(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Username - username"))
+// Email is the resolver for the email field.
+func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
+	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
 // Birthday is the resolver for the birthday field.
@@ -398,11 +399,6 @@ func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Ce
 	panic(fmt.Errorf("not implemented: Cents - cents"))
 }
 
-// Email is the resolver for the email field.
-func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
-}
-
 // Follows is the resolver for the follows field.
 func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error) {
 	panic(fmt.Errorf("not implemented: Follows - follows"))
@@ -413,9 +409,9 @@ func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *mode
 	panic(fmt.Errorf("not implemented: Posts - posts"))
 }
 
-// TotalLikes is the resolver for the totalLikes field.
-func (r *userResolver) TotalLikes(ctx context.Context, obj *resolver.User) (int, error) {
-	panic(fmt.Errorf("not implemented: TotalLikes - totalLikes"))
+// Likes is the resolver for the likes field.
+func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Likes, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // Mutation returns MutationResolver implementation.

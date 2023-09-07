@@ -49,18 +49,19 @@ type User {
   id: ID!
 
   username: String
-  birthday: Birthday
-  cents: Cents
-
-  # User Info
   name: String
   email: String
+  birthday: Birthday
   bio: String
+
+  profile: String
+  cover: String
+
+  cents: Cents
 
   follows(page: Pagination): Follows
   posts(page: Pagination): Posts
-  totalLikes: Int!
-
+  likes(page: Pagination): Likes
 }
 
 type Cents {
@@ -68,7 +69,6 @@ type Cents {
   deposited: Int!
   earned: Int!
   given: Int!
-
 }
 
 type Users {
@@ -186,6 +186,9 @@ input UserUpdateInput {
   email: String
   bio: String
   birthday: BirthdayInput
+  
+  profile: String
+  cover: String
 }
 
 input PostCreateInput {
