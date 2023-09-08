@@ -72,6 +72,7 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 		}
 	}
 
+	// call mongodb with filter
 	cusor, err := s.Collection(USERS_COLLECTION).
 		Find(ctx,
 			filter,
@@ -85,12 +86,14 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Decode all user document to accessible (array of) structs
 	var users []*User
 	err = cusor.All(ctx, &users)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// create "next" cursor, if there are more results than req.Limit
 	var next []byte
 	if len(users) > req.Limit {
 		last := users[req.Limit]
@@ -104,6 +107,7 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 		}
 	}
 
+	// calculate the last element to be returned based on req.Limit
 	end := req.Limit
 	if len(users) < req.Limit {
 		end = len(users)
