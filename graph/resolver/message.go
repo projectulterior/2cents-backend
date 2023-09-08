@@ -30,6 +30,18 @@ func NewMessageByID(svc *services.Services, messageID format.MessageID) *Message
 	}
 }
 
+func NewMessageWithData(svc *services.Services, data *messaging.Message) *Message {
+	return &Message{
+		svc:       svc,
+		messageID: data.MessageID,
+		getter: NewGetter(
+			func(ctx context.Context) (*messaging.Message, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
 func (m *Message) ID(ctx context.Context) (string, error) {
 	return m.messageID.String(), nil
 }

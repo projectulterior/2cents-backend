@@ -136,6 +136,7 @@ type ComplexityRoot struct {
 		LikeDelete    func(childComplexity int, id string) int
 		MessageCreate func(childComplexity int, input model.MessageCreateInput) int
 		MessageDelete func(childComplexity int, id string) int
+		MessageUpdate func(childComplexity int, id string, input model.MessageUpdateInput) int
 		PostCreate    func(childComplexity int, input model.PostCreateInput) int
 		PostDelete    func(childComplexity int, id string) int
 		PostUpdate    func(childComplexity int, id string, input model.PostUpdateInput) int
@@ -202,7 +203,6 @@ type ComplexityRoot struct {
 }
 
 type ChannelResolver interface {
-	ID(ctx context.Context, obj *resolver.Channel) (string, error)
 	Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error)
 	Messages(ctx context.Context, obj *resolver.Channel, page model.Pagination) (*model.Messages, error)
 	CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
@@ -224,7 +224,8 @@ type MutationResolver interface {
 	AddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error)
 	ChannelDelete(ctx context.Context, id string) (*resolver.Channel, error)
 	MessageCreate(ctx context.Context, input model.MessageCreateInput) (*resolver.Message, error)
-	MessageDelete(ctx context.Context, id string) (*resolver.Comment, error)
+	MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error)
+	MessageDelete(ctx context.Context, id string) (*resolver.Message, error)
 }
 type PostResolver interface {
 	Likes(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Likes, error)
@@ -670,6 +671,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MessageDelete(childComplexity, args["id"].(string)), true
 
+	case "Mutation.messageUpdate":
+		if e.complexity.Mutation.MessageUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_messageUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MessageUpdate(childComplexity, args["id"].(string), args["input"].(model.MessageUpdateInput)), true
+
 	case "Mutation.postCreate":
 		if e.complexity.Mutation.PostCreate == nil {
 			break
@@ -1107,6 +1120,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCommentCreateInput,
 		ec.unmarshalInputCommentUpdateInput,
 		ec.unmarshalInputMessageCreateInput,
+		ec.unmarshalInputMessageUpdateInput,
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPostCreateInput,
 		ec.unmarshalInputPostUpdateInput,
@@ -1424,6 +1438,30 @@ func (ec *executionContext) field_Mutation_messageDelete_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_messageUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.MessageUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNMessageUpdateInput2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessageUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -2165,7 +2203,7 @@ func (ec *executionContext) _Channel_id(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().ID(rctx, obj)
+		return obj.ID(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2187,7 +2225,7 @@ func (ec *executionContext) fieldContext_Channel_id(ctx context.Context, field g
 		Object:     "Channel",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
 		},
@@ -4809,6 +4847,75 @@ func (ec *executionContext) fieldContext_Mutation_messageCreate(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_messageUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_messageUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MessageUpdate(rctx, fc.Args["id"].(string), fc.Args["input"].(model.MessageUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Message)
+	fc.Result = res
+	return ec.marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_messageUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Message_id(ctx, field)
+			case "channel":
+				return ec.fieldContext_Message_channel(ctx, field)
+			case "content":
+				return ec.fieldContext_Message_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Message_contentType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Message_createdAt(ctx, field)
+			case "sender":
+				return ec.fieldContext_Message_sender(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_messageUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_messageDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_messageDelete(ctx, field)
 	if err != nil {
@@ -4835,9 +4942,9 @@ func (ec *executionContext) _Mutation_messageDelete(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*resolver.Comment)
+	res := resTmp.(*resolver.Message)
 	fc.Result = res
-	return ec.marshalNComment2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComment(ctx, field.Selections, res)
+	return ec.marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_messageDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4849,17 +4956,19 @@ func (ec *executionContext) fieldContext_Mutation_messageDelete(ctx context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Comment_id(ctx, field)
-			case "post":
-				return ec.fieldContext_Comment_post(ctx, field)
+				return ec.fieldContext_Message_id(ctx, field)
+			case "channel":
+				return ec.fieldContext_Message_channel(ctx, field)
 			case "content":
-				return ec.fieldContext_Comment_content(ctx, field)
-			case "author":
-				return ec.fieldContext_Comment_author(ctx, field)
+				return ec.fieldContext_Message_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Message_contentType(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_Comment_createdAt(ctx, field)
+				return ec.fieldContext_Message_createdAt(ctx, field)
+			case "sender":
+				return ec.fieldContext_Message_sender(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
 		},
 	}
 	defer func() {
@@ -9151,6 +9260,62 @@ func (ec *executionContext) unmarshalInputMessageCreateInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMessageUpdateInput(ctx context.Context, obj interface{}) (model.MessageUpdateInput, error) {
+	var it model.MessageUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"messageID", "senderID", "content", "contentType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "messageID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("messageID"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MessageID = data
+		case "senderID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("senderID"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SenderID = data
+		case "content":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Content = data
+		case "contentType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
+			data, err := ec.unmarshalOContentType2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋpkgᚋformatᚐContentType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContentType = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
 	var it model.Pagination
 	asMap := map[string]interface{}{}
@@ -10735,6 +10900,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "messageCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_messageCreate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "messageUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_messageUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -12629,6 +12801,11 @@ func (ec *executionContext) marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ
 
 func (ec *executionContext) unmarshalNMessageCreateInput2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessageCreateInput(ctx context.Context, v interface{}) (model.MessageCreateInput, error) {
 	res, err := ec.unmarshalInputMessageCreateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNMessageUpdateInput2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessageUpdateInput(ctx context.Context, v interface{}) (model.MessageUpdateInput, error) {
+	res, err := ec.unmarshalInputMessageUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -21,11 +21,6 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/users"
 )
 
-// ID is the resolver for the id field.
-func (r *channelResolver) ID(ctx context.Context, obj *resolver.Channel) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
-}
-
 // Members is the resolver for the members field.
 func (r *channelResolver) Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error) {
 	panic(fmt.Errorf("not implemented: Members - members"))
@@ -361,9 +356,52 @@ func (r *mutationResolver) MessageCreate(ctx context.Context, input model.Messag
 	return resolver.NewMessageByID(r.Services, reply.MessageID), nil
 }
 
+// MessageUpdate is the resolver for the messageUpdate field.
+func (r *mutationResolver) MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	senderID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := r.Messaging.UpdateMessage(ctx, messaging.UpdateMessageRequest{
+		MessageID:   messageID,
+		SenderID:    senderID,
+		Content:     input.Content,
+		ContentType: input.ContentType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageWithData(r.Services, message), nil
+}
+
 // MessageDelete is the resolver for the messageDelete field.
-func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resolver.Comment, error) {
-	panic(fmt.Errorf("not implemented: MessageDelete - messageDelete"))
+func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Messaging.DeleteMessage(ctx, messaging.DeleteMessageRequest{
+		MessageID: messageID,
+		SenderID:  authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
 // Likes is the resolver for the likes field.
@@ -551,3 +589,13 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *channelResolver) ID(ctx context.Context, obj *resolver.Channel) (string, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
