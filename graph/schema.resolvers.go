@@ -19,6 +19,8 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/users"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Members is the resolver for the members field.
@@ -323,12 +325,55 @@ func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.Channe
 
 // AddMembers is the resolver for the addMembers field.
 func (r *mutationResolver) AddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error) {
-	panic(fmt.Errorf("not implemented: AddMembers - addMembers"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	channelID, err := format.ParseChannelID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	memberIDs := []format.UserID{}
+	for _, id := range input.MemberIDs {
+		memberID, err := format.ParseUserID(id)
+		if err != nil {
+			return nil, e(ctx, http.StatusBadRequest, err.Error())
+		}
+		memberIDs = append(memberIDs, memberID)
+	}
+
+	channel, err := r.Messaging.AddMembers(ctx, messaging.AddMembersRequest{
+		ChannelID: channelID,
+		MemberID:  authID,
+		MemberIDs: memberIDs,
+	})
+	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			return nil, e(ctx, http.StatusInternalServerError, err.Error())
+		}
+		return nil, e(ctx, http.StatusNotFound, err.Error())
+	}
+
+	return resolver.NewChannelWithData(r.Services, channel), nil
 }
 
 // ChannelDelete is the resolver for the channelDelete field.
 func (r *mutationResolver) ChannelDelete(ctx context.Context, id string) (*resolver.Channel, error) {
-	panic(fmt.Errorf("not implemented: ChannelDelete - channelDelete"))
+	channelID, err := format.ParseChannelID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Messaging.DeleteChannel(ctx, messaging.DeleteChannelRequest{
+		ChannelID: channelID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewChannelByID(r.Services, channelID), nil
 }
 
 // MessageCreate is the resolver for the messageCreate field.
@@ -589,13 +634,3 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *channelResolver) ID(ctx context.Context, obj *resolver.Channel) (string, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
-}
