@@ -28,3 +28,19 @@ func NewChannelByID(svc *services.Services, channelID format.ChannelID) *Channel
 		),
 	}
 }
+
+func NewChannelWithData(svc *services.Services, data *messaging.Channel) *Channel {
+	return &Channel{
+		svc:       svc,
+		channelID: data.ChannelID,
+		getter: NewGetter(
+			func(ctx context.Context) (*messaging.Channel, error) {
+				return data, nil
+			},
+		),
+	}
+}
+
+func (c *Channel) ID(ctx context.Context) (string, error) {
+	return c.channelID.String(), nil
+}

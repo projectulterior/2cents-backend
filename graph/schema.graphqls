@@ -42,6 +42,10 @@ type Mutation {
   likeCreate(id: ID!): Like!
   likeDelete(id: ID!): Like!
 
+  channelCreate(input: ChannelCreateInput!): Channel!
+  addMembers(id: ID!, input: AddMembersInput!): Channel!
+  channelDelete(id: ID!): Channel!
+
   messageCreate(input: MessageCreateInput!): Message!
   messageDelete(id: ID!): Comment!
 }
@@ -147,6 +151,8 @@ type Channel {
   id: ID!
   members: [User!]
   messages(page: Pagination!): Messages
+  createdAt: Time
+  updatedAt: Time
 }
 
 type Message {
@@ -226,4 +232,14 @@ input MessageCreateInput {
   senderID: ID!
   content: String
   contentType: ContentType
+}
+
+input ChannelCreateInput {
+  memberIDs: [ID!]!
+}
+
+input AddMembersInput {
+  channelID: ID!
+  memberID: ID!
+  memberIDs: [ID!]!
 }

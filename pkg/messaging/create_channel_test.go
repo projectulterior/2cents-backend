@@ -23,4 +23,5 @@ func TestCreateChannel(t *testing.T) {
 	assert.NotEmpty(t, reply.ChannelID)
 	assert.NotEmpty(t, reply.MemberIDs)
 	assert.False(t, reply.CreatedAt.IsZero())
+	assert.Equal(t, reply.CreatedAt, reply.UpdatedAt)
 }

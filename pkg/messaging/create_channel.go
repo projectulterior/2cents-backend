@@ -19,6 +19,7 @@ func (s *Service) CreateChannel(ctx context.Context, req CreateChannelRequest) (
 	channel := Channel{
 		ChannelID: format.NewChannelID(),
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 		MemberIDs: req.MemberIDs,
 	}
 

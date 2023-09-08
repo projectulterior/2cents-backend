@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
@@ -33,6 +34,16 @@ func (r *channelResolver) Members(ctx context.Context, obj *resolver.Channel) ([
 // Messages is the resolver for the messages field.
 func (r *channelResolver) Messages(ctx context.Context, obj *resolver.Channel, page model.Pagination) (*model.Messages, error) {
 	panic(fmt.Errorf("not implemented: Messages - messages"))
+}
+
+// CreatedAt is the resolver for the createdAt field.
+func (r *channelResolver) CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
+}
+
+// UpdatedAt is the resolver for the updatedAt field.
+func (r *channelResolver) UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
 }
 
 // UserUpdate is the resolver for the userUpdate field.
@@ -287,6 +298,42 @@ func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver
 	}
 
 	return resolver.NewLikeByID(r.Services, likeID), nil
+}
+
+// ChannelCreate is the resolver for the channelCreate field.
+func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	memberIDs := []format.UserID{authID}
+	for _, id := range input.MemberIDs {
+		memberID, err := format.ParseUserID(id)
+		if err != nil {
+			return nil, e(ctx, http.StatusBadRequest, err.Error())
+		}
+		memberIDs = append(memberIDs, memberID)
+	}
+
+	reply, err := r.Messaging.CreateChannel(ctx, messaging.CreateChannelRequest{
+		MemberIDs: memberIDs,
+	})
+	if err != nil {
+		return nil, e(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return resolver.NewChannelWithData(r.Services, reply), nil
+}
+
+// AddMembers is the resolver for the addMembers field.
+func (r *mutationResolver) AddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error) {
+	panic(fmt.Errorf("not implemented: AddMembers - addMembers"))
+}
+
+// ChannelDelete is the resolver for the channelDelete field.
+func (r *mutationResolver) ChannelDelete(ctx context.Context, id string) (*resolver.Channel, error) {
+	panic(fmt.Errorf("not implemented: ChannelDelete - channelDelete"))
 }
 
 // MessageCreate is the resolver for the messageCreate field.

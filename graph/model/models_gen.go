@@ -7,11 +7,21 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/format"
 )
 
+type AddMembersInput struct {
+	ChannelID string   `json:"channelID"`
+	MemberID  string   `json:"memberID"`
+	MemberIDs []string `json:"memberIDs"`
+}
+
 type Cents struct {
 	Total     int `json:"total"`
 	Deposited int `json:"deposited"`
 	Earned    int `json:"earned"`
 	Given     int `json:"given"`
+}
+
+type ChannelCreateInput struct {
+	MemberIDs []string `json:"memberIDs"`
 }
 
 type CommentCreateInput struct {
