@@ -1,4 +1,4 @@
-package users
+package posts
 
 import (
 	"context"
@@ -12,45 +12,33 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type GetUsersRequest struct {
+type GetPostsRequest struct {
 	Cursor string
 	Limit  int
 }
 
-type GetUsersResponse struct {
-	Users []*User
+type GetPostsResponse struct {
+	Posts []*Post
 	Next  string
 }
 
-// GetUsers returns a list of all users in created_at order
-func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsersResponse, error) {
+func (s *Service) GetPosts(ctx context.Context, req *GetPostsRequest) (*GetPostsResponse, error) {
 	type Cursor struct {
-		CreatedAt time.Time     `json:"created_at"` // main sort field
-		UserID    format.UserID `json:"user_id"`
+		CreatedAt time.Time
+		PostID    format.PostID
 	}
 
 	filter := bson.M{}
 
-	// Parse cursor
 	if req.Cursor != "" {
-		// not the first query
-
-		// parse cursor
 		var cursor Cursor
 		err := json.Unmarshal([]byte(req.Cursor), &cursor)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		// add filters such that we only get documents after the cursor
-		//
-		// All documents returned should satified either of the two:
-		// 1. cursor.CreatedAt > doc.created_at
-		// 2. if created_at == cursor.CreatedAt => _id >= cursor.user_id
-
 		filter["$or"] = bson.A{
 			bson.M{
-				// doc.created_at is less than cursor.Created_at
 				"created_at": bson.M{
 					"$lt": cursor.CreatedAt,
 				},
@@ -64,7 +52,7 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 					},
 					bson.M{
 						"_id": bson.M{
-							"$gte": cursor.UserID.String(),
+							"$gte": cursor.PostID.String(),
 						},
 					},
 				},
@@ -72,8 +60,7 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 		}
 	}
 
-	// call mongodb with filter
-	cursor, err := s.Collection(USERS_COLLECTION).
+	cursor, err := s.Collection(POSTS_COLLECTION).
 		Find(ctx,
 			filter,
 			options.Find().
@@ -86,35 +73,32 @@ func (s *Service) GetUsers(ctx context.Context, req *GetUsersRequest) (*GetUsers
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// Decode all user document to accessible (array of) structs
-	var users []*User
-	err = cursor.All(ctx, &users)
+	var posts []*Post
+	err = cursor.All(ctx, &posts)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// create "next" cursor, if there are more results than req.Limit
 	var next []byte
-	if len(users) > req.Limit {
-		last := users[req.Limit]
+	if len(posts) > req.Limit {
+		last := posts[req.Limit]
 
 		next, err = json.Marshal(Cursor{
 			CreatedAt: last.CreatedAt,
-			UserID:    last.UserID,
+			PostID:    last.PostID,
 		})
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
 
-	// calculate the last element to be returned based on req.Limit
 	end := req.Limit
-	if len(users) < req.Limit {
-		end = len(users)
+	if len(posts) < req.Limit {
+		end = len(posts)
 	}
 
-	return &GetUsersResponse{
-		Users: users[:end],
+	return &GetPostsResponse{
+		Posts: posts[:end],
 		Next:  string(next),
 	}, nil
 }
