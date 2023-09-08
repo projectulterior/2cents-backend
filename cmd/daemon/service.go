@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
+	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/services"
 	"github.com/projectulterior/2cents-backend/pkg/users"
@@ -58,12 +60,30 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 	if err := followsService.Setup(ctx); err != nil {
 		return nil, err
 	}
+	commentsService := &comments.Service{
+		Database: m.Database("comments"),
+		Logger:   log,
+		Service:  postsService,
+	}
+	if err := followsService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
+	messagingService := &messaging.Service{
+		Database: m.Database("messages"),
+		Logger:   log,
+	}
+	if err := messagingService.Setup(ctx); err != nil {
+		return nil, err
+	}
 
 	return &services.Services{
-		Auth:    authService,
-		Users:   usersService,
-		Posts:   postsService,
-		Likes:   likesService,
-		Follows: followsService,
+		Auth:      authService,
+		Users:     usersService,
+		Posts:     postsService,
+		Likes:     likesService,
+		Follows:   followsService,
+		Messaging: messagingService,
+		Comments:  commentsService,
 	}, nil
 }

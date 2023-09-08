@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"context"
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -25,4 +26,8 @@ type Message struct {
 	Content     string             `bson:"content"`
 	ContentType format.ContentType `bson:"content_type"`
 	CreatedAt   time.Time          `bson:"created_at"`
+}
+
+func (s *Service) Setup(ctx context.Context) error {
+	return nil
 }

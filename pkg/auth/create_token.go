@@ -63,15 +63,16 @@ func verifyUsername(username string) bool {
 }
 
 func (s *Service) createToken(ctx context.Context, userID format.UserID) (string, string, error) {
+	now := time.Now()
 	tokenID := format.NewTokenID()
 
 	_, err := s.Collection(TOKENS_COLLECTION).
 		InsertOne(ctx, Token{
 			TokenID:     tokenID,
 			UserID:      userID,
-			CreatedAt:   time.Now(),
-			RefreshedAt: time.Now(),
-			ExpiredAt:   time.Now().Add(s.AuthTokenTTL),
+			CreatedAt:   now,
+			RefreshedAt: now,
+			ExpiredAt:   now.Add(s.AuthTokenTTL),
 		})
 	if err != nil {
 		return "", "", status.Error(codes.Internal, err.Error())

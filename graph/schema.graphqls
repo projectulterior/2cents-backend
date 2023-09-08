@@ -21,24 +21,30 @@ type Query {
 
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
+
+  message(id:ID!): Message!
+  messages(page: Pagination!): Messages!
 }
 
 type Mutation {
   userUpdate(input: UserUpdateInput!): User!
   userDelete: User!
+  userFollow(id: ID!, isFollow: Boolean!): Follow!
 
   postCreate(input: PostCreateInput!): Post! 
   postUpdate(id: ID!, input: PostUpdateInput!): Post!
   postDelete(id: ID!): Post!
 
   commentCreate(input: CommentCreateInput!): Comment!
-  commentUpdate(id:ID!, input: CommentUpdateInput!): Comment!
+  commentUpdate(id: ID!, input: CommentUpdateInput!): Comment!
   commentDelete(id: ID!): Comment!
 
   likeCreate(id: ID!): Like!
   likeDelete(id: ID!): Like!
 
-  userFollow(id: ID!, isFollow: Boolean!): Follow!
+  messageCreate(input: MessageCreateInput!): Message!
+  messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
+  messageDelete(id: ID!): Message!
 }
 
 type Subscription {
@@ -145,6 +151,8 @@ type Channel {
 }
 
 type Message {
+  id: ID!
+  channel: Channel!
   content: String
   contentType: ContentType
   createdAt: Time
@@ -210,6 +218,20 @@ input CommentCreateInput {
 }
 
 input CommentUpdateInput {
+  content: String
+  contentType: ContentType
+}
+
+input MessageCreateInput {
+  channelID: ID!
+  senderID: ID!
+  content: String
+  contentType: ContentType
+}
+
+input MessageUpdateInput {
+  messageID: ID!
+  senderID: ID!
   content: String
   contentType: ContentType
 }

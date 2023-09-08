@@ -101,3 +101,9 @@ models:
   Follow:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Follow
+  Message:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Message
+  Channel:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Channel

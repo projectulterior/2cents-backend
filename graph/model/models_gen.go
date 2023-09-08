@@ -3,8 +3,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 )
@@ -14,12 +12,6 @@ type Cents struct {
 	Deposited int `json:"deposited"`
 	Earned    int `json:"earned"`
 	Given     int `json:"given"`
-}
-
-type Channel struct {
-	ID       string           `json:"id"`
-	Members  []*resolver.User `json:"members,omitempty"`
-	Messages *Messages        `json:"messages,omitempty"`
 }
 
 type CommentCreateInput struct {
@@ -48,16 +40,23 @@ type Likes struct {
 	Next  string           `json:"next"`
 }
 
-type Message struct {
+type MessageCreateInput struct {
+	ChannelID   string              `json:"channelID"`
+	SenderID    string              `json:"senderID"`
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`
-	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
-	Sender      *resolver.User      `json:"sender,omitempty"`
+}
+
+type MessageUpdateInput struct {
+	MessageID   string              `json:"messageID"`
+	SenderID    string              `json:"senderID"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
 type Messages struct {
-	Messages []*Message `json:"messages,omitempty"`
-	Next     *string    `json:"next,omitempty"`
+	Messages []*resolver.Message `json:"messages,omitempty"`
+	Next     *string             `json:"next,omitempty"`
 }
 
 type Pagination struct {

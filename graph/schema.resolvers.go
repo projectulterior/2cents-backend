@@ -15,9 +15,25 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
+	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 )
+
+// ID is the resolver for the id field.
+func (r *channelResolver) ID(ctx context.Context, obj *resolver.Channel) (string, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// Members is the resolver for the members field.
+func (r *channelResolver) Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error) {
+	panic(fmt.Errorf("not implemented: Members - members"))
+}
+
+// Messages is the resolver for the messages field.
+func (r *channelResolver) Messages(ctx context.Context, obj *resolver.Channel, page model.Pagination) (*model.Messages, error) {
+	panic(fmt.Errorf("not implemented: Messages - messages"))
+}
 
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
@@ -56,6 +72,42 @@ func (r *mutationResolver) UserDelete(ctx context.Context) (*resolver.User, erro
 	}
 
 	return resolver.NewUserByID(r.Services, userID), nil
+}
+
+// UserFollow is the resolver for the userFollow field.
+func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error) {
+	followerID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	followeeID, err := format.ParseUserID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if isFollow {
+		reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
+			FollowerID: followerID,
+			FolloweeID: followeeID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewFollowWithData(r.Services, reply), nil
+	}
+
+	followID := format.NewFollowID(followerID, followeeID)
+
+	_, err = r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
+		FollowID: followID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewFollowByID(r.Services, followID), nil
 }
 
 // PostCreate is the resolver for the postCreate field.
@@ -176,7 +228,25 @@ func (r *mutationResolver) CommentUpdate(ctx context.Context, id string, input m
 
 // CommentDelete is the resolver for the commentDelete field.
 func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*resolver.Comment, error) {
-	return nil, nil
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Comments.DeleteComment(ctx, comments.DeleteCommentRequest{
+		CommentID: commentID,
+		DeleterID: authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentByID(r.Services, commentID), nil
 }
 
 // LikeCreate is the resolver for the likeCreate field.
@@ -219,40 +289,77 @@ func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver
 	return resolver.NewLikeByID(r.Services, likeID), nil
 }
 
-// UserFollow is the resolver for the userFollow field.
-func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error) {
-	followerID, err := authUserID(ctx)
+// MessageCreate is the resolver for the messageCreate field.
+func (r *mutationResolver) MessageCreate(ctx context.Context, input model.MessageCreateInput) (*resolver.Message, error) {
+	authID, err := authUserID(ctx)
 	if err != nil {
 		return nil, e(ctx, http.StatusForbidden, err.Error())
 	}
 
-	followeeID, err := format.ParseUserID(id)
+	channelID, err := format.ParseChannelID(input.ChannelID)
 	if err != nil {
 		return nil, err
 	}
 
-	if isFollow {
-		reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
-			FollowerID: followerID,
-			FolloweeID: followeeID,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		return resolver.NewFollowWithData(r.Services, reply), nil
-	}
-
-	followID := format.NewFollowID(followerID, followeeID)
-
-	_, err = r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
-		FollowID: followID,
+	reply, err := r.Messaging.CreateMessage(ctx, messaging.CreateMessageRequest{
+		ChannelID:   channelID,
+		SenderID:    authID,
+		Content:     *input.Content,
+		ContentType: *input.ContentType,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return resolver.NewFollowByID(r.Services, followID), nil
+	return resolver.NewMessageByID(r.Services, reply.MessageID), nil
+}
+
+// MessageUpdate is the resolver for the messageUpdate field.
+func (r *mutationResolver) MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	senderID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := r.Messaging.UpdateMessage(ctx, messaging.UpdateMessageRequest{
+		MessageID:   messageID,
+		SenderID:    senderID,
+		Content:     input.Content,
+		ContentType: input.ContentType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageWithData(r.Services, message), nil
+}
+
+// MessageDelete is the resolver for the messageDelete field.
+func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resolver.Message, error) {
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Messaging.DeleteMessage(ctx, messaging.DeleteMessageRequest{
+		MessageID: messageID,
+		SenderID:  authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
 // Likes is the resolver for the likes field.
@@ -352,13 +459,33 @@ func (r *queryResolver) Likes(ctx context.Context, page model.Pagination) (*mode
 }
 
 // Channel is the resolver for the channel field.
-func (r *queryResolver) Channel(ctx context.Context, id string) (*model.Channel, error) {
+func (r *queryResolver) Channel(ctx context.Context, id string) (*resolver.Channel, error) {
 	panic(fmt.Errorf("not implemented: Channel - channel"))
 }
 
 // ChannelByMembers is the resolver for the channelByMembers field.
-func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) (*model.Channel, error) {
+func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error) {
 	panic(fmt.Errorf("not implemented: ChannelByMembers - channelByMembers"))
+}
+
+// Message is the resolver for the message field.
+func (r *queryResolver) Message(ctx context.Context, id string) (*resolver.Message, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	messageID, err := format.ParseMessageID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewMessageByID(r.Services, messageID), nil
+}
+
+// Messages is the resolver for the messages field.
+func (r *queryResolver) Messages(ctx context.Context, page model.Pagination) (*model.Messages, error) {
+	panic(fmt.Errorf("not implemented: Messages - messages"))
 }
 
 // OnUserUpdated is the resolver for the onUserUpdated field.
@@ -396,6 +523,9 @@ func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *mode
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
+// Channel returns ChannelResolver implementation.
+func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -411,6 +541,7 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
+type channelResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
