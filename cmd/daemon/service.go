@@ -61,9 +61,9 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 		return nil, err
 	}
 	commentsService := &comments.Service{
+		Service:  postsService,
 		Database: m.Database("comments"),
 		Logger:   log,
-		Service:  postsService,
 	}
 	if err := followsService.Setup(ctx); err != nil {
 		return nil, err
@@ -81,9 +81,9 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 		Auth:      authService,
 		Users:     usersService,
 		Posts:     postsService,
+		Comments:  commentsService,
 		Likes:     likesService,
 		Follows:   followsService,
 		Messaging: messagingService,
-		Comments:  commentsService,
 	}, nil
 }

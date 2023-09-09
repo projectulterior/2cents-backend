@@ -29,4 +29,5 @@ up:
 	docker compose up --detach --build
 
 test: up
+	go clean -testcache
 	go test ./...

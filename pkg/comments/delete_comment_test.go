@@ -18,23 +18,24 @@ func TestDeleteComment(t *testing.T) {
 	postid := format.NewPostID()
 	content := "twocents comment"
 	newcontent1 := "new commment"
-	authorid := format.NewUserID()
+	authorID := format.NewUserID()
 
 	reply, err := svc.CreateComment(context.Background(), comments.CreateCommentRequest{
 		PostID:   postid,
 		Content:  content,
-		AuthorID: authorid,
+		AuthorID: authorID,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reply.CommentID)
 	assert.Equal(t, postid, reply.PostID)
 	assert.Equal(t, content, reply.Content)
-	assert.Equal(t, authorid, reply.AuthorID)
+	assert.Equal(t, authorID, reply.AuthorID)
 	assert.False(t, reply.CreatedAt.IsZero())
 	assert.Equal(t, reply.CreatedAt, reply.UpdatedAt)
 
 	deleted, err := svc.DeleteComment(context.Background(), comments.DeleteCommentRequest{
 		CommentID: reply.CommentID,
+		DeleterID: authorID,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, reply.CommentID, deleted.CommentID)
@@ -47,13 +48,13 @@ func TestDeleteComment(t *testing.T) {
 	reply1, err := svc.CreateComment(context.Background(), comments.CreateCommentRequest{
 		PostID:   postid,
 		Content:  content,
-		AuthorID: authorid,
+		AuthorID: authorID,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, reply1.CommentID)
 	assert.Equal(t, postid, reply1.PostID)
 	assert.Equal(t, content, reply1.Content)
-	assert.Equal(t, authorid, reply1.AuthorID)
+	assert.Equal(t, authorID, reply1.AuthorID)
 	assert.False(t, reply1.CreatedAt.IsZero())
 	updated1, err := svc.UpdateComment(context.Background(), comments.UpdateCommentRequest{
 		CommentID: reply1.CommentID,

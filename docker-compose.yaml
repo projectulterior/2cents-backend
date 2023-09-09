@@ -11,7 +11,7 @@ services:
             - SECRET=testing-test-token
             - MONGO=mongodb://mongodb:27017/?replicaSet=rs0&tlsInsecure=true
             - AUTH_TOKEN_TTL=10s
-            - REFRESH_TOKEN_TTL=1h
+            - REFRESH_TOKEN_TTL=750h
         depends_on:
             - mongo-init
             - mongodb

@@ -7,7 +7,8 @@ import (
 )
 
 type Service struct {
+	*posts.Service
+
 	*mongo.Database
 	*zap.Logger
-	*posts.Service
 }

@@ -16,10 +16,12 @@ type CreateChannelRequest struct {
 type CreateChannelResponse = Channel
 
 func (s *Service) CreateChannel(ctx context.Context, req CreateChannelRequest) (*CreateChannelResponse, error) {
+	now := time.Now()
+
 	channel := Channel{
 		ChannelID: format.NewChannelID(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 		MemberIDs: req.MemberIDs,
 	}
 
