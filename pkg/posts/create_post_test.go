@@ -12,24 +12,29 @@ import (
 func TestCreatePost(t *testing.T) {
 	svc := setup(t)
 
-	authorid := format.NewUserID()
+	createPost(t, svc, format.NewUserID())
+}
+
+func createPost(t *testing.T, svc *posts.Service, authorID format.UserID) *posts.Post {
 	visibilityPublic := format.PUBLIC
 	content := "hello"
 	contentType := format.TEXT
 
-	reply1, err := svc.CreatePost(context.Background(), posts.CreatePostRequest{
-		AuthorID:    authorid,
+	post, err := svc.CreatePost(context.Background(), posts.CreatePostRequest{
+		AuthorID:    authorID,
 		Visibility:  visibilityPublic,
 		Content:     content,
 		ContentType: contentType,
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, authorid, reply1.AuthorID)
-	assert.Equal(t, visibilityPublic, reply1.Visibility)
-	assert.Equal(t, content, reply1.Content)
-	assert.Equal(t, contentType, reply1.ContentType)
-	assert.NotEmpty(t, reply1.PostID)
-	assert.False(t, reply1.CreatedAt.IsZero())
-	assert.Equal(t, reply1.CreatedAt, reply1.UpdatedAt)
+	assert.Equal(t, authorID, post.AuthorID)
+	assert.Equal(t, visibilityPublic, post.Visibility)
+	assert.Equal(t, content, post.Content)
+	assert.Equal(t, contentType, post.ContentType)
+	assert.NotEmpty(t, post.PostID)
+	assert.False(t, post.CreatedAt.IsZero())
+	assert.Equal(t, post.CreatedAt, post.UpdatedAt)
+
+	return post
 }
