@@ -13,8 +13,10 @@ import (
 )
 
 type GetLikesRequest struct {
-	Cursor string
-	Limit  int
+	Cursor  string
+	Limit   int
+	LikerID *format.UserID
+	PostID  *format.PostID
 }
 
 type GetLikesResponse struct {
@@ -30,6 +32,14 @@ func (s *Service) GetLikes(ctx context.Context, req *GetLikesRequest) (*GetLikes
 
 	filter := bson.M{}
 
+	if req.LikerID != nil {
+		filter["liker_id"] = req.LikerID.String()
+	}
+
+	if req.PostID != nil {
+		filter["post_id"] = req.PostID.String()
+	}
+
 	if req.Cursor != "" {
 		var cursor Cursor
 		err := json.Unmarshal([]byte(req.Cursor), &cursor)
@@ -39,7 +49,7 @@ func (s *Service) GetLikes(ctx context.Context, req *GetLikesRequest) (*GetLikes
 
 		filter["$or"] = bson.A{
 			bson.M{
-				"cr,eated_at": bson.M{
+				"created_at": bson.M{
 					"$lt": cursor.CreatedAt,
 				},
 			},
@@ -47,6 +57,11 @@ func (s *Service) GetLikes(ctx context.Context, req *GetLikesRequest) (*GetLikes
 				"$and": bson.A{
 					bson.M{
 						"created_at": bson.M{
+							"$eq": cursor.CreatedAt,
+						},
+					},
+					bson.M{
+						"_id": bson.M{
 							"$gte": cursor.LikeID.String(),
 						},
 					},

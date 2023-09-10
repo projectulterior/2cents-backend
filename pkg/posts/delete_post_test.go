@@ -36,7 +36,8 @@ func TestDeletePost(t *testing.T) {
 	assert.Equal(t, reply1.CreatedAt, reply1.UpdatedAt)
 
 	deleted, err := svc.DeletePost(context.Background(), posts.DeletePostRequest{
-		PostID: reply1.PostID,
+		PostID:   reply1.PostID,
+		AuthorID: authorid,
 	})
 
 	assert.NoError(t, err)

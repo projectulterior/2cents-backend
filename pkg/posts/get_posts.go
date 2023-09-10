@@ -13,8 +13,9 @@ import (
 )
 
 type GetPostsRequest struct {
-	Cursor string
-	Limit  int
+	Cursor   string
+	Limit    int
+	AuthorID *format.UserID
 }
 
 type GetPostsResponse struct {
@@ -29,6 +30,10 @@ func (s *Service) GetPosts(ctx context.Context, req *GetPostsRequest) (*GetPosts
 	}
 
 	filter := bson.M{}
+
+	if req.AuthorID != nil {
+		filter["author_id"] = req.AuthorID.String()
+	}
 
 	if req.Cursor != "" {
 		var cursor Cursor
