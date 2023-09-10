@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
@@ -28,6 +29,8 @@ func TestGetPosts(t *testing.T) {
 			ContentType: format.TEXT,
 		})
 		assert.NoError(t, err)
+
+		time.Sleep(time.Millisecond)
 	}
 
 	i := NUM_OF_POSTS - 1

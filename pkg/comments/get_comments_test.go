@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -20,10 +21,13 @@ func TestGetComments(t *testing.T) {
 
 	for i := 0; i < NUM_OF_COMMENTS; i++ {
 		_, err := svc.CreateComment(context.Background(), comments.CreateCommentRequest{
-			PostID:  format.NewPostID(),
-			Content: string(format.NewCommentIDFromIdentifier(fmt.Sprintf("%d", i))),
+			PostID:   format.NewPostID(),
+			Content:  fmt.Sprintf("%d", i),
+			AuthorID: format.NewUserID(),
 		})
 		assert.NoError(t, err)
+
+		time.Sleep(time.Millisecond)
 	}
 
 	i := NUM_OF_COMMENTS - 1
@@ -37,8 +41,8 @@ func TestGetComments(t *testing.T) {
 		assert.NoError(t, err)
 
 		for _, comment := range comments.Comments {
-			expectedID := format.NewCommentIDFromIdentifier(fmt.Sprintf("%d", i))
-			assert.Equal(t, expectedID, comment.CommentID)
+			expected := fmt.Sprintf("%d", i)
+			assert.Equal(t, expected, comment.Content)
 			i -= 1
 		}
 
