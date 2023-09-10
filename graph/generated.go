@@ -70,7 +70,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Members   func(childComplexity int) int
-		Messages  func(childComplexity int, page model.Pagination) int
+		Messages  func(childComplexity int, page resolver.Pagination) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -147,12 +147,12 @@ type ComplexityRoot struct {
 
 	Post struct {
 		Author      func(childComplexity int) int
-		Comments    func(childComplexity int, page model.Pagination) int
+		Comments    func(childComplexity int, page resolver.Pagination) int
 		Content     func(childComplexity int) int
 		ContentType func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Likes       func(childComplexity int, page model.Pagination) int
+		Likes       func(childComplexity int, page resolver.Pagination) int
 		UpdatedAt   func(childComplexity int) int
 		Visibility  func(childComplexity int) int
 	}
@@ -166,15 +166,15 @@ type ComplexityRoot struct {
 		Channel          func(childComplexity int, id string) int
 		ChannelByMembers func(childComplexity int, members []string) int
 		Comment          func(childComplexity int, id string) int
-		Comments         func(childComplexity int, page model.Pagination) int
+		Comments         func(childComplexity int, page resolver.Pagination) int
 		Like             func(childComplexity int, id string) int
-		Likes            func(childComplexity int, page model.Pagination) int
+		Likes            func(childComplexity int, page resolver.Pagination) int
 		Message          func(childComplexity int, id string) int
-		Messages         func(childComplexity int, page model.Pagination) int
+		Messages         func(childComplexity int, page resolver.Pagination) int
 		Post             func(childComplexity int, id string) int
-		Posts            func(childComplexity int, page model.Pagination) int
+		Posts            func(childComplexity int, page resolver.Pagination) int
 		User             func(childComplexity int, id *string) int
-		Users            func(childComplexity int, page model.Pagination) int
+		Users            func(childComplexity int, page resolver.Pagination) int
 	}
 
 	Subscription struct {
@@ -187,11 +187,11 @@ type ComplexityRoot struct {
 		Cents    func(childComplexity int) int
 		Cover    func(childComplexity int) int
 		Email    func(childComplexity int) int
-		Follows  func(childComplexity int, page *model.Pagination) int
+		Follows  func(childComplexity int, page *resolver.Pagination) int
 		ID       func(childComplexity int) int
-		Likes    func(childComplexity int, page *model.Pagination) int
+		Likes    func(childComplexity int, page *resolver.Pagination) int
 		Name     func(childComplexity int) int
-		Posts    func(childComplexity int, page *model.Pagination) int
+		Posts    func(childComplexity int, page resolver.Pagination) int
 		Profile  func(childComplexity int) int
 		Username func(childComplexity int) int
 	}
@@ -204,7 +204,7 @@ type ComplexityRoot struct {
 
 type ChannelResolver interface {
 	Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error)
-	Messages(ctx context.Context, obj *resolver.Channel, page model.Pagination) (*model.Messages, error)
+	Messages(ctx context.Context, obj *resolver.Channel, page resolver.Pagination) (*model.Messages, error)
 	CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
 	UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
 }
@@ -228,22 +228,22 @@ type MutationResolver interface {
 	MessageDelete(ctx context.Context, id string) (*resolver.Message, error)
 }
 type PostResolver interface {
-	Likes(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Likes, error)
-	Comments(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Comments, error)
+	Likes(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Likes, error)
+	Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id *string) (*resolver.User, error)
-	Users(ctx context.Context, page model.Pagination) (*model.Users, error)
+	Users(ctx context.Context, page resolver.Pagination) (*model.Users, error)
 	Post(ctx context.Context, id string) (*resolver.Post, error)
-	Posts(ctx context.Context, page model.Pagination) (*model.Posts, error)
+	Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	Comment(ctx context.Context, id string) (*resolver.Comment, error)
-	Comments(ctx context.Context, page model.Pagination) (*model.Comments, error)
+	Comments(ctx context.Context, page resolver.Pagination) (*model.Comments, error)
 	Like(ctx context.Context, id string) (*resolver.Like, error)
-	Likes(ctx context.Context, page model.Pagination) (*model.Likes, error)
+	Likes(ctx context.Context, page resolver.Pagination) (*model.Likes, error)
 	Channel(ctx context.Context, id string) (*resolver.Channel, error)
 	ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error)
 	Message(ctx context.Context, id string) (*resolver.Message, error)
-	Messages(ctx context.Context, page model.Pagination) (*model.Messages, error)
+	Messages(ctx context.Context, page resolver.Pagination) (*model.Messages, error)
 }
 type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
@@ -253,9 +253,9 @@ type UserResolver interface {
 	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
 
 	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
-	Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error)
-	Posts(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Posts, error)
-	Likes(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Likes, error)
+	Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Follows, error)
+
+	Likes(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Likes, error)
 }
 
 type executableSchema struct {
@@ -353,7 +353,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Channel.Messages(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Channel.Messages(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Channel.updatedAt":
 		if e.complexity.Channel.UpdatedAt == nil {
@@ -767,7 +767,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Post.Comments(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Post.Comments(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Post.content":
 		if e.complexity.Post.Content == nil {
@@ -807,7 +807,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Post.Likes(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Post.Likes(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Post.updatedAt":
 		if e.complexity.Post.UpdatedAt == nil {
@@ -883,7 +883,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Comments(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Query.Comments(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Query.like":
 		if e.complexity.Query.Like == nil {
@@ -907,7 +907,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Likes(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Query.Likes(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Query.message":
 		if e.complexity.Query.Message == nil {
@@ -931,7 +931,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Messages(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Query.Messages(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Query.post":
 		if e.complexity.Query.Post == nil {
@@ -955,7 +955,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Posts(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Query.Posts(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -979,7 +979,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Users(childComplexity, args["page"].(model.Pagination)), true
+		return e.complexity.Query.Users(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "Subscription.onUserUpdated":
 		if e.complexity.Subscription.OnUserUpdated == nil {
@@ -1038,7 +1038,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.User.Follows(childComplexity, args["page"].(*model.Pagination)), true
+		return e.complexity.User.Follows(childComplexity, args["page"].(*resolver.Pagination)), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -1057,7 +1057,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.User.Likes(childComplexity, args["page"].(*model.Pagination)), true
+		return e.complexity.User.Likes(childComplexity, args["page"].(*resolver.Pagination)), true
 
 	case "User.name":
 		if e.complexity.User.Name == nil {
@@ -1076,7 +1076,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.User.Posts(childComplexity, args["page"].(*model.Pagination)), true
+		return e.complexity.User.Posts(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "User.profile":
 		if e.complexity.User.Profile == nil {
@@ -1261,10 +1261,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Channel_messages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1561,10 +1561,10 @@ func (ec *executionContext) field_Mutation_userUpdate_args(ctx context.Context, 
 func (ec *executionContext) field_Post_comments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1576,10 +1576,10 @@ func (ec *executionContext) field_Post_comments_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Post_likes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1651,10 +1651,10 @@ func (ec *executionContext) field_Query_comment_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_comments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1681,10 +1681,10 @@ func (ec *executionContext) field_Query_like_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_likes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1711,10 +1711,10 @@ func (ec *executionContext) field_Query_message_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_messages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1741,10 +1741,10 @@ func (ec *executionContext) field_Query_post_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_posts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1771,10 +1771,10 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_users_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1801,10 +1801,10 @@ func (ec *executionContext) field_Subscription_onUserUpdated_args(ctx context.Co
 func (ec *executionContext) field_User_follows_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.Pagination
+	var arg0 *resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1816,10 +1816,10 @@ func (ec *executionContext) field_User_follows_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_User_likes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.Pagination
+	var arg0 *resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1831,10 +1831,10 @@ func (ec *executionContext) field_User_likes_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_User_posts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2314,7 +2314,7 @@ func (ec *executionContext) _Channel_messages(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().Messages(rctx, obj, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Channel().Messages(rctx, obj, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5315,7 +5315,7 @@ func (ec *executionContext) _Post_likes(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Post().Likes(rctx, obj, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Post().Likes(rctx, obj, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5373,7 +5373,7 @@ func (ec *executionContext) _Post_comments(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Post().Comments(rctx, obj, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Post().Comments(rctx, obj, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5417,7 +5417,7 @@ func (ec *executionContext) fieldContext_Post_comments(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Posts_posts(ctx context.Context, field graphql.CollectedField, obj *model.Posts) (ret graphql.Marshaler) {
+func (ec *executionContext) _Posts_posts(ctx context.Context, field graphql.CollectedField, obj *resolver.Posts) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Posts_posts(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5431,7 +5431,7 @@ func (ec *executionContext) _Posts_posts(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Posts, nil
+		return obj.Posts(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5452,7 +5452,7 @@ func (ec *executionContext) fieldContext_Posts_posts(ctx context.Context, field 
 	fc = &graphql.FieldContext{
 		Object:     "Posts",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -5481,7 +5481,7 @@ func (ec *executionContext) fieldContext_Posts_posts(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Posts_next(ctx context.Context, field graphql.CollectedField, obj *model.Posts) (ret graphql.Marshaler) {
+func (ec *executionContext) _Posts_next(ctx context.Context, field graphql.CollectedField, obj *resolver.Posts) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Posts_next(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5495,7 +5495,7 @@ func (ec *executionContext) _Posts_next(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Next, nil
+		return obj.Next(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5507,16 +5507,16 @@ func (ec *executionContext) _Posts_next(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Posts_next(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Posts",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
@@ -5620,7 +5620,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Query().Users(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5756,7 +5756,7 @@ func (ec *executionContext) _Query_posts(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Posts(rctx, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Query().Posts(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5768,9 +5768,9 @@ func (ec *executionContext) _Query_posts(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Posts)
+	res := resTmp.(*resolver.Posts)
 	fc.Result = res
-	return ec.marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPosts(ctx, field.Selections, res)
+	return ec.marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_posts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5884,7 +5884,7 @@ func (ec *executionContext) _Query_comments(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Comments(rctx, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Query().Comments(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6010,7 +6010,7 @@ func (ec *executionContext) _Query_likes(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Likes(rctx, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Query().Likes(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6274,7 +6274,7 @@ func (ec *executionContext) _Query_messages(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Messages(rctx, fc.Args["page"].(model.Pagination))
+		return ec.resolvers.Query().Messages(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6949,7 +6949,7 @@ func (ec *executionContext) _User_follows(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Follows(rctx, obj, fc.Args["page"].(*model.Pagination))
+		return ec.resolvers.User().Follows(rctx, obj, fc.Args["page"].(*resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7007,7 +7007,7 @@ func (ec *executionContext) _User_posts(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Posts(rctx, obj, fc.Args["page"].(*model.Pagination))
+		return obj.Posts(ctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7016,9 +7016,9 @@ func (ec *executionContext) _User_posts(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Posts)
+	res := resTmp.(*resolver.Posts)
 	fc.Result = res
-	return ec.marshalOPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPosts(ctx, field.Selections, res)
+	return ec.marshalOPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_posts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7026,7 +7026,7 @@ func (ec *executionContext) fieldContext_User_posts(ctx context.Context, field g
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "posts":
@@ -7065,7 +7065,7 @@ func (ec *executionContext) _User_likes(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Likes(rctx, obj, fc.Args["page"].(*model.Pagination))
+		return ec.resolvers.User().Likes(rctx, obj, fc.Args["page"].(*resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9316,8 +9316,8 @@ func (ec *executionContext) unmarshalInputMessageUpdateInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (model.Pagination, error) {
-	var it model.Pagination
+func (ec *executionContext) unmarshalInputPagination(ctx context.Context, obj interface{}) (resolver.Pagination, error) {
+	var it resolver.Pagination
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -11277,7 +11277,7 @@ func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj
 
 var postsImplementors = []string{"Posts"}
 
-func (ec *executionContext) _Posts(ctx context.Context, sel ast.SelectionSet, obj *model.Posts) graphql.Marshaler {
+func (ec *executionContext) _Posts(ctx context.Context, sel ast.SelectionSet, obj *resolver.Posts) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, postsImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -11287,15 +11287,77 @@ func (ec *executionContext) _Posts(ctx context.Context, sel ast.SelectionSet, ob
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Posts")
 		case "posts":
-			out.Values[i] = ec._Posts_posts(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Posts_posts(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "next":
-			out.Values[i] = ec._Posts_next(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Posts_next(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12823,7 +12885,7 @@ func (ec *executionContext) marshalNMessages2ᚖgithubᚗcomᚋprojectulterior�
 	return ec._Messages(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (model.Pagination, error) {
+func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx context.Context, v interface{}) (resolver.Pagination, error) {
 	res, err := ec.unmarshalInputPagination(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -12896,11 +12958,11 @@ func (ec *executionContext) unmarshalNPostUpdateInput2githubᚗcomᚋprojectulte
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPosts2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPosts(ctx context.Context, sel ast.SelectionSet, v model.Posts) graphql.Marshaler {
+func (ec *executionContext) marshalNPosts2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx context.Context, sel ast.SelectionSet, v resolver.Posts) graphql.Marshaler {
 	return ec._Posts(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPosts(ctx context.Context, sel ast.SelectionSet, v *model.Posts) graphql.Marshaler {
+func (ec *executionContext) marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx context.Context, sel ast.SelectionSet, v *resolver.Posts) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -12917,6 +12979,27 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -13437,7 +13520,12 @@ func (ec *executionContext) marshalOMessages2ᚖgithubᚗcomᚋprojectulterior�
 	return ec._Messages(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {
+func (ec *executionContext) unmarshalOPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx context.Context, v interface{}) (resolver.Pagination, error) {
+	res, err := ec.unmarshalInputPagination(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx context.Context, v interface{}) (*resolver.Pagination, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -13452,7 +13540,7 @@ func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋprojectulteriorᚋ2ce
 	return ec._Post(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐPosts(ctx context.Context, sel ast.SelectionSet, v *model.Posts) graphql.Marshaler {
+func (ec *executionContext) marshalOPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx context.Context, sel ast.SelectionSet, v *resolver.Posts) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

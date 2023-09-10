@@ -127,3 +127,7 @@ func (u *User) Cover(ctx context.Context) (*string, error) {
 
 	return &reply.Cover, nil
 }
+
+func (u *User) Posts(ctx context.Context, page Pagination) (*Posts, error) {
+	return NewPosts(NewUserPosts(u.svc, u.userID, page)), nil
+}
