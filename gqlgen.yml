@@ -110,6 +110,9 @@ models:
   CommentLike:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.CommentLike
+  CommentLikes:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.CommentLikes
   Follow:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Follow
