@@ -12,6 +12,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -303,13 +304,43 @@ func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver
 }
 
 // CommentLikeCreate is the resolver for the commentLikeCreate field.
-func (r *mutationResolver) CommentLikeCreate(ctx context.Context, id string) (*model.CommentLike, error) {
-	panic(fmt.Errorf("not implemented: CommentLikeCreate - commentLikeCreate"))
+func (r *mutationResolver) CommentLikeCreate(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	reply, err := r.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
+		CommentID: commentID,
+		LikerID:   authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentLikeWithData(r.Services, reply), nil
 }
 
 // CommentLikeDelete is the resolver for the commentLikeDelete field.
-func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*model.CommentLike, error) {
-	panic(fmt.Errorf("not implemented: CommentLikeDelete - commentLikeDelete"))
+func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	commentLikeID, err := format.ParseCommentLikeID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
+		CommentLikeID: commentLikeID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
 }
 
 // ChannelCreate is the resolver for the channelCreate field.
@@ -556,8 +587,18 @@ func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*r
 }
 
 // CommentLike is the resolver for the commentLike field.
-func (r *queryResolver) CommentLike(ctx context.Context, id string) (*model.CommentLike, error) {
-	panic(fmt.Errorf("not implemented: CommentLike - commentLike"))
+func (r *queryResolver) CommentLike(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	commentLikeID, err := format.ParseCommentLikeID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
 }
 
 // CommentLikes is the resolver for the commentLikes field.

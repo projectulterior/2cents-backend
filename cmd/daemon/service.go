@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
@@ -65,7 +66,15 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 		Database: m.Database("comments"),
 		Logger:   log,
 	}
-	if err := followsService.Setup(ctx); err != nil {
+	if err := commentsService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
+	comment_LikesService := &comment_likes.Service{
+		Database: m.Database("comment_likes"),
+		Logger:   log,
+	}
+	if err := comment_LikesService.Setup(ctx); err != nil {
 		return nil, err
 	}
 
@@ -78,12 +87,13 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 	}
 
 	return &services.Services{
-		Auth:      authService,
-		Users:     usersService,
-		Posts:     postsService,
-		Comments:  commentsService,
-		Likes:     likesService,
-		Follows:   followsService,
-		Messaging: messagingService,
+		Auth:         authService,
+		Users:        usersService,
+		Posts:        postsService,
+		Comments:     commentsService,
+		Likes:        likesService,
+		Follows:      followsService,
+		CommentLikes: comment_LikesService,
+		Messaging:    messagingService,
 	}, nil
 }

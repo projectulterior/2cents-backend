@@ -107,6 +107,9 @@ models:
   Comment:
       model:
         - github.com/projectulterior/2cents-backend/graph/resolver.Comment
+  CommentLike:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.CommentLike
   Follow:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Follow
