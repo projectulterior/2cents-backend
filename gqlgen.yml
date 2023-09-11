@@ -74,6 +74,9 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Pagination:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Pagination
   Birthday:
     model:
       - github.com/projectulterior/2cents-backend/pkg/format.Birthday
@@ -92,6 +95,9 @@ models:
   Post:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Post
+  Posts:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Posts
   Like:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Like

@@ -15,13 +15,13 @@ func TestGetLikes(t *testing.T) {
 	svc := setup(t)
 
 	const (
-		NUM_OF_POSTS = 10
-		BATCH_SIZE   = NUM_OF_POSTS / 3
+		NUM_OF_LIKES = 10
+		BATCH_SIZE   = NUM_OF_LIKES / 3
 	)
 
 	postID := format.NewPostID()
 
-	for i := 0; i < NUM_OF_POSTS; i++ {
+	for i := 0; i < NUM_OF_LIKES; i++ {
 		_, err := svc.CreateLike(context.Background(), likes.CreateLikeRequest{
 			PostID:  postID,
 			LikerID: format.NewUserIDFromIdentifier(fmt.Sprintf("%d", i)),
@@ -31,7 +31,7 @@ func TestGetLikes(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 
-	i := NUM_OF_POSTS - 1
+	i := NUM_OF_LIKES - 1
 
 	var cursor string
 	for i >= 0 {

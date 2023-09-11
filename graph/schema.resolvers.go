@@ -29,7 +29,7 @@ func (r *channelResolver) Members(ctx context.Context, obj *resolver.Channel) ([
 }
 
 // Messages is the resolver for the messages field.
-func (r *channelResolver) Messages(ctx context.Context, obj *resolver.Channel, page model.Pagination) (*model.Messages, error) {
+func (r *channelResolver) Messages(ctx context.Context, obj *resolver.Channel, page resolver.Pagination) (*model.Messages, error) {
 	panic(fmt.Errorf("not implemented: Messages - messages"))
 }
 
@@ -450,12 +450,12 @@ func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resol
 }
 
 // Likes is the resolver for the likes field.
-func (r *postResolver) Likes(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Likes, error) {
+func (r *postResolver) Likes(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Likes, error) {
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // Comments is the resolver for the comments field.
-func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page model.Pagination) (*model.Comments, error) {
+func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
@@ -481,7 +481,7 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*resolver.User, e
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context, page model.Pagination) (*model.Users, error) {
+func (r *queryResolver) Users(ctx context.Context, page resolver.Pagination) (*model.Users, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
 }
 
@@ -501,7 +501,7 @@ func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, er
 }
 
 // Posts is the resolver for the posts field.
-func (r *queryResolver) Posts(ctx context.Context, page model.Pagination) (*model.Posts, error) {
+func (r *queryResolver) Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error) {
 	panic(fmt.Errorf("not implemented: Posts - posts"))
 }
 
@@ -521,7 +521,7 @@ func (r *queryResolver) Comment(ctx context.Context, id string) (*resolver.Comme
 }
 
 // Comments is the resolver for the comments field.
-func (r *queryResolver) Comments(ctx context.Context, page model.Pagination) (*model.Comments, error) {
+func (r *queryResolver) Comments(ctx context.Context, page resolver.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
@@ -541,7 +541,7 @@ func (r *queryResolver) Like(ctx context.Context, id string) (*resolver.Like, er
 }
 
 // Likes is the resolver for the likes field.
-func (r *queryResolver) Likes(ctx context.Context, page model.Pagination) (*model.Likes, error) {
+func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*model.Likes, error) {
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
@@ -571,7 +571,7 @@ func (r *queryResolver) Message(ctx context.Context, id string) (*resolver.Messa
 }
 
 // Messages is the resolver for the messages field.
-func (r *queryResolver) Messages(ctx context.Context, page model.Pagination) (*model.Messages, error) {
+func (r *queryResolver) Messages(ctx context.Context, page resolver.Pagination) (*model.Messages, error) {
 	panic(fmt.Errorf("not implemented: Messages - messages"))
 }
 
@@ -596,17 +596,12 @@ func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Ce
 }
 
 // Follows is the resolver for the follows field.
-func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Follows, error) {
+func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Follows, error) {
 	panic(fmt.Errorf("not implemented: Follows - follows"))
 }
 
-// Posts is the resolver for the posts field.
-func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Posts, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
-}
-
 // Likes is the resolver for the likes field.
-func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *model.Pagination) (*model.Likes, error) {
+func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Likes, error) {
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
@@ -634,3 +629,13 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*resolver.Posts, error) {
+	panic(fmt.Errorf("not implemented: Posts - posts"))
+}

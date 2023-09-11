@@ -69,11 +69,6 @@ type Messages struct {
 	Next     *string             `json:"next,omitempty"`
 }
 
-type Pagination struct {
-	Cursor string `json:"cursor"`
-	Limit  int    `json:"limit"`
-}
-
 type PostCreateInput struct {
 	Visibility  format.Visibility  `json:"visibility"`
 	Content     string             `json:"content"`
@@ -84,11 +79,6 @@ type PostUpdateInput struct {
 	Visibility  *format.Visibility  `json:"visibility,omitempty"`
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`
-}
-
-type Posts struct {
-	Posts []*resolver.Post `json:"posts"`
-	Next  string           `json:"next"`
 }
 
 type UserUpdateInput struct {
