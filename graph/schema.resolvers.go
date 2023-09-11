@@ -449,11 +449,6 @@ func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resol
 	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
-// Likes is the resolver for the likes field.
-func (r *postResolver) Likes(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Likes, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
-}
-
 // Comments is the resolver for the comments field.
 func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
@@ -541,7 +536,7 @@ func (r *queryResolver) Like(ctx context.Context, id string) (*resolver.Like, er
 }
 
 // Likes is the resolver for the likes field.
-func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*model.Likes, error) {
+func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*resolver.Likes, error) {
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
@@ -600,11 +595,6 @@ func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *re
 	panic(fmt.Errorf("not implemented: Follows - follows"))
 }
 
-// Likes is the resolver for the likes field.
-func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Likes, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
-}
-
 // Channel returns ChannelResolver implementation.
 func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
 
@@ -629,13 +619,3 @@ type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *userResolver) Posts(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*resolver.Posts, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
-}
