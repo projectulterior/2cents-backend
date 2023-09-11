@@ -3,6 +3,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 )
@@ -30,6 +32,18 @@ type CommentCreateInput struct {
 	ContentType format.ContentType `json:"contentType"`
 }
 
+type CommentLike struct {
+	ID        string            `json:"id"`
+	Comment   *resolver.Comment `json:"comment,omitempty"`
+	Liker     *resolver.User    `json:"liker,omitempty"`
+	CreatedAt *time.Time        `json:"createdAt,omitempty"`
+}
+
+type CommentLikes struct {
+	Likes []*CommentLike `json:"likes"`
+	Next  *string        `json:"next,omitempty"`
+}
+
 type CommentUpdateInput struct {
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`
@@ -43,11 +57,6 @@ type Comments struct {
 type Follows struct {
 	Follows []*resolver.Follow `json:"follows"`
 	Next    *string            `json:"next,omitempty"`
-}
-
-type Likes struct {
-	Likes []*resolver.Like `json:"likes"`
-	Next  string           `json:"next"`
 }
 
 type MessageCreateInput struct {
