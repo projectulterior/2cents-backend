@@ -2,15 +2,15 @@ package resolver
 
 import "context"
 
-type PostGetter interface {
-	Posts(ctx context.Context) ([]*Post, error)
-	Next(ctx context.Context) (*string, error)
+type PostsGetter interface {
+	Posts(context.Context) ([]*Post, error)
+	Next(context.Context) (*string, error)
 }
 
 type Posts struct {
-	PostGetter
+	PostsGetter
 }
 
-func NewPosts(getter PostGetter) *Posts {
-	return &Posts{PostGetter: getter}
+func NewPosts(getter PostsGetter) *Posts {
+	return &Posts{PostsGetter: getter}
 }
