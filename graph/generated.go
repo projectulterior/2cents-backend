@@ -42,7 +42,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Channel() ChannelResolver
-	Comment() CommentResolver
+	CommentLikes() CommentLikesResolver
 	Mutation() MutationResolver
 	Post() PostResolver
 	Query() QueryResolver
@@ -226,8 +226,8 @@ type ChannelResolver interface {
 	CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
 	UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
 }
-type CommentResolver interface {
-	CommentLikes(ctx context.Context, obj *resolver.Comment, page resolver.Pagination) (*model.CommentLikes, error)
+type CommentLikesResolver interface {
+	Likes(ctx context.Context, obj *resolver.CommentLikes) ([]*resolver.CommentLike, error)
 }
 type MutationResolver interface {
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error)
@@ -263,7 +263,7 @@ type QueryResolver interface {
 	Like(ctx context.Context, id string) (*resolver.Like, error)
 	Likes(ctx context.Context, page resolver.Pagination) (*resolver.Likes, error)
 	CommentLike(ctx context.Context, id string) (*resolver.CommentLike, error)
-	CommentLikes(ctx context.Context, page resolver.Pagination) (*model.CommentLikes, error)
+	CommentLikes(ctx context.Context, page resolver.Pagination) (*resolver.CommentLikes, error)
 	Channel(ctx context.Context, id string) (*resolver.Channel, error)
 	ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error)
 	Message(ctx context.Context, id string) (*resolver.Message, error)
@@ -2866,7 +2866,7 @@ func (ec *executionContext) _Comment_commentLikes(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Comment().CommentLikes(rctx, obj, fc.Args["page"].(resolver.Pagination))
+		return obj.CommentLikes(ctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2875,9 +2875,9 @@ func (ec *executionContext) _Comment_commentLikes(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.CommentLikes)
+	res := resTmp.(*resolver.CommentLikes)
 	fc.Result = res
-	return ec.marshalOCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCommentLikes(ctx, field.Selections, res)
+	return ec.marshalOCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_commentLikes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2885,7 +2885,7 @@ func (ec *executionContext) fieldContext_Comment_commentLikes(ctx context.Contex
 		Object:     "Comment",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "likes":
@@ -3158,7 +3158,7 @@ func (ec *executionContext) fieldContext_CommentLike_createdAt(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graphql.CollectedField, obj *model.CommentLikes) (ret graphql.Marshaler) {
+func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graphql.CollectedField, obj *resolver.CommentLikes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CommentLikes_likes(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3172,7 +3172,7 @@ func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Likes, nil
+		return ec.resolvers.CommentLikes().Likes(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3193,8 +3193,8 @@ func (ec *executionContext) fieldContext_CommentLikes_likes(ctx context.Context,
 	fc = &graphql.FieldContext{
 		Object:     "CommentLikes",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -3212,7 +3212,7 @@ func (ec *executionContext) fieldContext_CommentLikes_likes(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _CommentLikes_next(ctx context.Context, field graphql.CollectedField, obj *model.CommentLikes) (ret graphql.Marshaler) {
+func (ec *executionContext) _CommentLikes_next(ctx context.Context, field graphql.CollectedField, obj *resolver.CommentLikes) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CommentLikes_next(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3226,7 +3226,7 @@ func (ec *executionContext) _CommentLikes_next(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Next, nil
+		return obj.Next(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3244,7 +3244,7 @@ func (ec *executionContext) fieldContext_CommentLikes_next(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "CommentLikes",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
@@ -6847,9 +6847,9 @@ func (ec *executionContext) _Query_commentLikes(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.CommentLikes)
+	res := resTmp.(*resolver.CommentLikes)
 	fc.Result = res
-	return ec.marshalNCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCommentLikes(ctx, field.Selections, res)
+	return ec.marshalNCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikes(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_commentLikes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11066,7 +11066,7 @@ func (ec *executionContext) _CommentLike(ctx context.Context, sel ast.SelectionS
 
 var commentLikesImplementors = []string{"CommentLikes"}
 
-func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.SelectionSet, obj *model.CommentLikes) graphql.Marshaler {
+func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.SelectionSet, obj *resolver.CommentLikes) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, commentLikesImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -11076,12 +11076,74 @@ func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.Selection
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("CommentLikes")
 		case "likes":
-			out.Values[i] = ec._CommentLikes_likes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CommentLikes_likes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "next":
-			out.Values[i] = ec._CommentLikes_next(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CommentLikes_next(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13866,11 +13928,11 @@ func (ec *executionContext) marshalNCommentLike2ᚖgithubᚗcomᚋprojectulterio
 	return ec._CommentLike(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCommentLikes2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v model.CommentLikes) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentLikes2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v resolver.CommentLikes) graphql.Marshaler {
 	return ec._CommentLikes(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v *model.CommentLikes) graphql.Marshaler {
+func (ec *executionContext) marshalNCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v *resolver.CommentLikes) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -14669,7 +14731,7 @@ func (ec *executionContext) marshalOComment2ᚖgithubᚗcomᚋprojectulteriorᚋ
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v *model.CommentLikes) graphql.Marshaler {
+func (ec *executionContext) marshalOCommentLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikes(ctx context.Context, sel ast.SelectionSet, v *resolver.CommentLikes) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

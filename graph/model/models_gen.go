@@ -30,11 +30,6 @@ type CommentCreateInput struct {
 	ContentType format.ContentType `json:"contentType"`
 }
 
-type CommentLikes struct {
-	Likes []*resolver.CommentLike `json:"likes"`
-	Next  *string                 `json:"next,omitempty"`
-}
-
 type CommentUpdateInput struct {
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`

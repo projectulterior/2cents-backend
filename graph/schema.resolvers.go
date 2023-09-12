@@ -44,9 +44,9 @@ func (r *channelResolver) UpdatedAt(ctx context.Context, obj *resolver.Channel) 
 	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
 }
 
-// CommentLikes is the resolver for the commentLikes field.
-func (r *commentResolver) CommentLikes(ctx context.Context, obj *resolver.Comment, page resolver.Pagination) (*model.CommentLikes, error) {
-	panic(fmt.Errorf("not implemented: CommentLikes - commentLikes"))
+// Likes is the resolver for the likes field.
+func (r *commentLikesResolver) Likes(ctx context.Context, obj *resolver.CommentLikes) ([]*resolver.CommentLike, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // UserUpdate is the resolver for the userUpdate field.
@@ -315,7 +315,7 @@ func (r *mutationResolver) CommentLikeCreate(ctx context.Context, id string) (*r
 		return nil, e(ctx, http.StatusForbidden, err.Error())
 	}
 
-	reply, err := r.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
+	reply, err := r.Services.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
 		CommentID: commentID,
 		LikerID:   authID,
 	})
@@ -333,7 +333,7 @@ func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*r
 		return nil, err
 	}
 
-	_, err = r.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
+	_, err = r.Services.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
 		CommentLikeID: commentLikeID,
 	})
 	if err != nil {
@@ -602,7 +602,7 @@ func (r *queryResolver) CommentLike(ctx context.Context, id string) (*resolver.C
 }
 
 // CommentLikes is the resolver for the commentLikes field.
-func (r *queryResolver) CommentLikes(ctx context.Context, page resolver.Pagination) (*model.CommentLikes, error) {
+func (r *queryResolver) CommentLikes(ctx context.Context, page resolver.Pagination) (*resolver.CommentLikes, error) {
 	panic(fmt.Errorf("not implemented: CommentLikes - commentLikes"))
 }
 
@@ -664,8 +664,8 @@ func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *re
 // Channel returns ChannelResolver implementation.
 func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
 
-// Comment returns CommentResolver implementation.
-func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
+// CommentLikes returns CommentLikesResolver implementation.
+func (r *Resolver) CommentLikes() CommentLikesResolver { return &commentLikesResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -683,7 +683,7 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type channelResolver struct{ *Resolver }
-type commentResolver struct{ *Resolver }
+type commentLikesResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
