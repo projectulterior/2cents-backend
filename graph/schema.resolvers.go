@@ -12,6 +12,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/format"
@@ -41,6 +42,11 @@ func (r *channelResolver) CreatedAt(ctx context.Context, obj *resolver.Channel) 
 // UpdatedAt is the resolver for the updatedAt field.
 func (r *channelResolver) UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error) {
 	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+}
+
+// Likes is the resolver for the likes field.
+func (r *commentLikesResolver) Likes(ctx context.Context, obj *resolver.CommentLikes) ([]*resolver.CommentLike, error) {
+	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
 // UserUpdate is the resolver for the userUpdate field.
@@ -297,6 +303,46 @@ func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver
 	return resolver.NewLikeByID(r.Services, likeID), nil
 }
 
+// CommentLikeCreate is the resolver for the commentLikeCreate field.
+func (r *mutationResolver) CommentLikeCreate(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	commentID, err := format.ParseCommentID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	reply, err := r.Services.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
+		CommentID: commentID,
+		LikerID:   authID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentLikeWithData(r.Services, reply), nil
+}
+
+// CommentLikeDelete is the resolver for the commentLikeDelete field.
+func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	commentLikeID, err := format.ParseCommentLikeID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Services.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
+		CommentLikeID: commentLikeID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
+}
+
 // ChannelCreate is the resolver for the channelCreate field.
 func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error) {
 	authID, err := authUserID(ctx)
@@ -449,11 +495,6 @@ func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resol
 	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
-// Likes is the resolver for the likes field.
-func (r *postResolver) Likes(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Likes, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
-}
-
 // Comments is the resolver for the comments field.
 func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
@@ -541,8 +582,28 @@ func (r *queryResolver) Like(ctx context.Context, id string) (*resolver.Like, er
 }
 
 // Likes is the resolver for the likes field.
-func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*model.Likes, error) {
+func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*resolver.Likes, error) {
 	panic(fmt.Errorf("not implemented: Likes - likes"))
+}
+
+// CommentLike is the resolver for the commentLike field.
+func (r *queryResolver) CommentLike(ctx context.Context, id string) (*resolver.CommentLike, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	commentLikeID, err := format.ParseCommentLikeID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
+}
+
+// CommentLikes is the resolver for the commentLikes field.
+func (r *queryResolver) CommentLikes(ctx context.Context, page resolver.Pagination) (*resolver.CommentLikes, error) {
+	panic(fmt.Errorf("not implemented: CommentLikes - commentLikes"))
 }
 
 // Channel is the resolver for the channel field.
@@ -600,13 +661,11 @@ func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *re
 	panic(fmt.Errorf("not implemented: Follows - follows"))
 }
 
-// Likes is the resolver for the likes field.
-func (r *userResolver) Likes(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Likes, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
-}
-
 // Channel returns ChannelResolver implementation.
 func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
+
+// CommentLikes returns CommentLikesResolver implementation.
+func (r *Resolver) CommentLikes() CommentLikesResolver { return &commentLikesResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -624,6 +683,7 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type channelResolver struct{ *Resolver }
+type commentLikesResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

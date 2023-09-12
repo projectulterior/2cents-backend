@@ -16,8 +16,11 @@ type Query {
   comment(id: ID!): Comment!
   comments(page: Pagination!): Comments!
 
-  like(id:ID!): Like!
-  likes(page:Pagination!): Likes!
+  like(id: ID!): Like!
+  likes(page: Pagination!): Likes!
+
+  commentLike(id: ID!): CommentLike!
+  commentLikes(page: Pagination!): CommentLikes!
 
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
@@ -41,6 +44,9 @@ type Mutation {
 
   likeCreate(id: ID!): Like!
   likeDelete(id: ID!): Like!
+
+  commentLikeCreate(id: ID!): CommentLike!
+  commentLikeDelete(id: ID!): CommentLike!
 
   channelCreate(input: ChannelCreateInput!): Channel!
   addMembers(id: ID!, input: AddMembersInput!): Channel!
@@ -139,12 +145,25 @@ type Comment {
   post: Post
   content: String
   author: User
+  commentLikes(page: Pagination!): CommentLikes
   createdAt: Time
 }
 
 type Comments {
   comments: [Comment!]!
   next: String!
+}
+
+type CommentLike {
+  id: ID!
+  comment: Comment
+  liker: User
+  createdAt: Time
+}
+
+type CommentLikes {
+  likes: [CommentLike!]!
+  next: String
 }
 
 

@@ -45,11 +45,6 @@ type Follows struct {
 	Next    *string            `json:"next,omitempty"`
 }
 
-type Likes struct {
-	Likes []*resolver.Like `json:"likes"`
-	Next  string           `json:"next"`
-}
-
 type MessageCreateInput struct {
 	ChannelID   string              `json:"channelID"`
 	SenderID    string              `json:"senderID"`

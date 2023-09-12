@@ -81,3 +81,7 @@ func (c *Comment) CreatedAt(ctx context.Context) (*time.Time, error) {
 
 	return &reply.CreatedAt, nil
 }
+
+func (c *Comment) CommentLikes(ctx context.Context, page Pagination) (*CommentLikes, error) {
+	return NewCommentLikes(NewCommentsCommentLikes(c.svc, c.commentID, page)), nil
+}
