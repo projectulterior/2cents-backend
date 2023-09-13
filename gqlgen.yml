@@ -122,6 +122,9 @@ models:
   Message:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Message
+  Messages:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Messages
   Channel:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Channel

@@ -41,9 +41,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Channel() ChannelResolver
-	CommentLikes() CommentLikesResolver
-	Follows() FollowsResolver
 	Mutation() MutationResolver
 	Post() PostResolver
 	Query() QueryResolver
@@ -93,8 +90,8 @@ type ComplexityRoot struct {
 	}
 
 	CommentLikes struct {
-		Likes func(childComplexity int) int
-		Next  func(childComplexity int) int
+		CommentLikes func(childComplexity int) int
+		Next         func(childComplexity int) int
 	}
 
 	Comments struct {
@@ -210,7 +207,7 @@ type ComplexityRoot struct {
 		Cents    func(childComplexity int) int
 		Cover    func(childComplexity int) int
 		Email    func(childComplexity int) int
-		Follows  func(childComplexity int, page *resolver.Pagination) int
+		Follows  func(childComplexity int, page resolver.Pagination) int
 		ID       func(childComplexity int) int
 		Likes    func(childComplexity int, page resolver.Pagination) int
 		Name     func(childComplexity int) int
@@ -225,18 +222,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type ChannelResolver interface {
-	Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error)
-	Messages(ctx context.Context, obj *resolver.Channel, page resolver.Pagination) (*model.Messages, error)
-	CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
-	UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error)
-}
-type CommentLikesResolver interface {
-	Likes(ctx context.Context, obj *resolver.CommentLikes) ([]*resolver.CommentLike, error)
-}
-type FollowsResolver interface {
-	Follows(ctx context.Context, obj *resolver.Follows) ([]*resolver.Follow, error)
-}
 type MutationResolver interface {
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error)
 	UserDelete(ctx context.Context) (*resolver.User, error)
@@ -279,17 +264,13 @@ type QueryResolver interface {
 	Channel(ctx context.Context, id string) (*resolver.Channel, error)
 	ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error)
 	Message(ctx context.Context, id string) (*resolver.Message, error)
-	Messages(ctx context.Context, page resolver.Pagination) (*model.Messages, error)
+	Messages(ctx context.Context, page resolver.Pagination) (*resolver.Messages, error)
 }
 type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
 }
 type UserResolver interface {
-	Email(ctx context.Context, obj *resolver.User) (*string, error)
-	Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error)
-
 	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
-	Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*resolver.Follows, error)
 }
 
 type executableSchema struct {
@@ -471,12 +452,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CommentLike.Liker(childComplexity), true
 
-	case "CommentLikes.likes":
-		if e.complexity.CommentLikes.Likes == nil {
+	case "CommentLikes.commentLikes":
+		if e.complexity.CommentLikes.CommentLikes == nil {
 			break
 		}
 
-		return e.complexity.CommentLikes.Likes(childComplexity), true
+		return e.complexity.CommentLikes.CommentLikes(childComplexity), true
 
 	case "CommentLikes.next":
 		if e.complexity.CommentLikes.Next == nil {
@@ -1222,7 +1203,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.User.Follows(childComplexity, args["page"].(*resolver.Pagination)), true
+		return e.complexity.User.Follows(childComplexity, args["page"].(resolver.Pagination)), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -2120,10 +2101,10 @@ func (ec *executionContext) field_Subscription_onUserUpdated_args(ctx context.Co
 func (ec *executionContext) field_User_follows_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *resolver.Pagination
+	var arg0 resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2566,7 +2547,7 @@ func (ec *executionContext) _Channel_members(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().Members(rctx, obj)
+		return obj.Members(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2585,7 +2566,7 @@ func (ec *executionContext) fieldContext_Channel_members(ctx context.Context, fi
 		Object:     "Channel",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -2633,7 +2614,7 @@ func (ec *executionContext) _Channel_messages(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().Messages(rctx, obj, fc.Args["page"].(resolver.Pagination))
+		return obj.Messages(ctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2642,9 +2623,9 @@ func (ec *executionContext) _Channel_messages(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Messages)
+	res := resTmp.(*resolver.Messages)
 	fc.Result = res
-	return ec.marshalOMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessages(ctx, field.Selections, res)
+	return ec.marshalOMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessages(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Channel_messages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2652,7 +2633,7 @@ func (ec *executionContext) fieldContext_Channel_messages(ctx context.Context, f
 		Object:     "Channel",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "messages":
@@ -2691,7 +2672,7 @@ func (ec *executionContext) _Channel_createdAt(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().CreatedAt(rctx, obj)
+		return obj.CreatedAt(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2710,7 +2691,7 @@ func (ec *executionContext) fieldContext_Channel_createdAt(ctx context.Context, 
 		Object:     "Channel",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
 		},
@@ -2732,7 +2713,7 @@ func (ec *executionContext) _Channel_updatedAt(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Channel().UpdatedAt(rctx, obj)
+		return obj.UpdatedAt(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2751,7 +2732,7 @@ func (ec *executionContext) fieldContext_Channel_updatedAt(ctx context.Context, 
 		Object:     "Channel",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
 		},
@@ -3008,8 +2989,8 @@ func (ec *executionContext) fieldContext_Comment_commentLikes(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "likes":
-				return ec.fieldContext_CommentLikes_likes(ctx, field)
+			case "commentLikes":
+				return ec.fieldContext_CommentLikes_commentLikes(ctx, field)
 			case "next":
 				return ec.fieldContext_CommentLikes_next(ctx, field)
 			}
@@ -3278,8 +3259,8 @@ func (ec *executionContext) fieldContext_CommentLike_createdAt(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graphql.CollectedField, obj *resolver.CommentLikes) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_CommentLikes_likes(ctx, field)
+func (ec *executionContext) _CommentLikes_commentLikes(ctx context.Context, field graphql.CollectedField, obj *resolver.CommentLikes) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CommentLikes_commentLikes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3292,7 +3273,7 @@ func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.CommentLikes().Likes(rctx, obj)
+		return obj.CommentLikes(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3309,12 +3290,12 @@ func (ec *executionContext) _CommentLikes_likes(ctx context.Context, field graph
 	return ec.marshalNCommentLike2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLikeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CommentLikes_likes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CommentLikes_commentLikes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CommentLikes",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -3708,7 +3689,7 @@ func (ec *executionContext) _Follows_follows(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Follows().Follows(rctx, obj)
+		return obj.Follows(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3730,7 +3711,7 @@ func (ec *executionContext) fieldContext_Follows_follows(ctx context.Context, fi
 		Object:     "Follows",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -4390,7 +4371,7 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Messages_messages(ctx context.Context, field graphql.CollectedField, obj *model.Messages) (ret graphql.Marshaler) {
+func (ec *executionContext) _Messages_messages(ctx context.Context, field graphql.CollectedField, obj *resolver.Messages) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Messages_messages(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4404,7 +4385,7 @@ func (ec *executionContext) _Messages_messages(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Messages, nil
+		return obj.Messages(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4422,7 +4403,7 @@ func (ec *executionContext) fieldContext_Messages_messages(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "Messages",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -4445,7 +4426,7 @@ func (ec *executionContext) fieldContext_Messages_messages(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Messages_next(ctx context.Context, field graphql.CollectedField, obj *model.Messages) (ret graphql.Marshaler) {
+func (ec *executionContext) _Messages_next(ctx context.Context, field graphql.CollectedField, obj *resolver.Messages) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Messages_next(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4459,7 +4440,7 @@ func (ec *executionContext) _Messages_next(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Next, nil
+		return obj.Next(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4477,7 +4458,7 @@ func (ec *executionContext) fieldContext_Messages_next(ctx context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "Messages",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
@@ -7110,8 +7091,8 @@ func (ec *executionContext) fieldContext_Query_commentLikes(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "likes":
-				return ec.fieldContext_CommentLikes_likes(ctx, field)
+			case "commentLikes":
+				return ec.fieldContext_CommentLikes_commentLikes(ctx, field)
 			case "next":
 				return ec.fieldContext_CommentLikes_next(ctx, field)
 			}
@@ -7487,9 +7468,9 @@ func (ec *executionContext) _Query_messages(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Messages)
+	res := resTmp.(*resolver.Messages)
 	fc.Result = res
-	return ec.marshalNMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessages(ctx, field.Selections, res)
+	return ec.marshalNMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessages(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_messages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7886,7 +7867,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Email(rctx, obj)
+		return obj.Email(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7905,7 +7886,7 @@ func (ec *executionContext) fieldContext_User_email(ctx context.Context, field g
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -7927,7 +7908,7 @@ func (ec *executionContext) _User_birthday(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Birthday(rctx, obj)
+		return obj.Birthday(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7946,7 +7927,7 @@ func (ec *executionContext) fieldContext_User_birthday(ctx context.Context, fiel
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "month":
@@ -8150,7 +8131,7 @@ func (ec *executionContext) _User_follows(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Follows(rctx, obj, fc.Args["page"].(*resolver.Pagination))
+		return obj.Follows(ctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8169,7 +8150,7 @@ func (ec *executionContext) fieldContext_User_follows(ctx context.Context, field
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "follows":
@@ -11451,7 +11432,7 @@ func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("CommentLikes")
-		case "likes":
+		case "commentLikes":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -11460,7 +11441,7 @@ func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._CommentLikes_likes(ctx, field, obj)
+				res = ec._CommentLikes_commentLikes(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -12374,7 +12355,7 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 
 var messagesImplementors = []string{"Messages"}
 
-func (ec *executionContext) _Messages(ctx context.Context, sel ast.SelectionSet, obj *model.Messages) graphql.Marshaler {
+func (ec *executionContext) _Messages(ctx context.Context, sel ast.SelectionSet, obj *resolver.Messages) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, messagesImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -12384,9 +12365,71 @@ func (ec *executionContext) _Messages(ctx context.Context, sel ast.SelectionSet,
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Messages")
 		case "messages":
-			out.Values[i] = ec._Messages_messages(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Messages_messages(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "next":
-			out.Values[i] = ec._Messages_next(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Messages_next(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14703,11 +14746,11 @@ func (ec *executionContext) unmarshalNMessageUpdateInput2githubᚗcomᚋprojectu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMessages2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessages(ctx context.Context, sel ast.SelectionSet, v model.Messages) graphql.Marshaler {
+func (ec *executionContext) marshalNMessages2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessages(ctx context.Context, sel ast.SelectionSet, v resolver.Messages) graphql.Marshaler {
 	return ec._Messages(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessages(ctx context.Context, sel ast.SelectionSet, v *model.Messages) graphql.Marshaler {
+func (ec *executionContext) marshalNMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessages(ctx context.Context, sel ast.SelectionSet, v *resolver.Messages) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -15359,7 +15402,7 @@ func (ec *executionContext) marshalOMessage2ᚕᚖgithubᚗcomᚋprojectulterior
 	return ret
 }
 
-func (ec *executionContext) marshalOMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐMessages(ctx context.Context, sel ast.SelectionSet, v *model.Messages) graphql.Marshaler {
+func (ec *executionContext) marshalOMessages2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessages(ctx context.Context, sel ast.SelectionSet, v *resolver.Messages) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

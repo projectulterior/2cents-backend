@@ -128,6 +128,24 @@ func (u *User) Cover(ctx context.Context) (*string, error) {
 	return &reply.Cover, nil
 }
 
+func (u *User) Birthday(ctx context.Context) (*format.Birthday, error) {
+	reply, err := u.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &reply.Birthday, nil
+}
+
+func (u *User) Email(ctx context.Context) (*string, error) {
+	reply, err := u.getter.Call(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &reply.Email, nil
+}
+
 func (u *User) Posts(ctx context.Context, page Pagination) (*Posts, error) {
 	return NewPosts(NewUserPosts(u.svc, u.userID, page)), nil
 }

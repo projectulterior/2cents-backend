@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
@@ -23,36 +22,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-// Members is the resolver for the members field.
-func (r *channelResolver) Members(ctx context.Context, obj *resolver.Channel) ([]*resolver.User, error) {
-	panic(fmt.Errorf("not implemented: Members - members"))
-}
-
-// Messages is the resolver for the messages field.
-func (r *channelResolver) Messages(ctx context.Context, obj *resolver.Channel, page resolver.Pagination) (*model.Messages, error) {
-	panic(fmt.Errorf("not implemented: Messages - messages"))
-}
-
-// CreatedAt is the resolver for the createdAt field.
-func (r *channelResolver) CreatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented: CreatedAt - createdAt"))
-}
-
-// UpdatedAt is the resolver for the updatedAt field.
-func (r *channelResolver) UpdatedAt(ctx context.Context, obj *resolver.Channel) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
-}
-
-// Likes is the resolver for the likes field.
-func (r *commentLikesResolver) Likes(ctx context.Context, obj *resolver.CommentLikes) ([]*resolver.CommentLike, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
-}
-
-// Follows is the resolver for the follows field.
-func (r *followsResolver) Follows(ctx context.Context, obj *resolver.Follows) ([]*resolver.Follow, error) {
-	panic(fmt.Errorf("not implemented: Follows - follows"))
-}
 
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
@@ -653,7 +622,17 @@ func (r *queryResolver) CommentLikes(ctx context.Context, page resolver.Paginati
 
 // Follow is the resolver for the follow field.
 func (r *queryResolver) Follow(ctx context.Context, id string) (*resolver.Follow, error) {
-	panic(fmt.Errorf("not implemented: Follow - follow"))
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	followID, err := format.ParseFollowID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewFollowByID(r.Services, followID), nil
 }
 
 // Follows is the resolver for the follows field.
@@ -663,12 +642,48 @@ func (r *queryResolver) Follows(ctx context.Context, page resolver.Pagination) (
 
 // Channel is the resolver for the channel field.
 func (r *queryResolver) Channel(ctx context.Context, id string) (*resolver.Channel, error) {
-	panic(fmt.Errorf("not implemented: Channel - channel"))
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	channelID, err := format.ParseChannelID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	return resolver.NewChannelByID(r.Services, channelID), nil
 }
 
 // ChannelByMembers is the resolver for the channelByMembers field.
 func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error) {
-	panic(fmt.Errorf("not implemented: ChannelByMembers - channelByMembers"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	memberIDs := []format.UserID{authID}
+
+	for _, mid := range members {
+		memberID, err := format.ParseUserID(mid)
+		if err != nil {
+			return nil, e(ctx, http.StatusBadRequest, err.Error())
+		}
+
+		memberIDs = append(memberIDs, memberID)
+	}
+
+	channel, err := r.Messaging.GetChannelByMembers(ctx, messaging.GetChannelByMembersRequest{
+		MemberIDs: memberIDs,
+	})
+	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			return nil, e(ctx, http.StatusInternalServerError, err.Error())
+		}
+		return nil, e(ctx, http.StatusNotFound, err.Error())
+	}
+
+	return resolver.NewChannelWithData(r.Services, channel), nil
 }
 
 // Message is the resolver for the message field.
@@ -687,7 +702,7 @@ func (r *queryResolver) Message(ctx context.Context, id string) (*resolver.Messa
 }
 
 // Messages is the resolver for the messages field.
-func (r *queryResolver) Messages(ctx context.Context, page resolver.Pagination) (*model.Messages, error) {
+func (r *queryResolver) Messages(ctx context.Context, page resolver.Pagination) (*resolver.Messages, error) {
 	panic(fmt.Errorf("not implemented: Messages - messages"))
 }
 
@@ -696,34 +711,10 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
 }
 
-// Email is the resolver for the email field.
-func (r *userResolver) Email(ctx context.Context, obj *resolver.User) (*string, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
-}
-
-// Birthday is the resolver for the birthday field.
-func (r *userResolver) Birthday(ctx context.Context, obj *resolver.User) (*format.Birthday, error) {
-	panic(fmt.Errorf("not implemented: Birthday - birthday"))
-}
-
 // Cents is the resolver for the cents field.
 func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error) {
 	panic(fmt.Errorf("not implemented: Cents - cents"))
 }
-
-// Follows is the resolver for the follows field.
-func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*resolver.Follows, error) {
-	panic(fmt.Errorf("not implemented: Follows - follows"))
-}
-
-// Channel returns ChannelResolver implementation.
-func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
-
-// CommentLikes returns CommentLikesResolver implementation.
-func (r *Resolver) CommentLikes() CommentLikesResolver { return &commentLikesResolver{r} }
-
-// Follows returns FollowsResolver implementation.
-func (r *Resolver) Follows() FollowsResolver { return &followsResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -740,9 +731,6 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
-type channelResolver struct{ *Resolver }
-type commentLikesResolver struct{ *Resolver }
-type followsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

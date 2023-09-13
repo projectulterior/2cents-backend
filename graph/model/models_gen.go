@@ -54,11 +54,6 @@ type MessageUpdateInput struct {
 	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
-type Messages struct {
-	Messages []*resolver.Message `json:"messages,omitempty"`
-	Next     *string             `json:"next,omitempty"`
-}
-
 type PostCreateInput struct {
 	Visibility  format.Visibility  `json:"visibility"`
 	Content     string             `json:"content"`

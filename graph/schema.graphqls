@@ -168,7 +168,7 @@ type CommentLike {
 }
 
 type CommentLikes {
-  likes: [CommentLike!]!
+  commentLikes: [CommentLike!]!
   next: String
 }
 
