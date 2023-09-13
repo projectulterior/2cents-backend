@@ -40,11 +40,6 @@ type Comments struct {
 	Next     string              `json:"next"`
 }
 
-type Follows struct {
-	Follows []*resolver.Follow `json:"follows"`
-	Next    *string            `json:"next,omitempty"`
-}
-
 type MessageCreateInput struct {
 	ChannelID   string              `json:"channelID"`
 	SenderID    string              `json:"senderID"`

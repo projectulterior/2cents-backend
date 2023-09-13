@@ -22,6 +22,9 @@ type Query {
   commentLike(id: ID!): CommentLike!
   commentLikes(page: Pagination!): CommentLikes!
 
+  follow(id: ID!): Follow!
+  follows(page: Pagination!): Follows!
+
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
 
@@ -47,6 +50,9 @@ type Mutation {
 
   commentLikeCreate(id: ID!): CommentLike!
   commentLikeDelete(id: ID!): CommentLike!
+
+  followCreate(id: ID!): Follow!
+  followDelete(id: ID!): Follow!
 
   channelCreate(input: ChannelCreateInput!): Channel!
   addMembers(id: ID!, input: AddMembersInput!): Channel!

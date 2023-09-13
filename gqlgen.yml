@@ -116,6 +116,9 @@ models:
   Follow:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Follow
+  Follows:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Follows
   Message:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Message

@@ -49,6 +49,11 @@ func (r *commentLikesResolver) Likes(ctx context.Context, obj *resolver.CommentL
 	panic(fmt.Errorf("not implemented: Likes - likes"))
 }
 
+// Follows is the resolver for the follows field.
+func (r *followsResolver) Follows(ctx context.Context, obj *resolver.Follows) ([]*resolver.Follow, error) {
+	panic(fmt.Errorf("not implemented: Follows - follows"))
+}
+
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
 	userID, err := authUserID(ctx)
@@ -343,6 +348,46 @@ func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*r
 	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
 }
 
+// FollowCreate is the resolver for the followCreate field.
+func (r *mutationResolver) FollowCreate(ctx context.Context, id string) (*resolver.Follow, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	followeeID, err := format.ParseUserID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
+		FollowerID: authID,
+		FolloweeID: followeeID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewFollowByID(r.Services, reply.FollowID), nil
+}
+
+// FollowDelete is the resolver for the followDelete field.
+func (r *mutationResolver) FollowDelete(ctx context.Context, id string) (*resolver.Follow, error) {
+	followID, err := format.ParseFollowID(id)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	reply, err := r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
+		FollowID: followID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.NewFollowByID(r.Services, reply.FollowID), nil
+}
+
 // ChannelCreate is the resolver for the channelCreate field.
 func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error) {
 	authID, err := authUserID(ctx)
@@ -606,6 +651,16 @@ func (r *queryResolver) CommentLikes(ctx context.Context, page resolver.Paginati
 	panic(fmt.Errorf("not implemented: CommentLikes - commentLikes"))
 }
 
+// Follow is the resolver for the follow field.
+func (r *queryResolver) Follow(ctx context.Context, id string) (*resolver.Follow, error) {
+	panic(fmt.Errorf("not implemented: Follow - follow"))
+}
+
+// Follows is the resolver for the follows field.
+func (r *queryResolver) Follows(ctx context.Context, page resolver.Pagination) (*resolver.Follows, error) {
+	panic(fmt.Errorf("not implemented: Follows - follows"))
+}
+
 // Channel is the resolver for the channel field.
 func (r *queryResolver) Channel(ctx context.Context, id string) (*resolver.Channel, error) {
 	panic(fmt.Errorf("not implemented: Channel - channel"))
@@ -657,7 +712,7 @@ func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Ce
 }
 
 // Follows is the resolver for the follows field.
-func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*model.Follows, error) {
+func (r *userResolver) Follows(ctx context.Context, obj *resolver.User, page *resolver.Pagination) (*resolver.Follows, error) {
 	panic(fmt.Errorf("not implemented: Follows - follows"))
 }
 
@@ -666,6 +721,9 @@ func (r *Resolver) Channel() ChannelResolver { return &channelResolver{r} }
 
 // CommentLikes returns CommentLikesResolver implementation.
 func (r *Resolver) CommentLikes() CommentLikesResolver { return &commentLikesResolver{r} }
+
+// Follows returns FollowsResolver implementation.
+func (r *Resolver) Follows() FollowsResolver { return &followsResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -684,6 +742,7 @@ func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type channelResolver struct{ *Resolver }
 type commentLikesResolver struct{ *Resolver }
+type followsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
