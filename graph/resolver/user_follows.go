@@ -28,36 +28,22 @@ func NewUserFollows(svc *services.Services, userID format.UserID, page Paginatio
 	}
 }
 
-<<<<<<< HEAD
 func (f *UserFollows) Follows(ctx context.Context) ([]*Follow, error) {
 	reply, err := f.getter.Call(ctx)
-=======
-func (p *UserFollows) Follows(ctx context.Context) ([]*Follow, error) {
-	reply, err := p.getter.Call(ctx)
->>>>>>> e6f03cfec511319811904d22da689c74a15ce823
 	if err != nil {
 		return nil, err
 	}
 
 	var toRet []*Follow
 	for _, follow := range reply.Follows {
-<<<<<<< HEAD
 		toRet = append(toRet, NewFollowWithData(f.svc, follow))
-=======
-		toRet = append(toRet, NewFollowWithData(p.svc, follow))
->>>>>>> e6f03cfec511319811904d22da689c74a15ce823
 	}
 
 	return toRet, nil
 }
 
-<<<<<<< HEAD
-func (f *UserFollows) Next(ctx context.Context) (*string, error) {
-	reply, err := f.getter.Call(ctx)
-=======
 func (p *UserFollows) Next(ctx context.Context) (*string, error) {
 	reply, err := p.getter.Call(ctx)
->>>>>>> e6f03cfec511319811904d22da689c74a15ce823
 	if err != nil {
 		return nil, err
 	}
