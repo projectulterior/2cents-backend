@@ -13,8 +13,9 @@ import (
 )
 
 type GetChannelsRequest struct {
-	Cursor string
-	Limit  int
+	MemberID format.UserID
+	Cursor   string
+	Limit    int
 }
 
 type GetChannelsResponse struct {

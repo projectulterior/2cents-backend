@@ -2,15 +2,15 @@ package resolver
 
 import "context"
 
-type FollowsGetter interface {
-	Likes(context.Context) ([]*Follow, error)
+type FollowGetter interface {
+	Follows(context.Context) ([]*Follow, error)
 	Next(context.Context) (*string, error)
 }
 
 type Follows struct {
-	FollowsGetter
+	FollowGetter
 }
 
-func NewFollows(getter FollowsGetter) *Follows {
-	return &Follows{FollowsGetter: getter}
+func NewFollows(getter FollowGetter) *Follows {
+	return &Follows{FollowGetter: getter}
 }

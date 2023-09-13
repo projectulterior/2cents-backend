@@ -135,3 +135,7 @@ func (u *User) Posts(ctx context.Context, page Pagination) (*Posts, error) {
 func (u *User) Likes(ctx context.Context, page Pagination) (*Likes, error) {
 	return NewLikes(NewUserLikes(u.svc, u.userID, page)), nil
 }
+
+func (u *User) Follows(ctx context.Context, page Pagination) (*Follows, error) {
+	return NewFollows(NewUserFollows(u.svc, u.userID, page)), nil
+}
