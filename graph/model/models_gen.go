@@ -24,6 +24,11 @@ type ChannelCreateInput struct {
 	MemberIDs []string `json:"memberIDs"`
 }
 
+type Channels struct {
+	Channels []*resolver.Channel `json:"channels"`
+	Next     *string             `json:"next,omitempty"`
+}
+
 type CommentCreateInput struct {
 	PostID      string             `json:"postID"`
 	Content     string             `json:"content"`
@@ -52,6 +57,10 @@ type MessageUpdateInput struct {
 	SenderID    string              `json:"senderID"`
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`
+}
+
+type Notifications struct {
+	Messages *int `json:"messages,omitempty"`
 }
 
 type PostCreateInput struct {

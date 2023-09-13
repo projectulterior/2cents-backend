@@ -7,13 +7,23 @@ schema {
 scalar Time
 
 type Query {
+  """Returns the user specified by id. If empty, auth user"""
   user(id: ID): User!
+  """Returns all users in 2cents"""
   users(page: Pagination!): Users!
 
+  """Returns the post specified by id"""
   post(id: ID!): Post!
+  """Returns all posts in 2cents"""
   posts(page: Pagination!): Posts!
+  """Returns posts created by the auth user's following"""
+  postsFollowing(page: Pagination!): Posts!
+  """Returns posts cater towards the auth user"""
+  postsDiscovery(page: Pagination!): Posts!
 
+  """Returns the comment specified by id"""
   comment(id: ID!): Comment!
+  """Returns all comments in 2cents"""
   comments(page: Pagination!): Comments!
 
   like(id: ID!): Like!
@@ -28,8 +38,11 @@ type Query {
   channel(id: ID!): Channel!
   channelByMembers(members: [ID!]!): Channel!
 
-  message(id:ID!): Message!
-  messages(page: Pagination!): Messages!
+  channels(page: Pagination!): Channels!
+
+  messages(id: ID!, page: Pagination!): Messages!
+
+  notifications(page: Pagination): Notifications!
 }
 
 type Mutation {
@@ -41,30 +54,30 @@ type Mutation {
   postUpdate(id: ID!, input: PostUpdateInput!): Post!
   postDelete(id: ID!): Post!
 
+  postLike(id: ID!, isLike: Boolean!): Like!
+
   commentCreate(input: CommentCreateInput!): Comment!
   commentUpdate(id: ID!, input: CommentUpdateInput!): Comment!
   commentDelete(id: ID!): Comment!
 
-  likeCreate(id: ID!): Like!
-  likeDelete(id: ID!): Like!
-
-  commentLikeCreate(id: ID!): CommentLike!
-  commentLikeDelete(id: ID!): CommentLike!
+  commentLike(id: ID!, isLike: Boolean!): CommentLike!
 
   followCreate(id: ID!): Follow!
   followDelete(id: ID!): Follow!
 
   channelCreate(input: ChannelCreateInput!): Channel!
-  addMembers(id: ID!, input: AddMembersInput!): Channel!
+  channelAddMembers(id: ID!, input: AddMembersInput!): Channel!
   channelDelete(id: ID!): Channel!
 
   messageCreate(input: MessageCreateInput!): Message!
   messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
   messageDelete(id: ID!): Message!
+  messageSetUnread(id: ID!): Message!
 }
 
 type Subscription {
   onUserUpdated(id: ID): User!
+  onChannelUpdated: Channel!
 }
 
 type User {
@@ -172,13 +185,17 @@ type CommentLikes {
   next: String
 }
 
-
 type Channel {
   id: ID!
   members: [User!]
   messages(page: Pagination!): Messages
   createdAt: Time
   updatedAt: Time
+}
+
+type Channels {
+  channels: [Channel!]!
+  next: String
 }
 
 type Message {
@@ -205,6 +222,10 @@ enum ContentType {
   TEXT
   IMAGE
   VIDEO
+}
+
+type Notifications {
+  messages: Int
 }
 
 ### Inputs

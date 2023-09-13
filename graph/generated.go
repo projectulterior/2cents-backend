@@ -73,6 +73,11 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	Channels struct {
+		Channels func(childComplexity int) int
+		Next     func(childComplexity int) int
+	}
+
 	Comment struct {
 		Author       func(childComplexity int) int
 		CommentLikes func(childComplexity int, page resolver.Pagination) int
@@ -138,27 +143,30 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddMembers        func(childComplexity int, id string, input model.AddMembersInput) int
+		ChannelAddMembers func(childComplexity int, id string, input model.AddMembersInput) int
 		ChannelCreate     func(childComplexity int, input model.ChannelCreateInput) int
 		ChannelDelete     func(childComplexity int, id string) int
 		CommentCreate     func(childComplexity int, input model.CommentCreateInput) int
 		CommentDelete     func(childComplexity int, id string) int
-		CommentLikeCreate func(childComplexity int, id string) int
-		CommentLikeDelete func(childComplexity int, id string) int
+		CommentLike       func(childComplexity int, id string, isLike bool) int
 		CommentUpdate     func(childComplexity int, id string, input model.CommentUpdateInput) int
 		FollowCreate      func(childComplexity int, id string) int
 		FollowDelete      func(childComplexity int, id string) int
-		LikeCreate        func(childComplexity int, id string) int
-		LikeDelete        func(childComplexity int, id string) int
 		MessageCreate     func(childComplexity int, input model.MessageCreateInput) int
 		MessageDelete     func(childComplexity int, id string) int
+		MessageSetUnread  func(childComplexity int, id string) int
 		MessageUpdate     func(childComplexity int, id string, input model.MessageUpdateInput) int
 		PostCreate        func(childComplexity int, input model.PostCreateInput) int
 		PostDelete        func(childComplexity int, id string) int
+		PostLike          func(childComplexity int, id string, isLike bool) int
 		PostUpdate        func(childComplexity int, id string, input model.PostUpdateInput) int
 		UserDelete        func(childComplexity int) int
 		UserFollow        func(childComplexity int, id string, isFollow bool) int
 		UserUpdate        func(childComplexity int, input model.UserUpdateInput) int
+	}
+
+	Notifications struct {
+		Messages func(childComplexity int) int
 	}
 
 	Post struct {
@@ -181,6 +189,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Channel          func(childComplexity int, id string) int
 		ChannelByMembers func(childComplexity int, members []string) int
+		Channels         func(childComplexity int, page resolver.Pagination) int
 		Comment          func(childComplexity int, id string) int
 		CommentLike      func(childComplexity int, id string) int
 		CommentLikes     func(childComplexity int, page resolver.Pagination) int
@@ -189,16 +198,19 @@ type ComplexityRoot struct {
 		Follows          func(childComplexity int, page resolver.Pagination) int
 		Like             func(childComplexity int, id string) int
 		Likes            func(childComplexity int, page resolver.Pagination) int
-		Message          func(childComplexity int, id string) int
-		Messages         func(childComplexity int, page resolver.Pagination) int
+		Messages         func(childComplexity int, id string, page resolver.Pagination) int
+		Notifications    func(childComplexity int, page *resolver.Pagination) int
 		Post             func(childComplexity int, id string) int
 		Posts            func(childComplexity int, page resolver.Pagination) int
+		PostsDiscovery   func(childComplexity int, page resolver.Pagination) int
+		PostsFollowing   func(childComplexity int, page resolver.Pagination) int
 		User             func(childComplexity int, id *string) int
 		Users            func(childComplexity int, page resolver.Pagination) int
 	}
 
 	Subscription struct {
-		OnUserUpdated func(childComplexity int, id *string) int
+		OnChannelUpdated func(childComplexity int) int
+		OnUserUpdated    func(childComplexity int, id *string) int
 	}
 
 	User struct {
@@ -229,21 +241,20 @@ type MutationResolver interface {
 	PostCreate(ctx context.Context, input model.PostCreateInput) (*resolver.Post, error)
 	PostUpdate(ctx context.Context, id string, input model.PostUpdateInput) (*resolver.Post, error)
 	PostDelete(ctx context.Context, id string) (*resolver.Post, error)
+	PostLike(ctx context.Context, id string, isLike bool) (*resolver.Like, error)
 	CommentCreate(ctx context.Context, input model.CommentCreateInput) (*resolver.Comment, error)
 	CommentUpdate(ctx context.Context, id string, input model.CommentUpdateInput) (*resolver.Comment, error)
 	CommentDelete(ctx context.Context, id string) (*resolver.Comment, error)
-	LikeCreate(ctx context.Context, id string) (*resolver.Like, error)
-	LikeDelete(ctx context.Context, id string) (*resolver.Like, error)
-	CommentLikeCreate(ctx context.Context, id string) (*resolver.CommentLike, error)
-	CommentLikeDelete(ctx context.Context, id string) (*resolver.CommentLike, error)
+	CommentLike(ctx context.Context, id string, isLike bool) (*resolver.CommentLike, error)
 	FollowCreate(ctx context.Context, id string) (*resolver.Follow, error)
 	FollowDelete(ctx context.Context, id string) (*resolver.Follow, error)
 	ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error)
-	AddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error)
+	ChannelAddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error)
 	ChannelDelete(ctx context.Context, id string) (*resolver.Channel, error)
 	MessageCreate(ctx context.Context, input model.MessageCreateInput) (*resolver.Message, error)
 	MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error)
 	MessageDelete(ctx context.Context, id string) (*resolver.Message, error)
+	MessageSetUnread(ctx context.Context, id string) (*resolver.Message, error)
 }
 type PostResolver interface {
 	Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error)
@@ -253,6 +264,8 @@ type QueryResolver interface {
 	Users(ctx context.Context, page resolver.Pagination) (*model.Users, error)
 	Post(ctx context.Context, id string) (*resolver.Post, error)
 	Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
+	PostsFollowing(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
+	PostsDiscovery(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	Comment(ctx context.Context, id string) (*resolver.Comment, error)
 	Comments(ctx context.Context, page resolver.Pagination) (*model.Comments, error)
 	Like(ctx context.Context, id string) (*resolver.Like, error)
@@ -263,11 +276,13 @@ type QueryResolver interface {
 	Follows(ctx context.Context, page resolver.Pagination) (*resolver.Follows, error)
 	Channel(ctx context.Context, id string) (*resolver.Channel, error)
 	ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error)
-	Message(ctx context.Context, id string) (*resolver.Message, error)
-	Messages(ctx context.Context, page resolver.Pagination) (*resolver.Messages, error)
+	Channels(ctx context.Context, page resolver.Pagination) (*model.Channels, error)
+	Messages(ctx context.Context, id string, page resolver.Pagination) (*resolver.Messages, error)
+	Notifications(ctx context.Context, page *resolver.Pagination) (*model.Notifications, error)
 }
 type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
+	OnChannelUpdated(ctx context.Context) (<-chan *resolver.Channel, error)
 }
 type UserResolver interface {
 	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
@@ -376,6 +391,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Channel.UpdatedAt(childComplexity), true
+
+	case "Channels.channels":
+		if e.complexity.Channels.Channels == nil {
+			break
+		}
+
+		return e.complexity.Channels.Channels(childComplexity), true
+
+	case "Channels.next":
+		if e.complexity.Channels.Next == nil {
+			break
+		}
+
+		return e.complexity.Channels.Next(childComplexity), true
 
 	case "Comment.author":
 		if e.complexity.Comment.Author == nil {
@@ -620,17 +649,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Messages.Next(childComplexity), true
 
-	case "Mutation.addMembers":
-		if e.complexity.Mutation.AddMembers == nil {
+	case "Mutation.channelAddMembers":
+		if e.complexity.Mutation.ChannelAddMembers == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_addMembers_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_channelAddMembers_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddMembers(childComplexity, args["id"].(string), args["input"].(model.AddMembersInput)), true
+		return e.complexity.Mutation.ChannelAddMembers(childComplexity, args["id"].(string), args["input"].(model.AddMembersInput)), true
 
 	case "Mutation.channelCreate":
 		if e.complexity.Mutation.ChannelCreate == nil {
@@ -680,29 +709,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CommentDelete(childComplexity, args["id"].(string)), true
 
-	case "Mutation.commentLikeCreate":
-		if e.complexity.Mutation.CommentLikeCreate == nil {
+	case "Mutation.commentLike":
+		if e.complexity.Mutation.CommentLike == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_commentLikeCreate_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_commentLike_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CommentLikeCreate(childComplexity, args["id"].(string)), true
-
-	case "Mutation.commentLikeDelete":
-		if e.complexity.Mutation.CommentLikeDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_commentLikeDelete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CommentLikeDelete(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.CommentLike(childComplexity, args["id"].(string), args["isLike"].(bool)), true
 
 	case "Mutation.commentUpdate":
 		if e.complexity.Mutation.CommentUpdate == nil {
@@ -740,30 +757,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FollowDelete(childComplexity, args["id"].(string)), true
 
-	case "Mutation.likeCreate":
-		if e.complexity.Mutation.LikeCreate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_likeCreate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.LikeCreate(childComplexity, args["id"].(string)), true
-
-	case "Mutation.likeDelete":
-		if e.complexity.Mutation.LikeDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_likeDelete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.LikeDelete(childComplexity, args["id"].(string)), true
-
 	case "Mutation.messageCreate":
 		if e.complexity.Mutation.MessageCreate == nil {
 			break
@@ -787,6 +780,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MessageDelete(childComplexity, args["id"].(string)), true
+
+	case "Mutation.messageSetUnread":
+		if e.complexity.Mutation.MessageSetUnread == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_messageSetUnread_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MessageSetUnread(childComplexity, args["id"].(string)), true
 
 	case "Mutation.messageUpdate":
 		if e.complexity.Mutation.MessageUpdate == nil {
@@ -823,6 +828,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PostDelete(childComplexity, args["id"].(string)), true
+
+	case "Mutation.postLike":
+		if e.complexity.Mutation.PostLike == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_postLike_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PostLike(childComplexity, args["id"].(string), args["isLike"].(bool)), true
 
 	case "Mutation.postUpdate":
 		if e.complexity.Mutation.PostUpdate == nil {
@@ -866,6 +883,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
+
+	case "Notifications.messages":
+		if e.complexity.Notifications.Messages == nil {
+			break
+		}
+
+		return e.complexity.Notifications.Messages(childComplexity), true
 
 	case "Post.author":
 		if e.complexity.Post.Author == nil {
@@ -978,6 +1002,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ChannelByMembers(childComplexity, args["members"].([]string)), true
 
+	case "Query.channels":
+		if e.complexity.Query.Channels == nil {
+			break
+		}
+
+		args, err := ec.field_Query_channels_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Channels(childComplexity, args["page"].(resolver.Pagination)), true
+
 	case "Query.comment":
 		if e.complexity.Query.Comment == nil {
 			break
@@ -1074,18 +1110,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Likes(childComplexity, args["page"].(resolver.Pagination)), true
 
-	case "Query.message":
-		if e.complexity.Query.Message == nil {
-			break
-		}
-
-		args, err := ec.field_Query_message_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Message(childComplexity, args["id"].(string)), true
-
 	case "Query.messages":
 		if e.complexity.Query.Messages == nil {
 			break
@@ -1096,7 +1120,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Messages(childComplexity, args["page"].(resolver.Pagination)), true
+		return e.complexity.Query.Messages(childComplexity, args["id"].(string), args["page"].(resolver.Pagination)), true
+
+	case "Query.notifications":
+		if e.complexity.Query.Notifications == nil {
+			break
+		}
+
+		args, err := ec.field_Query_notifications_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Notifications(childComplexity, args["page"].(*resolver.Pagination)), true
 
 	case "Query.post":
 		if e.complexity.Query.Post == nil {
@@ -1122,6 +1158,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Posts(childComplexity, args["page"].(resolver.Pagination)), true
 
+	case "Query.postsDiscovery":
+		if e.complexity.Query.PostsDiscovery == nil {
+			break
+		}
+
+		args, err := ec.field_Query_postsDiscovery_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PostsDiscovery(childComplexity, args["page"].(resolver.Pagination)), true
+
+	case "Query.postsFollowing":
+		if e.complexity.Query.PostsFollowing == nil {
+			break
+		}
+
+		args, err := ec.field_Query_postsFollowing_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PostsFollowing(childComplexity, args["page"].(resolver.Pagination)), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -1145,6 +1205,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Users(childComplexity, args["page"].(resolver.Pagination)), true
+
+	case "Subscription.onChannelUpdated":
+		if e.complexity.Subscription.OnChannelUpdated == nil {
+			break
+		}
+
+		return e.complexity.Subscription.OnChannelUpdated(childComplexity), true
 
 	case "Subscription.onUserUpdated":
 		if e.complexity.Subscription.OnUserUpdated == nil {
@@ -1453,7 +1520,7 @@ func (ec *executionContext) field_Comment_commentLikes_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_addMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_channelAddMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1537,7 +1604,7 @@ func (ec *executionContext) field_Mutation_commentDelete_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_commentLikeCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_commentLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1549,21 +1616,15 @@ func (ec *executionContext) field_Mutation_commentLikeCreate_args(ctx context.Co
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_commentLikeDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg1 bool
+	if tmp, ok := rawArgs["isLike"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isLike"))
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["isLike"] = arg1
 	return args, nil
 }
 
@@ -1621,36 +1682,6 @@ func (ec *executionContext) field_Mutation_followDelete_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_likeCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_likeDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_messageCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1667,6 +1698,21 @@ func (ec *executionContext) field_Mutation_messageCreate_args(ctx context.Contex
 }
 
 func (ec *executionContext) field_Mutation_messageDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_messageSetUnread_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1732,6 +1778,30 @@ func (ec *executionContext) field_Mutation_postDelete_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_postLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 bool
+	if tmp, ok := rawArgs["isLike"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isLike"))
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["isLike"] = arg1
 	return args, nil
 }
 
@@ -1873,6 +1943,21 @@ func (ec *executionContext) field_Query_channel_args(ctx context.Context, rawArg
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_channels_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 resolver.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_commentLike_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1993,7 +2078,7 @@ func (ec *executionContext) field_Query_likes_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_message_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_messages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2005,16 +2090,25 @@ func (ec *executionContext) field_Query_message_args(ctx context.Context, rawArg
 		}
 	}
 	args["id"] = arg0
+	var arg1 resolver.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg1
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_messages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_notifications_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 resolver.Pagination
+	var arg0 *resolver.Pagination
 	if tmp, ok := rawArgs["page"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		arg0, err = ec.unmarshalOPagination2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2035,6 +2129,36 @@ func (ec *executionContext) field_Query_post_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_postsDiscovery_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 resolver.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_postsFollowing_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 resolver.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
 	return args, nil
 }
 
@@ -2735,6 +2859,103 @@ func (ec *executionContext) fieldContext_Channel_updatedAt(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channels_channels(ctx context.Context, field graphql.CollectedField, obj *model.Channels) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Channels_channels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Channels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*resolver.Channel)
+	fc.Result = res
+	return ec.marshalNChannel2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Channels_channels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channels",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "members":
+				return ec.fieldContext_Channel_members(ctx, field)
+			case "messages":
+				return ec.fieldContext_Channel_messages(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channels_next(ctx context.Context, field graphql.CollectedField, obj *model.Channels) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Channels_next(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Next, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Channels_next(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channels",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4908,6 +5129,71 @@ func (ec *executionContext) fieldContext_Mutation_postDelete(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_postLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_postLike(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PostLike(rctx, fc.Args["id"].(string), fc.Args["isLike"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Like)
+	fc.Result = res
+	return ec.marshalNLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLike(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_postLike(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Like_id(ctx, field)
+			case "post":
+				return ec.fieldContext_Like_post(ctx, field)
+			case "liker":
+				return ec.fieldContext_Like_liker(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Like_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Like", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_postLike_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_commentCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_commentCreate(ctx, field)
 	if err != nil {
@@ -5115,8 +5401,8 @@ func (ec *executionContext) fieldContext_Mutation_commentDelete(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_likeCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_likeCreate(ctx, field)
+func (ec *executionContext) _Mutation_commentLike(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_commentLike(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5129,137 +5415,7 @@ func (ec *executionContext) _Mutation_likeCreate(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LikeCreate(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*resolver.Like)
-	fc.Result = res
-	return ec.marshalNLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLike(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_likeCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Like_id(ctx, field)
-			case "post":
-				return ec.fieldContext_Like_post(ctx, field)
-			case "liker":
-				return ec.fieldContext_Like_liker(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Like_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Like", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_likeCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_likeDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_likeDelete(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LikeDelete(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*resolver.Like)
-	fc.Result = res
-	return ec.marshalNLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLike(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_likeDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Like_id(ctx, field)
-			case "post":
-				return ec.fieldContext_Like_post(ctx, field)
-			case "liker":
-				return ec.fieldContext_Like_liker(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Like_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Like", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_likeDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_commentLikeCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_commentLikeCreate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CommentLikeCreate(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().CommentLike(rctx, fc.Args["id"].(string), fc.Args["isLike"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5276,7 +5432,7 @@ func (ec *executionContext) _Mutation_commentLikeCreate(ctx context.Context, fie
 	return ec.marshalNCommentLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLike(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_commentLikeCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_commentLike(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -5303,72 +5459,7 @@ func (ec *executionContext) fieldContext_Mutation_commentLikeCreate(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_commentLikeCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_commentLikeDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_commentLikeDelete(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CommentLikeDelete(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*resolver.CommentLike)
-	fc.Result = res
-	return ec.marshalNCommentLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCommentLike(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_commentLikeDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CommentLike_id(ctx, field)
-			case "comment":
-				return ec.fieldContext_CommentLike_comment(ctx, field)
-			case "liker":
-				return ec.fieldContext_CommentLike_liker(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CommentLike_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CommentLike", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_commentLikeDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_commentLike_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5572,8 +5663,8 @@ func (ec *executionContext) fieldContext_Mutation_channelCreate(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_addMembers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_addMembers(ctx, field)
+func (ec *executionContext) _Mutation_channelAddMembers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_channelAddMembers(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5586,7 +5677,7 @@ func (ec *executionContext) _Mutation_addMembers(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddMembers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddMembersInput))
+		return ec.resolvers.Mutation().ChannelAddMembers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddMembersInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5603,7 +5694,7 @@ func (ec *executionContext) _Mutation_addMembers(ctx context.Context, field grap
 	return ec.marshalNChannel2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_addMembers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_channelAddMembers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -5632,7 +5723,7 @@ func (ec *executionContext) fieldContext_Mutation_addMembers(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_addMembers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_channelAddMembers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5909,6 +6000,116 @@ func (ec *executionContext) fieldContext_Mutation_messageDelete(ctx context.Cont
 	if fc.Args, err = ec.field_Mutation_messageDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_messageSetUnread(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_messageSetUnread(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MessageSetUnread(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Message)
+	fc.Result = res
+	return ec.marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_messageSetUnread(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Message_id(ctx, field)
+			case "channel":
+				return ec.fieldContext_Message_channel(ctx, field)
+			case "content":
+				return ec.fieldContext_Message_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Message_contentType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Message_createdAt(ctx, field)
+			case "sender":
+				return ec.fieldContext_Message_sender(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_messageSetUnread_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Notifications_messages(ctx context.Context, field graphql.CollectedField, obj *model.Notifications) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Notifications_messages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Messages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Notifications_messages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Notifications",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -6731,6 +6932,128 @@ func (ec *executionContext) fieldContext_Query_posts(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_postsFollowing(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_postsFollowing(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PostsFollowing(rctx, fc.Args["page"].(resolver.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Posts)
+	fc.Result = res
+	return ec.marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_postsFollowing(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "posts":
+				return ec.fieldContext_Posts_posts(ctx, field)
+			case "next":
+				return ec.fieldContext_Posts_next(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Posts", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_postsFollowing_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_postsDiscovery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_postsDiscovery(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PostsDiscovery(rctx, fc.Args["page"].(resolver.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Posts)
+	fc.Result = res
+	return ec.marshalNPosts2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPosts(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_postsDiscovery(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "posts":
+				return ec.fieldContext_Posts_posts(ctx, field)
+			case "next":
+				return ec.fieldContext_Posts_next(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Posts", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_postsDiscovery_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_comment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_comment(ctx, field)
 	if err != nil {
@@ -7373,8 +7696,8 @@ func (ec *executionContext) fieldContext_Query_channelByMembers(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_message(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_message(ctx, field)
+func (ec *executionContext) _Query_channels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_channels(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7387,7 +7710,7 @@ func (ec *executionContext) _Query_message(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Message(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().Channels(rctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7399,12 +7722,12 @@ func (ec *executionContext) _Query_message(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*resolver.Message)
+	res := resTmp.(*model.Channels)
 	fc.Result = res
-	return ec.marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessage(ctx, field.Selections, res)
+	return ec.marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_channels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -7412,20 +7735,12 @@ func (ec *executionContext) fieldContext_Query_message(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Message_id(ctx, field)
-			case "channel":
-				return ec.fieldContext_Message_channel(ctx, field)
-			case "content":
-				return ec.fieldContext_Message_content(ctx, field)
-			case "contentType":
-				return ec.fieldContext_Message_contentType(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Message_createdAt(ctx, field)
-			case "sender":
-				return ec.fieldContext_Message_sender(ctx, field)
+			case "channels":
+				return ec.fieldContext_Channels_channels(ctx, field)
+			case "next":
+				return ec.fieldContext_Channels_next(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Message", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Channels", field.Name)
 		},
 	}
 	defer func() {
@@ -7435,7 +7750,7 @@ func (ec *executionContext) fieldContext_Query_message(ctx context.Context, fiel
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_message_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_channels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7456,7 +7771,7 @@ func (ec *executionContext) _Query_messages(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Messages(rctx, fc.Args["page"].(resolver.Pagination))
+		return ec.resolvers.Query().Messages(rctx, fc.Args["id"].(string), fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7497,6 +7812,65 @@ func (ec *executionContext) fieldContext_Query_messages(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_messages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_notifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_notifications(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Notifications(rctx, fc.Args["page"].(*resolver.Pagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Notifications)
+	fc.Result = res
+	return ec.marshalNNotifications2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐNotifications(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_notifications(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "messages":
+				return ec.fieldContext_Notifications_messages(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Notifications", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_notifications_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7723,6 +8097,76 @@ func (ec *executionContext) fieldContext_Subscription_onUserUpdated(ctx context.
 	if fc.Args, err = ec.field_Subscription_onUserUpdated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_onChannelUpdated(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_onChannelUpdated(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().OnChannelUpdated(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *resolver.Channel):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNChannel2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannel(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_onChannelUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "members":
+				return ec.fieldContext_Channel_members(ctx, field)
+			case "messages":
+				return ec.fieldContext_Channel_messages(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -11017,6 +11461,47 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var channelsImplementors = []string{"Channels"}
+
+func (ec *executionContext) _Channels(ctx context.Context, sel ast.SelectionSet, obj *model.Channels) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Channels")
+		case "channels":
+			out.Values[i] = ec._Channels_channels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "next":
+			out.Values[i] = ec._Channels_next(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var commentImplementors = []string{"Comment"}
 
 func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, obj *resolver.Comment) graphql.Marshaler {
@@ -12514,6 +12999,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "postLike":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_postLike(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "commentCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_commentCreate(ctx, field)
@@ -12535,30 +13027,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "likeCreate":
+		case "commentLike":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_likeCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "likeDelete":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_likeDelete(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "commentLikeCreate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_commentLikeCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "commentLikeDelete":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_commentLikeDelete(ctx, field)
+				return ec._Mutation_commentLike(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -12584,9 +13055,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "addMembers":
+		case "channelAddMembers":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_addMembers(ctx, field)
+				return ec._Mutation_channelAddMembers(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -12619,6 +13090,49 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "messageSetUnread":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_messageSetUnread(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var notificationsImplementors = []string{"Notifications"}
+
+func (ec *executionContext) _Notifications(ctx context.Context, sel ast.SelectionSet, obj *model.Notifications) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, notificationsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Notifications")
+		case "messages":
+			out.Values[i] = ec._Notifications_messages(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13189,6 +13703,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "postsFollowing":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_postsFollowing(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "postsDiscovery":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_postsDiscovery(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "comment":
 			field := field
 
@@ -13409,7 +13967,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "message":
+		case "channels":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -13418,7 +13976,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_message(ctx, field)
+				res = ec._Query_channels(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -13441,6 +13999,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_messages(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "notifications":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_notifications(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -13499,6 +14079,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	switch fields[0].Name {
 	case "onUserUpdated":
 		return ec._Subscription_onUserUpdated(ctx, fields[0])
+	case "onChannelUpdated":
+		return ec._Subscription_onChannelUpdated(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -14331,6 +14913,50 @@ func (ec *executionContext) marshalNChannel2githubᚗcomᚋprojectulteriorᚋ2ce
 	return ec._Channel(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNChannel2ᚕᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*resolver.Channel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannel2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNChannel2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannel(ctx context.Context, sel ast.SelectionSet, v *resolver.Channel) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -14344,6 +14970,20 @@ func (ec *executionContext) marshalNChannel2ᚖgithubᚗcomᚋprojectulteriorᚋ
 func (ec *executionContext) unmarshalNChannelCreateInput2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannelCreateInput(ctx context.Context, v interface{}) (model.ChannelCreateInput, error) {
 	res, err := ec.unmarshalInputChannelCreateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannels2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx context.Context, sel ast.SelectionSet, v model.Channels) graphql.Marshaler {
+	return ec._Channels(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx context.Context, sel ast.SelectionSet, v *model.Channels) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Channels(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNComment2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComment(ctx context.Context, sel ast.SelectionSet, v resolver.Comment) graphql.Marshaler {
@@ -14758,6 +15398,20 @@ func (ec *executionContext) marshalNMessages2ᚖgithubᚗcomᚋprojectulterior�
 		return graphql.Null
 	}
 	return ec._Messages(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNotifications2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐNotifications(ctx context.Context, sel ast.SelectionSet, v model.Notifications) graphql.Marshaler {
+	return ec._Notifications(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNotifications2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐNotifications(ctx context.Context, sel ast.SelectionSet, v *model.Notifications) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Notifications(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx context.Context, v interface{}) (resolver.Pagination, error) {
@@ -15345,6 +15999,22 @@ func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	return res
 }
 

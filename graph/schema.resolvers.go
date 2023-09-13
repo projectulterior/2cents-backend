@@ -166,6 +166,42 @@ func (r *mutationResolver) PostDelete(ctx context.Context, id string) (*resolver
 	return resolver.NewPostByID(r.Services, postID), nil
 }
 
+// PostLike is the resolver for the postLike field.
+func (r *mutationResolver) PostLike(ctx context.Context, id string, isLike bool) (*resolver.Like, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	postID, err := format.ParsePostID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if isLike {
+		reply, err := r.Likes.CreateLike(ctx, likes.CreateLikeRequest{
+			PostID:  postID,
+			LikerID: authID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewLikeWithData(r.Services, reply), nil
+	} else {
+		likeID := format.NewLikeID(postID, authID)
+
+		_, err = r.Likes.DeleteLike(ctx, likes.DeleteLikeRequest{
+			LikeID: likeID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewLikeByID(r.Services, likeID), nil
+	}
+}
+
 // CommentCreate is the resolver for the commentCreate field.
 func (r *mutationResolver) CommentCreate(ctx context.Context, input model.CommentCreateInput) (*resolver.Comment, error) {
 	authID, err := authUserID(ctx)
@@ -237,84 +273,40 @@ func (r *mutationResolver) CommentDelete(ctx context.Context, id string) (*resol
 	return resolver.NewCommentByID(r.Services, commentID), nil
 }
 
-// LikeCreate is the resolver for the likeCreate field.
-func (r *mutationResolver) LikeCreate(ctx context.Context, id string) (*resolver.Like, error) {
-	postID, err := format.ParsePostID(id)
-	if err != nil {
-		return nil, err
-	}
-
+// CommentLike is the resolver for the commentLike field.
+func (r *mutationResolver) CommentLike(ctx context.Context, id string, isLike bool) (*resolver.CommentLike, error) {
 	authID, err := authUserID(ctx)
 	if err != nil {
 		return nil, e(ctx, http.StatusForbidden, err.Error())
 	}
 
-	reply, err := r.Likes.CreateLike(ctx, likes.CreateLikeRequest{
-		PostID:  postID,
-		LikerID: authID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewLikeWithData(r.Services, reply), nil
-}
-
-// LikeDelete is the resolver for the likeDelete field.
-func (r *mutationResolver) LikeDelete(ctx context.Context, id string) (*resolver.Like, error) {
-	likeID, err := format.ParseLikeID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = r.Likes.DeleteLike(ctx, likes.DeleteLikeRequest{
-		LikeID: likeID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewLikeByID(r.Services, likeID), nil
-}
-
-// CommentLikeCreate is the resolver for the commentLikeCreate field.
-func (r *mutationResolver) CommentLikeCreate(ctx context.Context, id string) (*resolver.CommentLike, error) {
 	commentID, err := format.ParseCommentID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	authID, err := authUserID(ctx)
-	if err != nil {
-		return nil, e(ctx, http.StatusForbidden, err.Error())
+	if isLike {
+		reply, err := r.Services.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
+			CommentID: commentID,
+			LikerID:   authID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewCommentLikeWithData(r.Services, reply), nil
+	} else {
+		likeID := format.NewCommentLikeID(commentID, authID)
+
+		_, err = r.Services.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
+			CommentLikeID: likeID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return resolver.NewCommentLikeByID(r.Services, likeID), nil
 	}
-
-	reply, err := r.Services.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
-		CommentID: commentID,
-		LikerID:   authID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewCommentLikeWithData(r.Services, reply), nil
-}
-
-// CommentLikeDelete is the resolver for the commentLikeDelete field.
-func (r *mutationResolver) CommentLikeDelete(ctx context.Context, id string) (*resolver.CommentLike, error) {
-	commentLikeID, err := format.ParseCommentLikeID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = r.Services.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
-		CommentLikeID: commentLikeID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewCommentLikeByID(r.Services, commentLikeID), nil
 }
 
 // FollowCreate is the resolver for the followCreate field.
@@ -383,8 +375,8 @@ func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.Channe
 	return resolver.NewChannelWithData(r.Services, reply), nil
 }
 
-// AddMembers is the resolver for the addMembers field.
-func (r *mutationResolver) AddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error) {
+// ChannelAddMembers is the resolver for the channelAddMembers field.
+func (r *mutationResolver) ChannelAddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error) {
 	authID, err := authUserID(ctx)
 	if err != nil {
 		return nil, err
@@ -509,6 +501,11 @@ func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resol
 	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
+// MessageSetUnread is the resolver for the messageSetUnread field.
+func (r *mutationResolver) MessageSetUnread(ctx context.Context, id string) (*resolver.Message, error) {
+	panic(fmt.Errorf("not implemented: MessageSetUnread - messageSetUnread"))
+}
+
 // Comments is the resolver for the comments field.
 func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
@@ -558,6 +555,16 @@ func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, er
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error) {
 	panic(fmt.Errorf("not implemented: Posts - posts"))
+}
+
+// PostsFollowing is the resolver for the postsFollowing field.
+func (r *queryResolver) PostsFollowing(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error) {
+	panic(fmt.Errorf("not implemented: PostsFollowing - postsFollowing"))
+}
+
+// PostsDiscovery is the resolver for the postsDiscovery field.
+func (r *queryResolver) PostsDiscovery(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error) {
+	panic(fmt.Errorf("not implemented: PostsDiscovery - postsDiscovery"))
 }
 
 // Comment is the resolver for the comment field.
@@ -686,29 +693,29 @@ func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) 
 	return resolver.NewChannelWithData(r.Services, channel), nil
 }
 
-// Message is the resolver for the message field.
-func (r *queryResolver) Message(ctx context.Context, id string) (*resolver.Message, error) {
-	_, err := authUserID(ctx)
-	if err != nil {
-		return nil, e(ctx, http.StatusForbidden, err.Error())
-	}
-
-	messageID, err := format.ParseMessageID(id)
-	if err != nil {
-		return nil, e(ctx, http.StatusBadRequest, err.Error())
-	}
-
-	return resolver.NewMessageByID(r.Services, messageID), nil
+// Channels is the resolver for the channels field.
+func (r *queryResolver) Channels(ctx context.Context, page resolver.Pagination) (*model.Channels, error) {
+	panic(fmt.Errorf("not implemented: Channels - channels"))
 }
 
 // Messages is the resolver for the messages field.
-func (r *queryResolver) Messages(ctx context.Context, page resolver.Pagination) (*resolver.Messages, error) {
+func (r *queryResolver) Messages(ctx context.Context, id string, page resolver.Pagination) (*resolver.Messages, error) {
 	panic(fmt.Errorf("not implemented: Messages - messages"))
+}
+
+// Notifications is the resolver for the notifications field.
+func (r *queryResolver) Notifications(ctx context.Context, page *resolver.Pagination) (*model.Notifications, error) {
+	panic(fmt.Errorf("not implemented: Notifications - notifications"))
 }
 
 // OnUserUpdated is the resolver for the onUserUpdated field.
 func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error) {
 	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
+}
+
+// OnChannelUpdated is the resolver for the onChannelUpdated field.
+func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *resolver.Channel, error) {
+	panic(fmt.Errorf("not implemented: OnChannelUpdated - onChannelUpdated"))
 }
 
 // Cents is the resolver for the cents field.
