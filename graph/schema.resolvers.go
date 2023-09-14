@@ -507,7 +507,7 @@ func (r *mutationResolver) MessageSetUnread(ctx context.Context, id string) (*re
 }
 
 // Comments is the resolver for the comments field.
-func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error) {
+func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*resolver.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
@@ -583,7 +583,7 @@ func (r *queryResolver) Comment(ctx context.Context, id string) (*resolver.Comme
 }
 
 // Comments is the resolver for the comments field.
-func (r *queryResolver) Comments(ctx context.Context, page resolver.Pagination) (*model.Comments, error) {
+func (r *queryResolver) Comments(ctx context.Context, page resolver.Pagination) (*resolver.Comments, error) {
 	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 

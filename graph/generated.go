@@ -257,7 +257,7 @@ type MutationResolver interface {
 	MessageSetUnread(ctx context.Context, id string) (*resolver.Message, error)
 }
 type PostResolver interface {
-	Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*model.Comments, error)
+	Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*resolver.Comments, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id *string) (*resolver.User, error)
@@ -267,7 +267,7 @@ type QueryResolver interface {
 	PostsFollowing(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	PostsDiscovery(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	Comment(ctx context.Context, id string) (*resolver.Comment, error)
-	Comments(ctx context.Context, page resolver.Pagination) (*model.Comments, error)
+	Comments(ctx context.Context, page resolver.Pagination) (*resolver.Comments, error)
 	Like(ctx context.Context, id string) (*resolver.Like, error)
 	Likes(ctx context.Context, page resolver.Pagination) (*resolver.Likes, error)
 	CommentLike(ctx context.Context, id string) (*resolver.CommentLike, error)
@@ -3575,7 +3575,7 @@ func (ec *executionContext) fieldContext_CommentLikes_next(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Comments_comments(ctx context.Context, field graphql.CollectedField, obj *model.Comments) (ret graphql.Marshaler) {
+func (ec *executionContext) _Comments_comments(ctx context.Context, field graphql.CollectedField, obj *resolver.Comments) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Comments_comments(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3589,7 +3589,7 @@ func (ec *executionContext) _Comments_comments(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Comments, nil
+		return obj.Comments(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3610,7 +3610,7 @@ func (ec *executionContext) fieldContext_Comments_comments(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "Comments",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -3633,7 +3633,7 @@ func (ec *executionContext) fieldContext_Comments_comments(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Comments_next(ctx context.Context, field graphql.CollectedField, obj *model.Comments) (ret graphql.Marshaler) {
+func (ec *executionContext) _Comments_next(ctx context.Context, field graphql.CollectedField, obj *resolver.Comments) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Comments_next(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3647,7 +3647,7 @@ func (ec *executionContext) _Comments_next(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Next, nil
+		return obj.Next(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3659,16 +3659,16 @@ func (ec *executionContext) _Comments_next(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comments_next(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Comments",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
@@ -6511,9 +6511,9 @@ func (ec *executionContext) _Post_comments(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Comments)
+	res := resTmp.(*resolver.Comments)
 	fc.Result = res
-	return ec.marshalOComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx, field.Selections, res)
+	return ec.marshalOComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Post_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7149,9 +7149,9 @@ func (ec *executionContext) _Query_comments(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Comments)
+	res := resTmp.(*resolver.Comments)
 	fc.Result = res
-	return ec.marshalNComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx, field.Selections, res)
+	return ec.marshalNComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComments(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -12011,7 +12011,7 @@ func (ec *executionContext) _CommentLikes(ctx context.Context, sel ast.Selection
 
 var commentsImplementors = []string{"Comments"}
 
-func (ec *executionContext) _Comments(ctx context.Context, sel ast.SelectionSet, obj *model.Comments) graphql.Marshaler {
+func (ec *executionContext) _Comments(ctx context.Context, sel ast.SelectionSet, obj *resolver.Comments) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, commentsImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -12021,15 +12021,77 @@ func (ec *executionContext) _Comments(ctx context.Context, sel ast.SelectionSet,
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Comments")
 		case "comments":
-			out.Values[i] = ec._Comments_comments(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comments_comments(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "next":
-			out.Values[i] = ec._Comments_next(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Comments_next(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15126,11 +15188,11 @@ func (ec *executionContext) unmarshalNCommentUpdateInput2githubᚗcomᚋprojectu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNComments2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx context.Context, sel ast.SelectionSet, v model.Comments) graphql.Marshaler {
+func (ec *executionContext) marshalNComments2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComments(ctx context.Context, sel ast.SelectionSet, v resolver.Comments) graphql.Marshaler {
 	return ec._Comments(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx context.Context, sel ast.SelectionSet, v *model.Comments) graphql.Marshaler {
+func (ec *executionContext) marshalNComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComments(ctx context.Context, sel ast.SelectionSet, v *resolver.Comments) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -15945,7 +16007,7 @@ func (ec *executionContext) marshalOCommentLikes2ᚖgithubᚗcomᚋprojectulteri
 	return ec._CommentLikes(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐComments(ctx context.Context, sel ast.SelectionSet, v *model.Comments) graphql.Marshaler {
+func (ec *executionContext) marshalOComments2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐComments(ctx context.Context, sel ast.SelectionSet, v *resolver.Comments) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

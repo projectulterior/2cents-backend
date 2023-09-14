@@ -40,11 +40,6 @@ type CommentUpdateInput struct {
 	ContentType *format.ContentType `json:"contentType,omitempty"`
 }
 
-type Comments struct {
-	Comments []*resolver.Comment `json:"comments"`
-	Next     string              `json:"next"`
-}
-
 type MessageCreateInput struct {
 	ChannelID   string              `json:"channelID"`
 	SenderID    string              `json:"senderID"`
