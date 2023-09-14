@@ -71,5 +71,10 @@ func (s *Service) UpdateUser(ctx context.Context, req UpdateUserRequest) (*Updat
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
+	s.EmitUserUpdated(ctx, UserUpdatedEvent{
+		User:      user,
+		Timestamp: user.UpdatedAt,
+	})
+
 	return &user, nil
 }

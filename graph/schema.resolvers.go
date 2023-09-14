@@ -604,7 +604,12 @@ func (r *queryResolver) Like(ctx context.Context, id string) (*resolver.Like, er
 
 // Likes is the resolver for the likes field.
 func (r *queryResolver) Likes(ctx context.Context, page resolver.Pagination) (*resolver.Likes, error) {
-	panic(fmt.Errorf("not implemented: Likes - likes"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	return resolver.NewLikes(resolver.NewUserLikes(r.Services, authID, page)), nil
 }
 
 // CommentLike is the resolver for the commentLike field.
