@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/logger"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 
 	"github.com/kelseyhightower/envconfig"
@@ -22,6 +23,7 @@ type Config struct {
 }
 
 var client *mongo.Client
+var broker pubsub.Broker
 var log *zap.Logger
 
 func TestMain(m *testing.M) {
@@ -46,6 +48,9 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	broker = pubsub.NewBroker()
+	defer broker.Shutdown(ctx)
+
 	os.Exit(m.Run())
 }
 
@@ -53,6 +58,9 @@ func setup(t *testing.T) *users.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
 	return &users.Service{
+		UserUpdated: broker.Publisher(users.USER_UPDATED_EVENT),
+		UserDeleted: broker.Publisher(users.USER_DELETED_EVENT),
+
 		Database: client.Database(name),
 		Logger:   log,
 	}

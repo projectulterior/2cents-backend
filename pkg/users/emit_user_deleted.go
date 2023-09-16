@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 )
+
+const USER_DELETED_EVENT pubsub.Route = "event.user.deleted"
 
 type UserDeletedEvent struct {
 	UserID    format.UserID

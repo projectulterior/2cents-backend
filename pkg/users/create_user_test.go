@@ -12,6 +12,8 @@ import (
 func TestCreateUser(t *testing.T) {
 	svc := setup(t)
 
+	updated := broker.Listener(users.USER_UPDATED_EVENT)
+
 	userID := format.NewUserID()
 
 	reply, err := svc.CreateUser(context.Background(), users.CreateUserRequest{
@@ -19,4 +21,12 @@ func TestCreateUser(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, userID, reply.UserID)
+
+	event, err := updated.Next(context.Background())
+	assert.NoError(t, err)
+
+	user, ok := event.(users.UserUpdatedEvent)
+	assert.True(t, ok)
+	assert.Equal(t, *reply, user.User)
+	assert.NotEmpty(t, user.Timestamp)
 }
