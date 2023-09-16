@@ -73,6 +73,7 @@ func main() {
 
 	c := graph.Config{
 		Resolvers: &graph.Resolver{
+			Broker:   broker,
 			Services: svc,
 		},
 	}

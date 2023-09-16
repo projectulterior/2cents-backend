@@ -49,7 +49,7 @@ func (r *router) listener() Listener {
 
 	r.listeners = append(r.listeners, ch)
 
-	return &listener{ch: ch}
+	return &listener{router: r, ch: ch}
 }
 
 func (r *router) removeListener(l *listener) {
