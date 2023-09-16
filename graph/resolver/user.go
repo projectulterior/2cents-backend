@@ -157,3 +157,7 @@ func (u *User) Likes(ctx context.Context, page Pagination) (*Likes, error) {
 func (u *User) Follows(ctx context.Context, page Pagination) (*Follows, error) {
 	return NewFollows(NewUserFollows(u.svc, u.userID, page)), nil
 }
+
+func (u *User) Cents(ctx context.Context) (*Cents, error) {
+	return nil, nil
+}

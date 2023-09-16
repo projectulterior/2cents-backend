@@ -309,46 +309,6 @@ func (r *mutationResolver) CommentLike(ctx context.Context, id string, isLike bo
 	}
 }
 
-// FollowCreate is the resolver for the followCreate field.
-func (r *mutationResolver) FollowCreate(ctx context.Context, id string) (*resolver.Follow, error) {
-	authID, err := authUserID(ctx)
-	if err != nil {
-		return nil, e(ctx, http.StatusForbidden, err.Error())
-	}
-
-	followeeID, err := format.ParseUserID(id)
-	if err != nil {
-		return nil, e(ctx, http.StatusBadRequest, err.Error())
-	}
-
-	reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
-		FollowerID: authID,
-		FolloweeID: followeeID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewFollowByID(r.Services, reply.FollowID), nil
-}
-
-// FollowDelete is the resolver for the followDelete field.
-func (r *mutationResolver) FollowDelete(ctx context.Context, id string) (*resolver.Follow, error) {
-	followID, err := format.ParseFollowID(id)
-	if err != nil {
-		return nil, e(ctx, http.StatusForbidden, err.Error())
-	}
-
-	reply, err := r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
-		FollowID: followID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.NewFollowByID(r.Services, reply.FollowID), nil
-}
-
 // ChannelCreate is the resolver for the channelCreate field.
 func (r *mutationResolver) ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error) {
 	authID, err := authUserID(ctx)
@@ -501,14 +461,9 @@ func (r *mutationResolver) MessageDelete(ctx context.Context, id string) (*resol
 	return resolver.NewMessageByID(r.Services, messageID), nil
 }
 
-// MessageSetUnread is the resolver for the messageSetUnread field.
-func (r *mutationResolver) MessageSetUnread(ctx context.Context, id string) (*resolver.Message, error) {
-	panic(fmt.Errorf("not implemented: MessageSetUnread - messageSetUnread"))
-}
-
-// Comments is the resolver for the comments field.
-func (r *postResolver) Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*resolver.Comments, error) {
-	panic(fmt.Errorf("not implemented: Comments - comments"))
+// MessageRead is the resolver for the messageRead field.
+func (r *mutationResolver) MessageRead(ctx context.Context, id string) (*resolver.Message, error) {
+	panic(fmt.Errorf("not implemented: MessageRead - messageRead"))
 }
 
 // User is the resolver for the user field.
@@ -723,16 +678,8 @@ func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *re
 	panic(fmt.Errorf("not implemented: OnChannelUpdated - onChannelUpdated"))
 }
 
-// Cents is the resolver for the cents field.
-func (r *userResolver) Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error) {
-	panic(fmt.Errorf("not implemented: Cents - cents"))
-}
-
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
-
-// Post returns PostResolver implementation.
-func (r *Resolver) Post() PostResolver { return &postResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
@@ -740,11 +687,6 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
-// User returns UserResolver implementation.
-func (r *Resolver) User() UserResolver { return &userResolver{r} }
-
 type mutationResolver struct{ *Resolver }
-type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-type userResolver struct{ *Resolver }

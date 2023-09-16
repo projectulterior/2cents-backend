@@ -102,3 +102,7 @@ func (p *Post) UpdatedAt(ctx context.Context) (*time.Time, error) {
 func (p *Post) Likes(ctx context.Context, page Pagination) (*Likes, error) {
 	return NewLikes(NewPostLikes(p.svc, p.postID, page)), nil
 }
+
+func (p *Post) Comments(ctx context.Context, page Pagination) (*Comments, error) {
+	return NewComments(NewPostComments(p.svc, p.postID, page)), nil
+}

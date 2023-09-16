@@ -131,3 +131,6 @@ models:
   Channel:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Channel
+  Cents:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Cents

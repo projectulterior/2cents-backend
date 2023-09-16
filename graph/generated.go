@@ -42,10 +42,8 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
-	Post() PostResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
-	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -150,11 +148,9 @@ type ComplexityRoot struct {
 		CommentDelete     func(childComplexity int, id string) int
 		CommentLike       func(childComplexity int, id string, isLike bool) int
 		CommentUpdate     func(childComplexity int, id string, input model.CommentUpdateInput) int
-		FollowCreate      func(childComplexity int, id string) int
-		FollowDelete      func(childComplexity int, id string) int
 		MessageCreate     func(childComplexity int, input model.MessageCreateInput) int
 		MessageDelete     func(childComplexity int, id string) int
-		MessageSetUnread  func(childComplexity int, id string) int
+		MessageRead       func(childComplexity int, id string) int
 		MessageUpdate     func(childComplexity int, id string, input model.MessageUpdateInput) int
 		PostCreate        func(childComplexity int, input model.PostCreateInput) int
 		PostDelete        func(childComplexity int, id string) int
@@ -246,18 +242,13 @@ type MutationResolver interface {
 	CommentUpdate(ctx context.Context, id string, input model.CommentUpdateInput) (*resolver.Comment, error)
 	CommentDelete(ctx context.Context, id string) (*resolver.Comment, error)
 	CommentLike(ctx context.Context, id string, isLike bool) (*resolver.CommentLike, error)
-	FollowCreate(ctx context.Context, id string) (*resolver.Follow, error)
-	FollowDelete(ctx context.Context, id string) (*resolver.Follow, error)
 	ChannelCreate(ctx context.Context, input model.ChannelCreateInput) (*resolver.Channel, error)
 	ChannelAddMembers(ctx context.Context, id string, input model.AddMembersInput) (*resolver.Channel, error)
 	ChannelDelete(ctx context.Context, id string) (*resolver.Channel, error)
 	MessageCreate(ctx context.Context, input model.MessageCreateInput) (*resolver.Message, error)
 	MessageUpdate(ctx context.Context, id string, input model.MessageUpdateInput) (*resolver.Message, error)
 	MessageDelete(ctx context.Context, id string) (*resolver.Message, error)
-	MessageSetUnread(ctx context.Context, id string) (*resolver.Message, error)
-}
-type PostResolver interface {
-	Comments(ctx context.Context, obj *resolver.Post, page resolver.Pagination) (*resolver.Comments, error)
+	MessageRead(ctx context.Context, id string) (*resolver.Message, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id *string) (*resolver.User, error)
@@ -283,9 +274,6 @@ type QueryResolver interface {
 type SubscriptionResolver interface {
 	OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error)
 	OnChannelUpdated(ctx context.Context) (<-chan *resolver.Channel, error)
-}
-type UserResolver interface {
-	Cents(ctx context.Context, obj *resolver.User) (*model.Cents, error)
 }
 
 type executableSchema struct {
@@ -733,30 +721,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CommentUpdate(childComplexity, args["id"].(string), args["input"].(model.CommentUpdateInput)), true
 
-	case "Mutation.followCreate":
-		if e.complexity.Mutation.FollowCreate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_followCreate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FollowCreate(childComplexity, args["id"].(string)), true
-
-	case "Mutation.followDelete":
-		if e.complexity.Mutation.FollowDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_followDelete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FollowDelete(childComplexity, args["id"].(string)), true
-
 	case "Mutation.messageCreate":
 		if e.complexity.Mutation.MessageCreate == nil {
 			break
@@ -781,17 +745,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MessageDelete(childComplexity, args["id"].(string)), true
 
-	case "Mutation.messageSetUnread":
-		if e.complexity.Mutation.MessageSetUnread == nil {
+	case "Mutation.messageRead":
+		if e.complexity.Mutation.MessageRead == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_messageSetUnread_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_messageRead_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MessageSetUnread(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.MessageRead(childComplexity, args["id"].(string)), true
 
 	case "Mutation.messageUpdate":
 		if e.complexity.Mutation.MessageUpdate == nil {
@@ -1652,36 +1616,6 @@ func (ec *executionContext) field_Mutation_commentUpdate_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_followCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_followDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_messageCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1712,7 +1646,7 @@ func (ec *executionContext) field_Mutation_messageDelete_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_messageSetUnread_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_messageRead_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2437,7 +2371,7 @@ func (ec *executionContext) fieldContext_Birthday_year(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Cents_total(ctx context.Context, field graphql.CollectedField, obj *model.Cents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Cents_total(ctx context.Context, field graphql.CollectedField, obj *resolver.Cents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Cents_total(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2481,7 +2415,7 @@ func (ec *executionContext) fieldContext_Cents_total(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Cents_deposited(ctx context.Context, field graphql.CollectedField, obj *model.Cents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Cents_deposited(ctx context.Context, field graphql.CollectedField, obj *resolver.Cents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Cents_deposited(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2525,7 +2459,7 @@ func (ec *executionContext) fieldContext_Cents_deposited(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Cents_earned(ctx context.Context, field graphql.CollectedField, obj *model.Cents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Cents_earned(ctx context.Context, field graphql.CollectedField, obj *resolver.Cents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Cents_earned(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2569,7 +2503,7 @@ func (ec *executionContext) fieldContext_Cents_earned(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Cents_given(ctx context.Context, field graphql.CollectedField, obj *model.Cents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Cents_given(ctx context.Context, field graphql.CollectedField, obj *resolver.Cents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Cents_given(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5466,136 +5400,6 @@ func (ec *executionContext) fieldContext_Mutation_commentLike(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_followCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_followCreate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FollowCreate(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*resolver.Follow)
-	fc.Result = res
-	return ec.marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_followCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Follow_id(ctx, field)
-			case "follower":
-				return ec.fieldContext_Follow_follower(ctx, field)
-			case "followee":
-				return ec.fieldContext_Follow_followee(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Follow_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Follow", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_followCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_followDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_followDelete(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FollowDelete(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*resolver.Follow)
-	fc.Result = res
-	return ec.marshalNFollow2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐFollow(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_followDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Follow_id(ctx, field)
-			case "follower":
-				return ec.fieldContext_Follow_follower(ctx, field)
-			case "followee":
-				return ec.fieldContext_Follow_followee(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Follow_createdAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Follow", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_followDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_channelCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_channelCreate(ctx, field)
 	if err != nil {
@@ -6004,8 +5808,8 @@ func (ec *executionContext) fieldContext_Mutation_messageDelete(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_messageSetUnread(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_messageSetUnread(ctx, field)
+func (ec *executionContext) _Mutation_messageRead(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_messageRead(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6018,7 +5822,7 @@ func (ec *executionContext) _Mutation_messageSetUnread(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MessageSetUnread(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().MessageRead(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6035,7 +5839,7 @@ func (ec *executionContext) _Mutation_messageSetUnread(ctx context.Context, fiel
 	return ec.marshalNMessage2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐMessage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_messageSetUnread(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_messageRead(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -6066,7 +5870,7 @@ func (ec *executionContext) fieldContext_Mutation_messageSetUnread(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_messageSetUnread_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_messageRead_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6502,7 +6306,7 @@ func (ec *executionContext) _Post_comments(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Post().Comments(rctx, obj, fc.Args["page"].(resolver.Pagination))
+		return obj.Comments(ctx, fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6521,7 +6325,7 @@ func (ec *executionContext) fieldContext_Post_comments(ctx context.Context, fiel
 		Object:     "Post",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "comments":
@@ -8524,7 +8328,7 @@ func (ec *executionContext) _User_cents(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Cents(rctx, obj)
+		return obj.Cents(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8533,9 +8337,9 @@ func (ec *executionContext) _User_cents(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Cents)
+	res := resTmp.(*resolver.Cents)
 	fc.Result = res
-	return ec.marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx, field.Selections, res)
+	return ec.marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCents(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_cents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8543,7 +8347,7 @@ func (ec *executionContext) fieldContext_User_cents(ctx context.Context, field g
 		Object:     "User",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "total":
@@ -11207,7 +11011,7 @@ func (ec *executionContext) _Birthday(ctx context.Context, sel ast.SelectionSet,
 
 var centsImplementors = []string{"Cents"}
 
-func (ec *executionContext) _Cents(ctx context.Context, sel ast.SelectionSet, obj *model.Cents) graphql.Marshaler {
+func (ec *executionContext) _Cents(ctx context.Context, sel ast.SelectionSet, obj *resolver.Cents) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, centsImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -13096,20 +12900,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "followCreate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_followCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "followDelete":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_followDelete(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "channelCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_channelCreate(ctx, field)
@@ -13152,9 +12942,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "messageSetUnread":
+		case "messageRead":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_messageSetUnread(ctx, field)
+				return ec._Mutation_messageRead(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -15986,7 +15776,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐCents(ctx context.Context, sel ast.SelectionSet, v *model.Cents) graphql.Marshaler {
+func (ec *executionContext) marshalOCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCents(ctx context.Context, sel ast.SelectionSet, v *resolver.Cents) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

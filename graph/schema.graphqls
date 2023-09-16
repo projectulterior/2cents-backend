@@ -48,6 +48,7 @@ type Query {
 type Mutation {
   userUpdate(input: UserUpdateInput!): User!
   userDelete: User!
+
   userFollow(id: ID!, isFollow: Boolean!): Follow!
 
   postCreate(input: PostCreateInput!): Post! 
@@ -62,9 +63,6 @@ type Mutation {
 
   commentLike(id: ID!, isLike: Boolean!): CommentLike!
 
-  followCreate(id: ID!): Follow!
-  followDelete(id: ID!): Follow!
-
   channelCreate(input: ChannelCreateInput!): Channel!
   channelAddMembers(id: ID!, input: AddMembersInput!): Channel!
   channelDelete(id: ID!): Channel!
@@ -72,7 +70,7 @@ type Mutation {
   messageCreate(input: MessageCreateInput!): Message!
   messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
   messageDelete(id: ID!): Message!
-  messageSetUnread(id: ID!): Message!
+  messageRead(id: ID!): Message!
 }
 
 type Subscription {
