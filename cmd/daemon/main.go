@@ -13,6 +13,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/logger"
 	"github.com/projectulterior/2cents-backend/pkg/os/process"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 	http_server "github.com/projectulterior/2cents-backend/pkg/server/http"
 
 	graphql_handler "github.com/99designs/gqlgen/graphql/handler"
@@ -61,8 +62,11 @@ func main() {
 	}
 	defer m.Disconnect(ctx)
 
+	broker := pubsub.NewBroker()
+	defer broker.Shutdown(ctx)
+
 	// services
-	svc, err := initServices(ctx, cfg, m, log)
+	svc, err := initServices(ctx, cfg, m, broker, log)
 	if err != nil {
 		panic(err)
 	}

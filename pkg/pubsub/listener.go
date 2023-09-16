@@ -6,14 +6,22 @@ import (
 )
 
 type listener struct {
-	ch <-chan Message
+	router *router
+	ch     <-chan Message
 }
 
 func (l *listener) Next(ctx context.Context) (Message, error) {
-	msg, ok := <-l.ch
-	if !ok {
-		return nil, fmt.Errorf("unexpected closed channel")
+	select {
+	case <-ctx.Done():
+		return nil, context.Canceled
+	case msg, ok := <-l.ch:
+		if !ok {
+			return nil, fmt.Errorf("unexpected closed channel")
+		}
+		return msg, nil
 	}
+}
 
-	return msg, nil
+func (l *listener) Close(ctx context.Context) {
+	l.router.removeListener(l)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 	"github.com/projectulterior/2cents-backend/pkg/services"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 
@@ -18,7 +19,7 @@ import (
 )
 
 // setup services
-func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger) (*services.Services, error) {
+func initServices(ctx context.Context, cfg Config, m *mongo.Client, broker pubsub.Broker, log *zap.Logger) (*services.Services, error) {
 	authService := &auth.Service{
 		Secret:          cfg.Secret,
 		AuthTokenTTL:    cfg.AuthTokenTTL,
@@ -31,6 +32,9 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 	}
 
 	usersService := &users.Service{
+		UserUpdated: broker.Publisher(users.USER_UPDATED_EVENT),
+		UserDeleted: broker.Publisher(users.USER_DELETED_EVENT),
+
 		Database: m.Database("users"),
 		Logger:   log,
 	}

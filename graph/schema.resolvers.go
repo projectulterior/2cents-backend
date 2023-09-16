@@ -19,6 +19,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/users"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -670,7 +671,37 @@ func (r *queryResolver) Notifications(ctx context.Context, page *resolver.Pagina
 
 // OnUserUpdated is the resolver for the onUserUpdated field.
 func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<-chan *resolver.User, error) {
-	panic(fmt.Errorf("not implemented: OnUserUpdated - onUserUpdated"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	ch := make(chan *resolver.User)
+
+	go func() {
+		listener := r.Broker.Listener(users.USER_UPDATED_EVENT)
+		defer listener.Close(ctx)
+
+		for {
+			msg, err := listener.Next(ctx)
+			if err != nil {
+				r.Error("error in listener", zap.Error(err))
+				return
+			}
+
+			event, ok := msg.(users.UserUpdatedEvent)
+			if !ok {
+				r.Error("error in decoding event", zap.Error(err))
+				return
+			}
+
+			if event.User.UserID == authID {
+				ch <- resolver.NewUserWithData(r.Services, &event.User)
+			}
+		}
+	}()
+
+	return ch, nil
 }
 
 // OnChannelUpdated is the resolver for the onChannelUpdated field.

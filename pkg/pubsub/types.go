@@ -18,4 +18,5 @@ type Publisher interface {
 
 type Listener interface {
 	Next(context.Context) (Message, error)
+	Close(context.Context)
 }

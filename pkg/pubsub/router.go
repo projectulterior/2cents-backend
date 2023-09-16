@@ -6,7 +6,7 @@ import (
 
 type router struct {
 	ch        chan Message
-	listeners []chan<- Message
+	listeners []chan Message
 
 	mutex sync.Mutex
 }
@@ -50,6 +50,18 @@ func (r *router) listener() Listener {
 	r.listeners = append(r.listeners, ch)
 
 	return &listener{ch: ch}
+}
+
+func (r *router) removeListener(l *listener) {
+	l.router.mutex.Lock()
+	defer l.router.mutex.Unlock()
+
+	for i, listener := range l.router.listeners {
+		if listener == l.ch {
+			l.router.listeners = append(l.router.listeners[:i], l.router.listeners[i+1:]...)
+			return
+		}
+	}
 }
 
 func (r *router) shutdown() error {
