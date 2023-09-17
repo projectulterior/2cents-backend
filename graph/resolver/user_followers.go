@@ -8,18 +8,18 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/services"
 )
 
-type UserFollows struct {
+type UserFollowers struct {
 	svc *services.Services
 	getter[*follow.GetFollowsResponse, func(context.Context) (*follow.GetFollowsResponse, error)]
 }
 
-func NewUserFollows(svc *services.Services, userID format.UserID, page Pagination) *UserFollows {
-	return &UserFollows{
+func NewUserFollowers(svc *services.Services, userID format.UserID, page Pagination) *UserFollowers {
+	return &UserFollowers{
 		svc: svc,
 		getter: NewGetter(
 			func(ctx context.Context) (*follow.GetFollowsResponse, error) {
 				return svc.Follows.GetFollows(ctx, &follow.GetFollowsRequest{
-					FollowerID: &userID,
+					FolloweeID: &userID,
 					Cursor:     page.Cursor,
 					Limit:      page.Limit,
 				})
@@ -28,7 +28,7 @@ func NewUserFollows(svc *services.Services, userID format.UserID, page Paginatio
 	}
 }
 
-func (f *UserFollows) Follows(ctx context.Context) ([]*Follow, error) {
+func (f *UserFollowers) Follows(ctx context.Context) ([]*Follow, error) {
 	reply, err := f.getter.Call(ctx)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (f *UserFollows) Follows(ctx context.Context) ([]*Follow, error) {
 	return toRet, nil
 }
 
-func (f *UserFollows) Next(ctx context.Context) (*string, error) {
+func (f *UserFollowers) Next(ctx context.Context) (*string, error) {
 	reply, err := f.getter.Call(ctx)
 	if err != nil {
 		return nil, err

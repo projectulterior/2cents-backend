@@ -16,6 +16,7 @@ type GetFollowsRequest struct {
 	Cursor     string
 	Limit      int
 	FollowerID *format.UserID
+	FolloweeID *format.UserID
 }
 
 type GetFollowsResponse struct {
@@ -33,6 +34,10 @@ func (s *Service) GetFollows(ctx context.Context, req *GetFollowsRequest) (*GetF
 
 	if req.FollowerID != nil {
 		filter["follower_id"] = req.FollowerID.String()
+	}
+
+	if req.FolloweeID != nil {
+		filter["followee_id"] = req.FolloweeID.String()
 	}
 
 	if req.Cursor != "" {
