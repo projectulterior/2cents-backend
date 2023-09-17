@@ -17,6 +17,11 @@ type Channel struct {
 	MemberIDs []format.UserID  `bson:"member_ids"`
 	CreatedAt time.Time        `bson:"created_at"`
 	UpdatedAt time.Time        `bson:"updated_at"`
+
+	// used for GetChannels to order channels by latest messages
+	Latest []struct {
+		CreatedAt time.Time `bson:"created_at"`
+	} `bson:"latest,omitempty"`
 }
 
 type Message struct {
