@@ -19,7 +19,7 @@ func NewUserComments(svc *services.Services, userID format.UserID, page Paginati
 		getter: NewGetter(
 			func(ctx context.Context) (*comments.GetCommentsResponse, error) {
 				return svc.Comments.GetComments(ctx, &comments.GetCommentsRequest{
-					AuthorID: userID,
+					AuthorID: &userID,
 					Cursor:   page.Cursor,
 					Limit:    page.Limit,
 				})

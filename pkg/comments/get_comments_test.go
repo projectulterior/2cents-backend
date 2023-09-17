@@ -37,7 +37,7 @@ func TestGetComments(t *testing.T) {
 	var cursor string
 	for i >= 0 {
 		comments, err := svc.GetComments(context.Background(), &comments.GetCommentsRequest{
-			PostID: postID,
+			PostID: &postID,
 			Cursor: cursor,
 			Limit:  BATCH_SIZE,
 		})

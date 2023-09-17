@@ -13,8 +13,8 @@ import (
 )
 
 type GetCommentsRequest struct {
-	AuthorID format.UserID
-	PostID   format.PostID
+	AuthorID *format.UserID
+	PostID   *format.PostID
 	Cursor   string
 	Limit    int
 }
@@ -24,15 +24,21 @@ type GetCommentsResponse struct {
 	Next     string
 }
 
+// GetComments for either a given post or given author
 func (s *Service) GetComments(ctx context.Context, req *GetCommentsRequest) (*GetCommentsResponse, error) {
 	type Cursor struct {
 		CreatedAt time.Time        `json:"created_at"`
 		CommentID format.CommentID `json:"comment_id"`
 	}
 
-	filter := bson.M{
-		"post_id":   req.PostID.String(),
-		"author_id": req.AuthorID.String(),
+	filter := bson.M{}
+
+	if req.PostID != nil {
+		filter["post_id"] = req.PostID.String()
+	}
+
+	if req.AuthorID != nil {
+		filter["author_id"] = req.AuthorID.String()
 	}
 
 	if req.Cursor != "" {
