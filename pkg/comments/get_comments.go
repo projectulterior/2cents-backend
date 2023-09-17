@@ -13,9 +13,10 @@ import (
 )
 
 type GetCommentsRequest struct {
-	PostID format.PostID
-	Cursor string
-	Limit  int
+	AuthorID format.UserID
+	PostID   format.PostID
+	Cursor   string
+	Limit    int
 }
 
 type GetCommentsResponse struct {
@@ -30,7 +31,8 @@ func (s *Service) GetComments(ctx context.Context, req *GetCommentsRequest) (*Ge
 	}
 
 	filter := bson.M{
-		"post_id": req.PostID.String(),
+		"post_id":   req.PostID.String(),
+		"author_id": req.AuthorID.String(),
 	}
 
 	if req.Cursor != "" {
