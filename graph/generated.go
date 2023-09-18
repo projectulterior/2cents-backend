@@ -267,7 +267,7 @@ type QueryResolver interface {
 	Follows(ctx context.Context, page resolver.Pagination) (*resolver.Follows, error)
 	Channel(ctx context.Context, id string) (*resolver.Channel, error)
 	ChannelByMembers(ctx context.Context, members []string) (*resolver.Channel, error)
-	Channels(ctx context.Context, page resolver.Pagination) (*model.Channels, error)
+	Channels(ctx context.Context, page resolver.Pagination) (*resolver.Channels, error)
 	Messages(ctx context.Context, id string, page resolver.Pagination) (*resolver.Messages, error)
 	Notifications(ctx context.Context, page *resolver.Pagination) (*model.Notifications, error)
 }
@@ -2798,7 +2798,7 @@ func (ec *executionContext) fieldContext_Channel_updatedAt(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Channels_channels(ctx context.Context, field graphql.CollectedField, obj *model.Channels) (ret graphql.Marshaler) {
+func (ec *executionContext) _Channels_channels(ctx context.Context, field graphql.CollectedField, obj *resolver.Channels) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Channels_channels(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2812,7 +2812,7 @@ func (ec *executionContext) _Channels_channels(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Channels, nil
+		return obj.Channels(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2833,7 +2833,7 @@ func (ec *executionContext) fieldContext_Channels_channels(ctx context.Context, 
 	fc = &graphql.FieldContext{
 		Object:     "Channels",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
@@ -2854,7 +2854,7 @@ func (ec *executionContext) fieldContext_Channels_channels(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Channels_next(ctx context.Context, field graphql.CollectedField, obj *model.Channels) (ret graphql.Marshaler) {
+func (ec *executionContext) _Channels_next(ctx context.Context, field graphql.CollectedField, obj *resolver.Channels) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Channels_next(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2868,7 +2868,7 @@ func (ec *executionContext) _Channels_next(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Next, nil
+		return obj.Next(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2886,7 +2886,7 @@ func (ec *executionContext) fieldContext_Channels_next(ctx context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "Channels",
 		Field:      field,
-		IsMethod:   false,
+		IsMethod:   true,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
@@ -7526,9 +7526,9 @@ func (ec *executionContext) _Query_channels(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Channels)
+	res := resTmp.(*resolver.Channels)
 	fc.Result = res
-	return ec.marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx, field.Selections, res)
+	return ec.marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannels(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_channels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11267,7 +11267,7 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 
 var channelsImplementors = []string{"Channels"}
 
-func (ec *executionContext) _Channels(ctx context.Context, sel ast.SelectionSet, obj *model.Channels) graphql.Marshaler {
+func (ec *executionContext) _Channels(ctx context.Context, sel ast.SelectionSet, obj *resolver.Channels) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, channelsImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -11277,12 +11277,74 @@ func (ec *executionContext) _Channels(ctx context.Context, sel ast.SelectionSet,
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Channels")
 		case "channels":
-			out.Values[i] = ec._Channels_channels(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channels_channels(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "next":
-			out.Values[i] = ec._Channels_next(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channels_next(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14824,11 +14886,11 @@ func (ec *executionContext) unmarshalNChannelCreateInput2githubᚗcomᚋprojectu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNChannels2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx context.Context, sel ast.SelectionSet, v model.Channels) graphql.Marshaler {
+func (ec *executionContext) marshalNChannels2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannels(ctx context.Context, sel ast.SelectionSet, v resolver.Channels) graphql.Marshaler {
 	return ec._Channels(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋmodelᚐChannels(ctx context.Context, sel ast.SelectionSet, v *model.Channels) graphql.Marshaler {
+func (ec *executionContext) marshalNChannels2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐChannels(ctx context.Context, sel ast.SelectionSet, v *resolver.Channels) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
