@@ -17,11 +17,6 @@ type ChannelCreateInput struct {
 	MemberIDs []string `json:"memberIDs"`
 }
 
-type Channels struct {
-	Channels []*resolver.Channel `json:"channels"`
-	Next     *string             `json:"next,omitempty"`
-}
-
 type CommentCreateInput struct {
 	PostID      string             `json:"postID"`
 	Content     string             `json:"content"`

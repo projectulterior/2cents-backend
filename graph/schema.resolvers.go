@@ -655,7 +655,7 @@ func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) 
 }
 
 // Channels is the resolver for the channels field.
-func (r *queryResolver) Channels(ctx context.Context, page resolver.Pagination) (*model.Channels, error) {
+func (r *queryResolver) Channels(ctx context.Context, page resolver.Pagination) (*resolver.Channels, error) {
 	panic(fmt.Errorf("not implemented: Channels - channels"))
 }
 
