@@ -9,6 +9,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/pkg/logger"
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 
 	"github.com/kelseyhightower/envconfig"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,6 +23,7 @@ type Config struct {
 }
 
 var client *mongo.Client
+var broker pubsub.Broker
 var log *zap.Logger
 
 func TestMain(m *testing.M) {
@@ -41,6 +43,9 @@ func TestMain(m *testing.M) {
 	}
 	defer client.Disconnect(ctx)
 
+	broker = pubsub.NewBroker()
+	defer broker.Shutdown(ctx)
+
 	log, err = logger.InitLogger(cfg.Service)
 	if err != nil {
 		panic(err)
@@ -53,6 +58,8 @@ func setup(t *testing.T) *messaging.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
 	return &messaging.Service{
+		ChannelUpdated: broker.Publisher(messaging.CHANNEL_UPDATED_EVENT),
+
 		Database: client.Database(name),
 		Logger:   log,
 	}

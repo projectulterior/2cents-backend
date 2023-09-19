@@ -83,6 +83,8 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, broker pubsu
 	}
 
 	messagingService := &messaging.Service{
+		ChannelUpdated: broker.Publisher(messaging.CHANNEL_UPDATED_EVENT),
+
 		Database: m.Database("messages"),
 		Logger:   log,
 	}

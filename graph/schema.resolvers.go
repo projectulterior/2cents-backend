@@ -706,7 +706,39 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 
 // OnChannelUpdated is the resolver for the onChannelUpdated field.
 func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *resolver.Channel, error) {
-	panic(fmt.Errorf("not implemented: OnChannelUpdated - onChannelUpdated"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	ch := make(chan *resolver.Channel)
+
+	go func() {
+		listener := r.Broker.Listener(messaging.CHANNEL_UPDATED_EVENT)
+		defer listener.Close(ctx)
+
+		for {
+			msg, err := listener.Next(ctx)
+			if err != nil {
+				r.Error("error in listener", zap.Error(err))
+				return
+			}
+
+			event, ok := msg.(messaging.ChannelUpdatedEvent)
+			if !ok {
+				r.Error("error in decoding event", zap.Error(err))
+				return
+			}
+
+			for _, memberID := range event.Channel.MemberIDs {
+				if memberID == authID {
+					ch <- resolver.NewChannelWithData(r.Services, &event.Channel)
+				}
+			}
+		}
+	}()
+
+	return ch, nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -36,13 +36,15 @@ func (s *Service) CreateMessage(ctx context.Context, req CreateMessageRequest) (
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
+	now := time.Now()
+
 	message := Message{
 		MessageID:   format.NewMessageID(),
 		ChannelID:   req.ChannelID,
 		SenderID:    req.SenderID,
 		Content:     req.Content,
 		ContentType: req.ContentType,
-		CreatedAt:   time.Now(),
+		CreatedAt:   now,
 	}
 
 	_, err = s.Collection(MESSAGES_COLLECTION).
@@ -50,6 +52,11 @@ func (s *Service) CreateMessage(ctx context.Context, req CreateMessageRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	s.EmitChannelUpdated(ctx, ChannelUpdatedEvent{
+		Channel:   channel,
+		Timestamp: now,
+	})
 
 	return &message, nil
 }
