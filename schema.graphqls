@@ -1,0 +1,314 @@
+schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
+}
+
+scalar Time
+
+type Query {
+    """
+    Returns the user specified by id. If empty, auth user
+    """
+    user(id: ID): User!
+    """
+    Returns all users in 2cents
+    """
+    users(page: Pagination!): Users!
+
+    """
+    Returns the post specified by id
+    """
+    post(id: ID!): Post!
+    """
+    Returns all posts in 2cents
+    """
+    posts(id: ID, page: Pagination!): Posts!
+    """
+    Returns posts created by the auth user's following
+    """
+    postsFollowing(page: Pagination!): Posts!
+    """
+    Returns posts cater towards the auth user
+    """
+    postsDiscovery(page: Pagination!): Posts!
+
+    """
+    Returns the comment specified by id
+    """
+    comment(id: ID!): Comment!
+    """
+    Returns all comments in 2cents
+    """
+    comments(page: Pagination!): Comments!
+
+    like(id: ID!): Like!
+    likes(page: Pagination!): Likes!
+
+    commentLike(id: ID!): CommentLike!
+    commentLikes(page: Pagination!): CommentLikes!
+
+    follow(id: ID!): Follow!
+    follows(page: Pagination!): Follows!
+
+    channel(id: ID!): Channel!
+    channelByMembers(members: [ID!]!): Channel!
+
+    channels(page: Pagination!): Channels!
+
+    messages(id: ID!, page: Pagination!): Messages!
+
+    notifications(page: Pagination): Notifications!
+}
+
+type Mutation {
+    userUpdate(input: UserUpdateInput!): User!
+    userDelete: User!
+
+    userFollow(id: ID!, isFollow: Boolean!): Follow!
+
+    postCreate(input: PostCreateInput!): Post!
+    postUpdate(id: ID!, input: PostUpdateInput!): Post!
+    postDelete(id: ID!): Post!
+
+    postLike(id: ID!, isLike: Boolean!): Like!
+
+    commentCreate(input: CommentCreateInput!): Comment!
+    commentUpdate(id: ID!, input: CommentUpdateInput!): Comment!
+    commentDelete(id: ID!): Comment!
+
+    commentLike(id: ID!, isLike: Boolean!): CommentLike!
+
+    channelCreate(input: ChannelCreateInput!): Channel!
+    channelAddMembers(id: ID!, input: AddMembersInput!): Channel!
+    channelDelete(id: ID!): Channel!
+
+    messageCreate(input: MessageCreateInput!): Message!
+    messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
+    messageDelete(id: ID!): Message!
+    messageRead(id: ID!): Message!
+}
+
+type Subscription {
+    onUserUpdated(id: ID): User!
+    onChannelUpdated: Channel!
+}
+
+type User {
+    id: ID!
+
+    username: String
+    name: String
+    email: String
+    birthday: Birthday
+    bio: String
+
+    profile: String
+    cover: String
+
+    cents: Cents
+
+    follows(page: Pagination): Follows
+    posts(page: Pagination): Posts
+    likes(page: Pagination): Likes
+}
+
+type Cents {
+    total: Int!
+    deposited: Int!
+    earned: Int!
+    given: Int!
+}
+
+type Users {
+    users: [User!]!
+    next: String!
+}
+
+type Birthday {
+    month: Int!
+    day: Int!
+    year: Int!
+}
+
+type Posts {
+    posts: [Post!]!
+    next: String!
+}
+
+type Post {
+    id: ID!
+    visibility: Visibility
+    content: String
+    contentType: ContentType
+    createdAt: Time
+    updatedAt: Time
+    author: User
+    likes(page: Pagination!): Likes
+    comments(page: Pagination!): Comments
+
+    like: Like
+}
+
+type Follow {
+    id: ID!
+    follower: User
+    followee: User
+    createdAt: Time
+}
+
+type Follows {
+    follows: [Follow!]!
+    next: String
+}
+
+type Like {
+    id: ID!
+    post: Post
+    liker: User
+    createdAt: Time
+}
+
+type Likes {
+    likes: [Like!]!
+    next: String!
+}
+
+type Comment {
+    id: ID!
+    post: Post
+    content: String
+    author: User
+    commentLikes(page: Pagination!): CommentLikes
+    createdAt: Time
+}
+
+type Comments {
+    comments: [Comment!]!
+    next: String!
+}
+
+type CommentLike {
+    id: ID!
+    comment: Comment
+    liker: User
+    createdAt: Time
+}
+
+type CommentLikes {
+    commentLikes: [CommentLike!]!
+    next: String
+}
+
+type Channel {
+    id: ID!
+    members: [User!]
+    messages(page: Pagination!): Messages
+    createdAt: Time
+    updatedAt: Time
+}
+
+type Channels {
+    channels: [Channel!]!
+    next: String
+}
+
+type Message {
+    id: ID!
+    channel: Channel!
+    content: String
+    contentType: ContentType
+    createdAt: Time
+    sender: User
+}
+
+type Messages {
+    messages: [Message!]
+    next: String
+}
+
+enum Visibility {
+    PUBLIC
+    FRIENDS
+    PRIVATE
+}
+
+enum ContentType {
+    TEXT
+    IMAGE
+    VIDEO
+}
+
+type Notifications {
+    messages: Int
+}
+
+### Inputs
+
+input Pagination {
+    cursor: String!
+    limit: Int!
+}
+
+input BirthdayInput {
+    day: Int
+    month: Int
+    year: Int
+}
+
+input UserUpdateInput {
+    name: String
+    email: String
+    bio: String
+    birthday: BirthdayInput
+
+    profile: String
+    cover: String
+}
+
+input PostCreateInput {
+    visibility: Visibility!
+    content: String!
+    contentType: ContentType!
+}
+
+input PostUpdateInput {
+    visibility: Visibility
+    content: String
+    contentType: ContentType
+}
+
+input CommentCreateInput {
+    postID: ID!
+    content: String!
+    contentType: ContentType!
+}
+
+input CommentUpdateInput {
+    content: String
+    contentType: ContentType
+}
+
+input MessageCreateInput {
+    channelID: ID!
+    senderID: ID!
+    content: String
+    contentType: ContentType
+}
+
+input ChannelCreateInput {
+    memberIDs: [ID!]!
+}
+
+input AddMembersInput {
+    channelID: ID!
+    memberID: ID!
+    memberIDs: [ID!]!
+}
+
+input MessageUpdateInput {
+    messageID: ID!
+    senderID: ID!
+    content: String
+    contentType: ContentType
+}

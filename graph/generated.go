@@ -5,7 +5,6 @@ package graph
 import (
 	"bytes"
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"io"
@@ -42,6 +41,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
+	Post() PostResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
 }
@@ -172,6 +172,7 @@ type ComplexityRoot struct {
 		ContentType func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
+		Like        func(childComplexity int) int
 		Likes       func(childComplexity int, page resolver.Pagination) int
 		UpdatedAt   func(childComplexity int) int
 		Visibility  func(childComplexity int) int
@@ -197,7 +198,7 @@ type ComplexityRoot struct {
 		Messages         func(childComplexity int, id string, page resolver.Pagination) int
 		Notifications    func(childComplexity int, page *resolver.Pagination) int
 		Post             func(childComplexity int, id string) int
-		Posts            func(childComplexity int, page resolver.Pagination) int
+		Posts            func(childComplexity int, id *string, page resolver.Pagination) int
 		PostsDiscovery   func(childComplexity int, page resolver.Pagination) int
 		PostsFollowing   func(childComplexity int, page resolver.Pagination) int
 		User             func(childComplexity int, id *string) int
@@ -250,11 +251,14 @@ type MutationResolver interface {
 	MessageDelete(ctx context.Context, id string) (*resolver.Message, error)
 	MessageRead(ctx context.Context, id string) (*resolver.Message, error)
 }
+type PostResolver interface {
+	Like(ctx context.Context, obj *resolver.Post) (*resolver.Like, error)
+}
 type QueryResolver interface {
 	User(ctx context.Context, id *string) (*resolver.User, error)
 	Users(ctx context.Context, page resolver.Pagination) (*model.Users, error)
 	Post(ctx context.Context, id string) (*resolver.Post, error)
-	Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
+	Posts(ctx context.Context, id *string, page resolver.Pagination) (*resolver.Posts, error)
 	PostsFollowing(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	PostsDiscovery(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error)
 	Comment(ctx context.Context, id string) (*resolver.Comment, error)
@@ -902,6 +906,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Post.ID(childComplexity), true
 
+	case "Post.like":
+		if e.complexity.Post.Like == nil {
+			break
+		}
+
+		return e.complexity.Post.Like(childComplexity), true
+
 	case "Post.likes":
 		if e.complexity.Post.Likes == nil {
 			break
@@ -1120,7 +1131,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Posts(childComplexity, args["page"].(resolver.Pagination)), true
+		return e.complexity.Query.Posts(childComplexity, args["id"].(*string), args["page"].(resolver.Pagination)), true
 
 	case "Query.postsDiscovery":
 		if e.complexity.Query.PostsDiscovery == nil {
@@ -1434,19 +1445,322 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
 }
 
-//go:embed "schema.graphqls"
-var sourcesFS embed.FS
-
-func sourceData(filename string) string {
-	data, err := sourcesFS.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprintf("codegen problem: %s not available", filename))
-	}
-	return string(data)
+var sources = []*ast.Source{
+	{Name: "../schema.graphqls", Input: `schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
 }
 
-var sources = []*ast.Source{
-	{Name: "schema.graphqls", Input: sourceData("schema.graphqls"), BuiltIn: false},
+scalar Time
+
+type Query {
+    """
+    Returns the user specified by id. If empty, auth user
+    """
+    user(id: ID): User!
+    """
+    Returns all users in 2cents
+    """
+    users(page: Pagination!): Users!
+
+    """
+    Returns the post specified by id
+    """
+    post(id: ID!): Post!
+    """
+    Returns all posts in 2cents
+    """
+    posts(id: ID, page: Pagination!): Posts!
+    """
+    Returns posts created by the auth user's following
+    """
+    postsFollowing(page: Pagination!): Posts!
+    """
+    Returns posts cater towards the auth user
+    """
+    postsDiscovery(page: Pagination!): Posts!
+
+    """
+    Returns the comment specified by id
+    """
+    comment(id: ID!): Comment!
+    """
+    Returns all comments in 2cents
+    """
+    comments(page: Pagination!): Comments!
+
+    like(id: ID!): Like!
+    likes(page: Pagination!): Likes!
+
+    commentLike(id: ID!): CommentLike!
+    commentLikes(page: Pagination!): CommentLikes!
+
+    follow(id: ID!): Follow!
+    follows(page: Pagination!): Follows!
+
+    channel(id: ID!): Channel!
+    channelByMembers(members: [ID!]!): Channel!
+
+    channels(page: Pagination!): Channels!
+
+    messages(id: ID!, page: Pagination!): Messages!
+
+    notifications(page: Pagination): Notifications!
+}
+
+type Mutation {
+    userUpdate(input: UserUpdateInput!): User!
+    userDelete: User!
+
+    userFollow(id: ID!, isFollow: Boolean!): Follow!
+
+    postCreate(input: PostCreateInput!): Post!
+    postUpdate(id: ID!, input: PostUpdateInput!): Post!
+    postDelete(id: ID!): Post!
+
+    postLike(id: ID!, isLike: Boolean!): Like!
+
+    commentCreate(input: CommentCreateInput!): Comment!
+    commentUpdate(id: ID!, input: CommentUpdateInput!): Comment!
+    commentDelete(id: ID!): Comment!
+
+    commentLike(id: ID!, isLike: Boolean!): CommentLike!
+
+    channelCreate(input: ChannelCreateInput!): Channel!
+    channelAddMembers(id: ID!, input: AddMembersInput!): Channel!
+    channelDelete(id: ID!): Channel!
+
+    messageCreate(input: MessageCreateInput!): Message!
+    messageUpdate(id: ID!, input: MessageUpdateInput!): Message!
+    messageDelete(id: ID!): Message!
+    messageRead(id: ID!): Message!
+}
+
+type Subscription {
+    onUserUpdated(id: ID): User!
+    onChannelUpdated: Channel!
+}
+
+type User {
+    id: ID!
+
+    username: String
+    name: String
+    email: String
+    birthday: Birthday
+    bio: String
+
+    profile: String
+    cover: String
+
+    cents: Cents
+
+    follows(page: Pagination): Follows
+    posts(page: Pagination): Posts
+    likes(page: Pagination): Likes
+}
+
+type Cents {
+    total: Int!
+    deposited: Int!
+    earned: Int!
+    given: Int!
+}
+
+type Users {
+    users: [User!]!
+    next: String!
+}
+
+type Birthday {
+    month: Int!
+    day: Int!
+    year: Int!
+}
+
+type Posts {
+    posts: [Post!]!
+    next: String!
+}
+
+type Post {
+    id: ID!
+    visibility: Visibility
+    content: String
+    contentType: ContentType
+    createdAt: Time
+    updatedAt: Time
+    author: User
+    likes(page: Pagination!): Likes
+    comments(page: Pagination!): Comments
+
+    like: Like
+}
+
+type Follow {
+    id: ID!
+    follower: User
+    followee: User
+    createdAt: Time
+}
+
+type Follows {
+    follows: [Follow!]!
+    next: String
+}
+
+type Like {
+    id: ID!
+    post: Post
+    liker: User
+    createdAt: Time
+}
+
+type Likes {
+    likes: [Like!]!
+    next: String!
+}
+
+type Comment {
+    id: ID!
+    post: Post
+    content: String
+    author: User
+    commentLikes(page: Pagination!): CommentLikes
+    createdAt: Time
+}
+
+type Comments {
+    comments: [Comment!]!
+    next: String!
+}
+
+type CommentLike {
+    id: ID!
+    comment: Comment
+    liker: User
+    createdAt: Time
+}
+
+type CommentLikes {
+    commentLikes: [CommentLike!]!
+    next: String
+}
+
+type Channel {
+    id: ID!
+    members: [User!]
+    messages(page: Pagination!): Messages
+    createdAt: Time
+    updatedAt: Time
+}
+
+type Channels {
+    channels: [Channel!]!
+    next: String
+}
+
+type Message {
+    id: ID!
+    channel: Channel!
+    content: String
+    contentType: ContentType
+    createdAt: Time
+    sender: User
+}
+
+type Messages {
+    messages: [Message!]
+    next: String
+}
+
+enum Visibility {
+    PUBLIC
+    FRIENDS
+    PRIVATE
+}
+
+enum ContentType {
+    TEXT
+    IMAGE
+    VIDEO
+}
+
+type Notifications {
+    messages: Int
+}
+
+### Inputs
+
+input Pagination {
+    cursor: String!
+    limit: Int!
+}
+
+input BirthdayInput {
+    day: Int
+    month: Int
+    year: Int
+}
+
+input UserUpdateInput {
+    name: String
+    email: String
+    bio: String
+    birthday: BirthdayInput
+
+    profile: String
+    cover: String
+}
+
+input PostCreateInput {
+    visibility: Visibility!
+    content: String!
+    contentType: ContentType!
+}
+
+input PostUpdateInput {
+    visibility: Visibility
+    content: String
+    contentType: ContentType
+}
+
+input CommentCreateInput {
+    postID: ID!
+    content: String!
+    contentType: ContentType!
+}
+
+input CommentUpdateInput {
+    content: String
+    contentType: ContentType
+}
+
+input MessageCreateInput {
+    channelID: ID!
+    senderID: ID!
+    content: String
+    contentType: ContentType
+}
+
+input ChannelCreateInput {
+    memberIDs: [ID!]!
+}
+
+input AddMembersInput {
+    channelID: ID!
+    memberID: ID!
+    memberIDs: [ID!]!
+}
+
+input MessageUpdateInput {
+    messageID: ID!
+    senderID: ID!
+    content: String
+    contentType: ContentType
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -2099,15 +2413,24 @@ func (ec *executionContext) field_Query_postsFollowing_args(ctx context.Context,
 func (ec *executionContext) field_Query_posts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 resolver.Pagination
-	if tmp, ok := rawArgs["page"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
-		arg0, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["page"] = arg0
+	args["id"] = arg0
+	var arg1 resolver.Pagination
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg1
 	return args, nil
 }
 
@@ -2993,6 +3316,8 @@ func (ec *executionContext) fieldContext_Comment_post(ctx context.Context, field
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -4023,6 +4348,8 @@ func (ec *executionContext) fieldContext_Like_post(ctx context.Context, field gr
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -4895,6 +5222,8 @@ func (ec *executionContext) fieldContext_Mutation_postCreate(ctx context.Context
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -4970,6 +5299,8 @@ func (ec *executionContext) fieldContext_Mutation_postUpdate(ctx context.Context
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -5045,6 +5376,8 @@ func (ec *executionContext) fieldContext_Mutation_postDelete(ctx context.Context
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -6350,6 +6683,57 @@ func (ec *executionContext) fieldContext_Post_comments(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Post_like(ctx context.Context, field graphql.CollectedField, obj *resolver.Post) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Post_like(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Post().Like(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Like)
+	fc.Result = res
+	return ec.marshalOLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLike(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Post_like(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Like_id(ctx, field)
+			case "post":
+				return ec.fieldContext_Like_post(ctx, field)
+			case "liker":
+				return ec.fieldContext_Like_liker(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Like_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Like", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Posts_posts(ctx context.Context, field graphql.CollectedField, obj *resolver.Posts) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Posts_posts(ctx, field)
 	if err != nil {
@@ -6407,6 +6791,8 @@ func (ec *executionContext) fieldContext_Posts_posts(ctx context.Context, field 
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -6657,6 +7043,8 @@ func (ec *executionContext) fieldContext_Query_post(ctx context.Context, field g
 				return ec.fieldContext_Post_likes(ctx, field)
 			case "comments":
 				return ec.fieldContext_Post_comments(ctx, field)
+			case "like":
+				return ec.fieldContext_Post_like(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
 		},
@@ -6689,7 +7077,7 @@ func (ec *executionContext) _Query_posts(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Posts(rctx, fc.Args["page"].(resolver.Pagination))
+		return ec.resolvers.Query().Posts(rctx, fc.Args["id"].(*string), fc.Args["page"].(resolver.Pagination))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13381,6 +13769,39 @@ func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "like":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Post_like(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15930,6 +16351,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOLike2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLike(ctx context.Context, sel ast.SelectionSet, v *resolver.Like) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Like(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOLikes2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐLikes(ctx context.Context, sel ast.SelectionSet, v *resolver.Likes) graphql.Marshaler {

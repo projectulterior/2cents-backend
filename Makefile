@@ -31,3 +31,8 @@ up:
 test: up
 	go clean -testcache
 	go test ./...
+
+token:
+	curl -X POST http://localhost:8080/auth/create_token \
+        --header 'Content-Type: application/json' \
+        --data '{ "username": "username", "password": "password" }'

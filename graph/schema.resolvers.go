@@ -467,6 +467,11 @@ func (r *mutationResolver) MessageRead(ctx context.Context, id string) (*resolve
 	panic(fmt.Errorf("not implemented: MessageRead - messageRead"))
 }
 
+// Like is the resolver for the like field.
+func (r *postResolver) Like(ctx context.Context, obj *resolver.Post) (*resolver.Like, error) {
+	panic(fmt.Errorf("not implemented: Like - like"))
+}
+
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id *string) (*resolver.User, error) {
 	authID, err := authUserID(ctx)
@@ -509,8 +514,22 @@ func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, er
 }
 
 // Posts is the resolver for the posts field.
-func (r *queryResolver) Posts(ctx context.Context, page resolver.Pagination) (*resolver.Posts, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
+func (r *queryResolver) Posts(ctx context.Context, id *string, page resolver.Pagination) (*resolver.Posts, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	if id != nil {
+		userID, err := format.ParseUserID(*id)
+		if err != nil {
+			return nil, e(ctx, http.StatusBadRequest, err.Error())
+		}
+
+		return resolver.NewPosts(resolver.NewUserPosts(r.Services, userID, page)), nil
+	}
+
+	return resolver.NewPosts(resolver.NewAllPosts(r.Services, page)), nil
 }
 
 // PostsFollowing is the resolver for the postsFollowing field.
@@ -744,6 +763,9 @@ func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *re
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -751,5 +773,6 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
