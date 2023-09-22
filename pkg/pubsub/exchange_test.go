@@ -24,6 +24,14 @@ func TestExchange(t *testing.T) {
 	publisher := exchange.Publisher()
 	listener := exchange.Listener()
 
+	var success bool
+	go exchange.Subscribe(func(ctx context.Context, msg TestMessage) error {
+		if msg.Content == message {
+			success = true
+		}
+		return nil
+	})
+
 	err := publisher.Publish(context.Background(), TestMessage{
 		Content: message,
 	})
@@ -32,4 +40,6 @@ func TestExchange(t *testing.T) {
 	msg, err := listener.Next(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, message, msg.Content)
+
+	assert.True(t, success)
 }

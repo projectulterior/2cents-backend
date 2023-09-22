@@ -53,6 +53,23 @@ func (e *exchange[M]) Listener() Listener[M] {
 	return &listener[M]{ex: e, ch: ch}
 }
 
+func (e *exchange[M]) Subscribe(fn func(context.Context, M) error) {
+	ch := make(chan M)
+
+	func() {
+		e.mutex.Lock()
+		defer e.mutex.Unlock()
+
+		e.listeners = append(e.listeners, ch)
+	}()
+
+	for msg := range ch {
+		// TODO: handle errors
+		_ = fn(context.Background(), msg)
+
+	}
+}
+
 func (e *exchange[M]) removeListener(l *listener[M]) {
 	l.ex.mutex.Lock()
 	defer l.ex.mutex.Unlock()

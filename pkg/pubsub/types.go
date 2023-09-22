@@ -18,5 +18,6 @@ type Listener[M Message] interface {
 type Exchange[M Message] interface {
 	Publisher() Publisher[M]
 	Listener() Listener[M]
+	Subscribe(func(context.Context, M) error)
 	Shutdown(context.Context) error
 }
