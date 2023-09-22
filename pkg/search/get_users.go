@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -30,8 +29,6 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 		After  []types.FieldValue `json:"after"`
 		Offset int                `json:"offset"`
 	}
-
-	const KEEP_ALIVE = 30 * time.Minute
 
 	var cursor Cursor
 	if req.Cursor != "" {
