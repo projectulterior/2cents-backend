@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -24,14 +25,19 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 		return nil, status.Error(codes.InvalidArgument, "invalid username")
 	}
 
+	password, err := salt(req.Password)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	var user User
-	err := s.Collection(USERS_COLLECTION).
+	err = s.Collection(USERS_COLLECTION).
 		FindOneAndUpdate(ctx,
 			bson.M{"username": req.Username},
 			bson.M{
 				"$setOnInsert": bson.M{
 					"_id":        format.NewUserID(),
-					"password":   req.Password,
+					"password":   password,
 					"created_at": time.Now(),
 				},
 			},
@@ -43,7 +49,7 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if req.Password != user.Password {
+	if password != user.Password {
 		return nil, status.Error(codes.PermissionDenied, "wrong password")
 	}
 
@@ -60,6 +66,21 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 
 func verifyUsername(username string) bool {
 	return len(username) > MIN_USERNAME_LENGTH
+}
+
+func salt(str string) (string, error) {
+	// Use GenerateFromPassword to hash & salt pwd.
+	// MinCost is just an integer constant provided by the bcrypt
+	// package along with DefaultCost & MaxCost.
+	// The cost can be any value you want provided it isn't lower
+	// than the MinCost (4)
+	hash, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	// GenerateFromPassword returns a byte slice so we need to
+	// convert the bytes to a string and return it
+	return string(hash), nil
 }
 
 func (s *Service) createToken(ctx context.Context, userID format.UserID) (string, string, error) {

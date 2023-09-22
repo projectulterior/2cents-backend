@@ -18,16 +18,26 @@ type UpdatePasswordRequest struct {
 }
 
 func (s *Service) UpdatePassword(ctx context.Context, req UpdatePasswordRequest) error {
+	oldPassword, err := salt(req.OldPassword)
+	if err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	newPassword, err := salt(req.NewPassword)
+	if err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+
 	var user User
-	err := s.Collection(USERS_COLLECTION).
+	err = s.Collection(USERS_COLLECTION).
 		FindOneAndUpdate(ctx,
 			bson.M{
 				"_id":      req.UserID.String(),
-				"password": req.OldPassword,
+				"password": oldPassword,
 			},
 			bson.M{
 				"$set": bson.M{
-					"password": req.NewPassword,
+					"password": newPassword,
 				},
 			},
 			options.FindOneAndUpdate().

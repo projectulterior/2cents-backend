@@ -14,6 +14,7 @@ require (
 	go.mongodb.org/mongo-driver v1.12.1
 	go.opencensus.io v0.24.0
 	go.uber.org/zap v1.25.0
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	google.golang.org/grpc v1.58.0
 )
 
@@ -46,7 +47,6 @@ require (
 	go.elastic.co/apm/v2 v2.4.4 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
