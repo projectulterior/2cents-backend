@@ -7,6 +7,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/format"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -30,14 +31,15 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	userID := format.NewUserID()
+
 	var user User
 	err = s.Collection(USERS_COLLECTION).
 		FindOneAndUpdate(ctx,
-			bson.M{"username": req.Username},
+			bson.M{"username": req.Username, "password": password},
 			bson.M{
 				"$setOnInsert": bson.M{
-					"_id":        format.NewUserID(),
-					"password":   password,
+					"_id":        userID,
 					"created_at": time.Now(),
 				},
 			},
@@ -46,16 +48,24 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 				SetUpsert(true),
 		).Decode(&user)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+		if mongo.IsDuplicateKeyError(err) {
+			return nil, status.Error(codes.PermissionDenied, "wrong password")
+		}
 
-	if password != user.Password {
-		return nil, status.Error(codes.PermissionDenied, "wrong password")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	auth, refresh, err := s.createToken(ctx, user.UserID)
 	if err != nil {
 		return nil, err
+	}
+
+	if user.UserID == userID {
+		// new user
+		s.UserUpdated.Publish(ctx, UserUpdatedEvent{
+			User:      user,
+			Timestamp: user.CreatedAt,
+		})
 	}
 
 	return &CreateTokenResponse{

@@ -9,6 +9,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/logger"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub/broker"
 
 	"github.com/kelseyhightower/envconfig"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -55,11 +56,17 @@ func TestMain(m *testing.M) {
 func setup(t *testing.T) *auth.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
-	return &auth.Service{
+	svc := &auth.Service{
 		Secret:          secret,
 		AuthTokenTTL:    time.Minute,
 		RefreshTokenTTL: time.Hour,
+		UserUpdated:     broker.Exchange(auth.UserUpdatedEvent{}).Publisher(),
 		Database:        client.Database(name),
 		Logger:          log,
 	}
+	if err := svc.Setup(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	return svc
 }
