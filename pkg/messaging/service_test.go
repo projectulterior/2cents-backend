@@ -23,7 +23,7 @@ type Config struct {
 }
 
 var client *mongo.Client
-var broker pubsub.Broker
+var channelUpdated pubsub.Exchange[messaging.ChannelUpdatedEvent]
 var log *zap.Logger
 
 func TestMain(m *testing.M) {
@@ -43,8 +43,8 @@ func TestMain(m *testing.M) {
 	}
 	defer client.Disconnect(ctx)
 
-	broker = pubsub.NewBroker()
-	defer broker.Shutdown(ctx)
+	channelUpdated = pubsub.NewExchange[messaging.ChannelUpdatedEvent]()
+	defer channelUpdated.Shutdown(ctx)
 
 	log, err = logger.InitLogger(cfg.Service)
 	if err != nil {
@@ -58,7 +58,7 @@ func setup(t *testing.T) *messaging.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
 	return &messaging.Service{
-		ChannelUpdated: broker.Publisher(messaging.CHANNEL_UPDATED_EVENT),
+		ChannelUpdated: channelUpdated.Publisher(),
 
 		Database: client.Database(name),
 		Logger:   log,

@@ -53,7 +53,7 @@ func (s *Service) CreateMessage(ctx context.Context, req CreateMessageRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	s.EmitChannelUpdated(ctx, ChannelUpdatedEvent{
+	s.ChannelUpdated.Publish(ctx, ChannelUpdatedEvent{
 		Channel:   channel,
 		Timestamp: now,
 	})

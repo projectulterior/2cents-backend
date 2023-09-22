@@ -7,8 +7,8 @@ import (
 )
 
 type Service struct {
-	UserUpdated pubsub.Publisher
-	UserDeleted pubsub.Publisher
+	UserUpdated pubsub.Publisher[UserUpdatedEvent]
+	UserDeleted pubsub.Publisher[UserDeletedEvent]
 
 	*mongo.Database
 	*zap.Logger

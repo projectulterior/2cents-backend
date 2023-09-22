@@ -38,7 +38,7 @@ func (s *Service) CreateUser(ctx context.Context, req CreateUserRequest) (*Creat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	s.EmitUserUpdated(ctx, UserUpdatedEvent{
+	s.UserUpdated.Publish(ctx, UserUpdatedEvent{
 		User:      user,
 		Timestamp: now,
 	})

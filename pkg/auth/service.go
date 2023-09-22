@@ -13,7 +13,7 @@ type Service struct {
 	AuthTokenTTL    time.Duration
 	RefreshTokenTTL time.Duration
 
-	UserUpdated pubsub.Publisher
+	UserUpdated pubsub.Publisher[UserUpdatedEvent]
 
 	*mongo.Database
 	*zap.Logger

@@ -2,21 +2,21 @@ package pubsub
 
 import "context"
 
-type Route string
-
-type Message any
-
-type Broker interface {
-	Publisher(Route) Publisher
-	Listener(Route) Listener
-	Shutdown(context.Context) error
+type Message interface {
+	Route() string
 }
 
-type Publisher interface {
-	Publish(context.Context, Message) error
+type Publisher[M Message] interface {
+	Publish(context.Context, M) error
 }
 
-type Listener interface {
-	Next(context.Context) (Message, error)
+type Listener[M Message] interface {
+	Next(context.Context) (*M, error)
 	Close(context.Context)
+}
+
+type Exchange[M Message] interface {
+	Publisher() Publisher[M]
+	Listener() Listener[M]
+	Shutdown(context.Context) error
 }

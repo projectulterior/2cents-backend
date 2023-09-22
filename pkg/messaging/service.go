@@ -7,7 +7,7 @@ import (
 )
 
 type Service struct {
-	ChannelUpdated pubsub.Publisher
+	ChannelUpdated pubsub.Publisher[ChannelUpdatedEvent]
 
 	*mongo.Database
 	*zap.Logger

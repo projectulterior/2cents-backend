@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 	"github.com/projectulterior/2cents-backend/pkg/services"
 	"go.uber.org/zap"
 )
@@ -12,7 +11,6 @@ import (
 
 type Resolver struct {
 	*services.Services
-	pubsub.Broker
 
 	*zap.Logger
 }

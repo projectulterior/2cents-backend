@@ -5,12 +5,12 @@ import (
 	"fmt"
 )
 
-type listener struct {
-	router *router
-	ch     <-chan Message
+type listener[M Message] struct {
+	ex *exchange[M]
+	ch <-chan M
 }
 
-func (l *listener) Next(ctx context.Context) (Message, error) {
+func (l *listener[M]) Next(ctx context.Context) (*M, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
@@ -18,10 +18,10 @@ func (l *listener) Next(ctx context.Context) (Message, error) {
 		if !ok {
 			return nil, fmt.Errorf("unexpected closed channel")
 		}
-		return msg, nil
+		return &msg, nil
 	}
 }
 
-func (l *listener) Close(ctx context.Context) {
-	l.router.removeListener(l)
+func (l *listener[M]) Close(ctx context.Context) {
+	l.ex.removeListener(l)
 }

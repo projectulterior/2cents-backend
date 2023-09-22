@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/logger"
 	"github.com/projectulterior/2cents-backend/pkg/pubsub"
 	"github.com/projectulterior/2cents-backend/pkg/search"
@@ -23,7 +24,7 @@ type Config struct {
 }
 
 var client *elasticsearch.TypedClient
-var broker pubsub.Broker
+var userUpdated pubsub.Exchange[auth.UserUpdatedEvent]
 var log *zap.Logger
 
 func TestMain(m *testing.M) {
@@ -49,8 +50,8 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	broker = pubsub.NewBroker()
-	defer broker.Shutdown(ctx)
+	userUpdated = pubsub.NewExchange[auth.UserUpdatedEvent]()
+	defer userUpdated.Shutdown(ctx)
 
 	os.Exit(m.Run())
 }

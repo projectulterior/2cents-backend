@@ -18,6 +18,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
+	"github.com/projectulterior/2cents-backend/pkg/pubsub/broker"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -76,7 +77,7 @@ func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow b
 	}
 
 	if isFollow {
-		reply, err := r.Services.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
+		reply, err := r.Follows.CreateFollow(ctx, follow.CreateFollowRequest{
 			FollowerID: followerID,
 			FolloweeID: followeeID,
 		})
@@ -89,7 +90,7 @@ func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow b
 
 	followID := format.NewFollowID(followerID, followeeID)
 
-	_, err = r.Services.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
+	_, err = r.Follows.DeleteFollow(ctx, follow.DeleteFollowRequest{
 		FollowID: followID,
 	})
 	if err != nil {
@@ -287,7 +288,7 @@ func (r *mutationResolver) CommentLike(ctx context.Context, id string, isLike bo
 	}
 
 	if isLike {
-		reply, err := r.Services.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
+		reply, err := r.CommentLikes.CreateCommentLike(ctx, comment_likes.CreateCommentLikeRequest{
 			CommentID: commentID,
 			LikerID:   authID,
 		})
@@ -299,7 +300,7 @@ func (r *mutationResolver) CommentLike(ctx context.Context, id string, isLike bo
 	} else {
 		likeID := format.NewCommentLikeID(commentID, authID)
 
-		_, err = r.Services.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
+		_, err = r.CommentLikes.DeleteCommentLike(ctx, comment_likes.DeleteCommentLikeRequest{
 			CommentLikeID: likeID,
 		})
 		if err != nil {
@@ -698,19 +699,13 @@ func (r *subscriptionResolver) OnUserUpdated(ctx context.Context, id *string) (<
 	ch := make(chan *resolver.User)
 
 	go func() {
-		listener := r.Broker.Listener(users.USER_UPDATED_EVENT)
+		listener := broker.Exchange(users.UserUpdatedEvent{}).Listener()
 		defer listener.Close(ctx)
 
 		for {
-			msg, err := listener.Next(ctx)
+			event, err := listener.Next(ctx)
 			if err != nil {
 				r.Error("error in listener", zap.Error(err))
-				return
-			}
-
-			event, ok := msg.(users.UserUpdatedEvent)
-			if !ok {
-				r.Error("error in decoding event", zap.Error(err))
 				return
 			}
 
@@ -733,19 +728,13 @@ func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *re
 	ch := make(chan *resolver.Channel)
 
 	go func() {
-		listener := r.Broker.Listener(messaging.CHANNEL_UPDATED_EVENT)
+		listener := broker.Exchange(messaging.ChannelUpdatedEvent{}).Listener()
 		defer listener.Close(ctx)
 
 		for {
-			msg, err := listener.Next(ctx)
+			event, err := listener.Next(ctx)
 			if err != nil {
 				r.Error("error in listener", zap.Error(err))
-				return
-			}
-
-			event, ok := msg.(messaging.ChannelUpdatedEvent)
-			if !ok {
-				r.Error("error in decoding event", zap.Error(err))
 				return
 			}
 

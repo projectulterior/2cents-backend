@@ -26,7 +26,7 @@ func (s *Service) DeleteUser(ctx context.Context, req DeleteUserRequest) (*Delet
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	s.EmitUserDeleted(ctx, UserDeletedEvent{
+	s.UserDeleted.Publish(ctx, UserDeletedEvent{
 		UserID:    req.UserID,
 		Timestamp: now,
 	})

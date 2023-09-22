@@ -23,7 +23,8 @@ type Config struct {
 }
 
 var client *mongo.Client
-var broker pubsub.Broker
+var userUpdated pubsub.Exchange[users.UserUpdatedEvent]
+var userDeleted pubsub.Exchange[users.UserDeletedEvent]
 var log *zap.Logger
 
 func TestMain(m *testing.M) {
@@ -48,8 +49,11 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	broker = pubsub.NewBroker()
-	defer broker.Shutdown(ctx)
+	userUpdated = pubsub.NewExchange[users.UserUpdatedEvent]()
+	defer userUpdated.Shutdown(ctx)
+
+	userDeleted = pubsub.NewExchange[users.UserDeletedEvent]()
+	defer userDeleted.Shutdown(ctx)
 
 	os.Exit(m.Run())
 }
@@ -58,8 +62,8 @@ func setup(t *testing.T) *users.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
 	return &users.Service{
-		UserUpdated: broker.Publisher(users.USER_UPDATED_EVENT),
-		UserDeleted: broker.Publisher(users.USER_DELETED_EVENT),
+		UserUpdated: userUpdated.Publisher(),
+		UserDeleted: userDeleted.Publisher(),
 
 		Database: client.Database(name),
 		Logger:   log,
