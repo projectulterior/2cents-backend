@@ -27,11 +27,11 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 	var user User
 	err := s.Collection(USERS_COLLECTION).
 		FindOneAndUpdate(ctx,
-			bson.M{"_id": req.Username},
+			bson.M{"username": req.Username},
 			bson.M{
 				"$setOnInsert": bson.M{
+					"_id":        format.NewUserID(),
 					"password":   req.Password,
-					"user_id":    format.NewUserID(),
 					"created_at": time.Now(),
 				},
 			},

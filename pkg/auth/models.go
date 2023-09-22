@@ -18,9 +18,9 @@ const (
 )
 
 type User struct {
-	Username  string        `bson:"_id"`
+	UserID    format.UserID `bson:"_id"`
+	Username  string        `bson:"username"`
 	Password  string        `bson:"password"`
-	UserID    format.UserID `bson:"user_id"`
 	CreatedAt time.Time     `bson:"created_at"`
 }
 
@@ -38,7 +38,7 @@ func (s *Service) Setup(ctx context.Context) error {
 		Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys: bson.D{
-				{Key: "user_id", Value: 1},
+				{Key: "username", Value: 1},
 			},
 			Options: options.Index().SetUnique(true),
 		},

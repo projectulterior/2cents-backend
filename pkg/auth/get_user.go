@@ -18,7 +18,7 @@ type GetUserResponse = User
 func (s *Service) GetUser(ctx context.Context, req GetUserRequest) (*GetUserResponse, error) {
 	var user User
 	err := s.Collection(USERS_COLLECTION).
-		FindOne(ctx, bson.M{"user_id": req.UserID.String()}).
+		FindOne(ctx, bson.M{"_id": req.UserID.String()}).
 		Decode(&user)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {

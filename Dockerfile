@@ -4,14 +4,14 @@ RUN apt-get update \
     && apt-get install -y  --no-install-recommends \
         git \
         make
-    
+
 ENV APP_DIR $GOPATH/src/github.com/projectulterior/2cents-backend
 WORKDIR ${APP_DIR}
 
-COPY . ${APP_DIR}
-
 RUN go install github.com/99designs/gqlgen@latest
 RUN export PATH="$PATH:$(go env GOPATH)/bin"
+
+COPY . ${APP_DIR}
 
 RUN make build
 
