@@ -31,6 +31,8 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 		Offset int                `json:"offset"`
 	}
 
+	const KEEP_ALIVE = 30 * time.Minute
+
 	var cursor Cursor
 	if req.Cursor != "" {
 		err := json.Unmarshal([]byte(req.Cursor), &cursor)
@@ -38,7 +40,7 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	} else {
-		resp, err := s.OpenPointInTime(s.UsersIndex).Do(ctx)
+		resp, err := s.OpenPointInTime(s.UsersIndex).Index(s.UsersIndex).KeepAlive("30s").Do(ctx)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -47,7 +49,6 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 	}
 
 	resp, err := s.Search().
-		Index(s.UsersIndex).
 		Request(&search.Request{
 			Query: &types.Query{
 				Bool: &types.BoolQuery{
@@ -72,8 +73,8 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 			Size:           &req.Limit,
 			TrackTotalHits: true,
 			Pit: &types.PointInTimeReference{
-				Id:        cursor.PID,
-				KeepAlive: 30 * time.Minute,
+				Id: cursor.PID,
+				// KeepAlive: 30 * time.Second,
 			},
 			SearchAfter: cursor.After,
 			Sort: []types.SortCombinations{

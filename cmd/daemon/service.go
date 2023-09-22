@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
@@ -11,6 +12,7 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/projectulterior/2cents-backend/pkg/pubsub/broker"
+	"github.com/projectulterior/2cents-backend/pkg/search"
 	"github.com/projectulterior/2cents-backend/pkg/services"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 
@@ -19,7 +21,7 @@ import (
 )
 
 // setup services
-func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Logger) (*services.Services, error) {
+func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elasticsearch.TypedClient, log *zap.Logger) (*services.Services, error) {
 	authService := &auth.Service{
 		Secret:          cfg.Secret,
 		AuthTokenTTL:    cfg.AuthTokenTTL,
@@ -91,6 +93,19 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, log *zap.Log
 	if err := messagingService.Setup(ctx); err != nil {
 		return nil, err
 	}
+
+	searchService := &search.Service{
+		UsersIndex: "users",
+		PostsIndex: "posts",
+
+		TypedClient: es,
+		Logger:      log,
+	}
+	if err := searchService.Setup(ctx); err != nil {
+		return nil, err
+	}
+	go broker.Exchange(auth.UserUpdatedEvent{}).Subscribe(searchService.ProcessUsernameUpdated)
+	go broker.Exchange(users.UserUpdatedEvent{}).Subscribe(searchService.ProcessUserUpdated)
 
 	return &services.Services{
 		Auth:         authService,

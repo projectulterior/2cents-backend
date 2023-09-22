@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/projectulterior/2cents-backend/cmd/daemon/handler"
 	"github.com/projectulterior/2cents-backend/cmd/daemon/httputil"
 	"github.com/projectulterior/2cents-backend/cmd/daemon/middleware"
@@ -36,7 +37,8 @@ type Config struct {
 	Secret          string        `envconfig:"SECRET" default:"secret"`
 	AuthTokenTTL    time.Duration `envconfig:"AUTH_TOKEN_TTL" default:"10s"`
 	RefreshTokenTTL time.Duration `envconfig:"REFRESH_TOKEN_TTL" default:"1h"`
-	Mongo           string        `evnconfig:"MONGO"`
+	Mongo           string        `envconfig:"MONGO"`
+	Elastic         string        `envconfig:"ELASTIC"`
 }
 
 func main() {
@@ -61,8 +63,17 @@ func main() {
 	}
 	defer m.Disconnect(ctx)
 
+	es, err := elasticsearch.NewTypedClient(elasticsearch.Config{
+		RetryOnStatus: []int{502, 503, 504, 429},
+		MaxRetries:    5,
+		Addresses:     []string{cfg.Elastic},
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	// services
-	svc, err := initServices(ctx, cfg, m, log)
+	svc, err := initServices(ctx, cfg, m, es, log)
 	if err != nil {
 		panic(err)
 	}
