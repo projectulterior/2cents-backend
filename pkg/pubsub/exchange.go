@@ -66,7 +66,6 @@ func (e *exchange[M]) Subscribe(fn func(context.Context, M) error) {
 	for msg := range ch {
 		// TODO: handle errors
 		_ = fn(context.Background(), msg)
-
 	}
 }
 

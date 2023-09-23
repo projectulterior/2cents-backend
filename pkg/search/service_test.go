@@ -59,10 +59,16 @@ func TestMain(m *testing.M) {
 func setup(t *testing.T) *search.Service {
 	name := fmt.Sprintf("%s-%s", strings.ToLower(t.Name()), time.Now().Format("01-02--15;04;05"))
 
-	return &search.Service{
+	svc := &search.Service{
 		UsersIndex:  "users-" + name,
 		PostsIndex:  "posts-" + name,
 		TypedClient: client,
 		Logger:      log,
 	}
+
+	if err := svc.Setup(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	return svc
 }

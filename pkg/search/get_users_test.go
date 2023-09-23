@@ -41,11 +41,15 @@ func TestGetUsers(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	reply, err := svc.GetUsers(context.Background(), search.GetUsersRequest{
-		Query: brianID.Identifier(),
-		Limit: 1,
-	})
-	assert.NoError(t, err)
-	assert.Len(t, reply.Users, 1)
-	assert.Equal(t, brianID, reply.Users[0].UserID)
+	for _, userID := range userIDs {
+		t.Run("search:"+userID.Identifier(), func(t *testing.T) {
+			reply, err := svc.GetUsers(context.Background(), search.GetUsersRequest{
+				Query: userID.Identifier(),
+				Limit: 1,
+			})
+			assert.NoError(t, err)
+			assert.Len(t, reply.Users, 1)
+			assert.Equal(t, userID, reply.Users[0].UserID)
+		})
+	}
 }
