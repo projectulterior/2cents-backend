@@ -8,7 +8,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,41 +30,42 @@ func (s *Service) CreateToken(ctx context.Context, req CreateTokenRequest) (*Cre
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userID := format.NewUserID()
-
 	var user User
 	err = s.Collection(USERS_COLLECTION).
-		FindOneAndUpdate(ctx,
-			bson.M{"username": req.Username, "password": password},
-			bson.M{
-				"$setOnInsert": bson.M{
-					"_id":        userID,
-					"created_at": time.Now(),
-				},
-			},
-			options.FindOneAndUpdate().
-				SetReturnDocument(options.After).
-				SetUpsert(true),
-		).Decode(&user)
+		FindOne(ctx, bson.M{"username": req.Username}).
+		Decode(&user)
 	if err != nil {
-		if mongo.IsDuplicateKeyError(err) {
-			return nil, status.Error(codes.PermissionDenied, "wrong password")
+		if err != mongo.ErrNoDocuments {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		return nil, status.Error(codes.Internal, err.Error())
+		// new user
+		user = User{
+			UserID:    format.NewUserID(),
+			Username:  req.Username,
+			Password:  password,
+			CreatedAt: time.Now(),
+		}
+
+		_, err := s.Collection(USERS_COLLECTION).
+			InsertOne(ctx, user)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		s.UserUpdated.Publish(ctx, UserUpdatedEvent{
+			User:      user,
+			Timestamp: user.CreatedAt,
+		})
+	}
+
+	if err := check(user.Password, req.Password); err != nil {
+		return nil, status.Error(codes.PermissionDenied, "wrong password")
 	}
 
 	auth, refresh, err := s.createToken(ctx, user.UserID)
 	if err != nil {
 		return nil, err
-	}
-
-	if user.UserID == userID {
-		// new user
-		s.UserUpdated.Publish(ctx, UserUpdatedEvent{
-			User:      user,
-			Timestamp: user.CreatedAt,
-		})
 	}
 
 	return &CreateTokenResponse{
@@ -91,6 +91,10 @@ func salt(str string) (string, error) {
 	// GenerateFromPassword returns a byte slice so we need to
 	// convert the bytes to a string and return it
 	return string(hash), nil
+}
+
+func check(hash, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
 func (s *Service) createToken(ctx context.Context, userID format.UserID) (string, string, error) {

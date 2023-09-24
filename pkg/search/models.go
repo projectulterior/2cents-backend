@@ -29,7 +29,7 @@ func (s *Service) Setup(ctx context.Context) error {
 		}).Do(ctx)
 	if err != nil {
 		// check if duplicate error
-		return err
+		// return err
 	}
 
 	return nil

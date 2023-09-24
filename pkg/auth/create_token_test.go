@@ -24,9 +24,21 @@ func TestCreateToken(t *testing.T) {
 	assert.NotEmpty(t, resp.Auth)
 	assert.NotEmpty(t, resp.Refresh)
 
-	_, err = svc.CreateToken(context.Background(), auth.CreateTokenRequest{
-		Username: username,
-		Password: password + "1",
+	t.Run("second time", func(t *testing.T) {
+		resp, err := svc.CreateToken(context.Background(), auth.CreateTokenRequest{
+			Username: username,
+			Password: password,
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp.Auth)
+		assert.NotEmpty(t, resp.Refresh)
 	})
-	assert.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	t.Run("wrong password", func(t *testing.T) {
+		_, err = svc.CreateToken(context.Background(), auth.CreateTokenRequest{
+			Username: username,
+			Password: password + "1",
+		})
+		assert.Equal(t, codes.PermissionDenied, status.Code(err))
+	})
 }
