@@ -3,8 +3,8 @@ package auth
 import "time"
 
 type UserUpdatedEvent struct {
-	User      User
-	Timestamp time.Time
+	User      User      `json:"user"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func (e UserUpdatedEvent) Route() string {

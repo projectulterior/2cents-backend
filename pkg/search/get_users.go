@@ -53,7 +53,8 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 						{
 							Match: map[string]types.MatchQuery{
 								"username": {
-									Query: req.Query,
+									Query:     req.Query,
+									Fuzziness: 2,
 								},
 							},
 						},
@@ -65,6 +66,7 @@ func (s *Service) GetUsers(ctx context.Context, req GetUsersRequest) (*GetUsersR
 							},
 						},
 					},
+					MinimumShouldMatch: 1,
 				},
 			},
 			Size:           &req.Limit,

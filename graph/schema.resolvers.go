@@ -468,6 +468,21 @@ func (r *mutationResolver) MessageRead(ctx context.Context, id string) (*resolve
 	panic(fmt.Errorf("not implemented: MessageRead - messageRead"))
 }
 
+// ExportUsers is the resolver for the exportUsers field.
+func (r *mutationResolver) ExportUsers(ctx context.Context) (bool, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return false, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	err = r.Auth.ExportUsers(ctx)
+	if err != nil {
+		return false, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	return true, nil
+}
+
 // Like is the resolver for the like field.
 func (r *postResolver) Like(ctx context.Context, obj *resolver.Post) (*resolver.Like, error) {
 	panic(fmt.Errorf("not implemented: Like - like"))
@@ -495,7 +510,7 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*resolver.User, e
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context, page resolver.Pagination) (*model.Users, error) {
+func (r *queryResolver) Users(ctx context.Context, page resolver.Pagination) (*resolver.Users, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
 }
 
@@ -687,6 +702,16 @@ func (r *queryResolver) Messages(ctx context.Context, id string, page resolver.P
 // Notifications is the resolver for the notifications field.
 func (r *queryResolver) Notifications(ctx context.Context, page *resolver.Pagination) (*model.Notifications, error) {
 	panic(fmt.Errorf("not implemented: Notifications - notifications"))
+}
+
+// SearchUsers is the resolver for the searchUsers field.
+func (r *queryResolver) SearchUsers(ctx context.Context, query string, page resolver.Pagination) (*resolver.Users, error) {
+	_, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	return resolver.NewUsers(resolver.NewSearchUsers(r.Services, query, page)), nil
 }
 
 // OnUserUpdated is the resolver for the onUserUpdated field.

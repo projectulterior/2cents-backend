@@ -43,13 +43,25 @@ func TestGetUsers(t *testing.T) {
 
 	for _, userID := range userIDs {
 		t.Run("search:"+userID.Identifier(), func(t *testing.T) {
-			reply, err := svc.GetUsers(context.Background(), search.GetUsersRequest{
-				Query: userID.Identifier(),
-				Limit: 1,
+			t.Run("initial", func(t *testing.T) {
+				reply, err := svc.GetUsers(context.Background(), search.GetUsersRequest{
+					Query: userID.Identifier()[:3],
+					Limit: 1,
+				})
+				assert.NoError(t, err)
+				assert.Len(t, reply.Users, 1)
+				assert.Equal(t, userID, reply.Users[0].UserID)
 			})
-			assert.NoError(t, err)
-			assert.Len(t, reply.Users, 1)
-			assert.Equal(t, userID, reply.Users[0].UserID)
+
+			t.Run("exact", func(t *testing.T) {
+				reply, err := svc.GetUsers(context.Background(), search.GetUsersRequest{
+					Query: userID.Identifier(),
+					Limit: 1,
+				})
+				assert.NoError(t, err)
+				assert.Len(t, reply.Users, 1)
+				assert.Equal(t, userID, reply.Users[0].UserID)
+			})
 		})
 	}
 }
