@@ -86,6 +86,9 @@ models:
   User:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.User
+  Users:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Users
   Visibility:
     model:
       - github.com/projectulterior/2cents-backend/pkg/format.Visibility

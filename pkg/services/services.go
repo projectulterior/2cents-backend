@@ -8,16 +8,18 @@ import (
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/messaging"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
+	"github.com/projectulterior/2cents-backend/pkg/search"
 	"github.com/projectulterior/2cents-backend/pkg/users"
 )
 
 type Services struct {
 	Auth         *auth.Service
-	Users        *users.Service
-	Posts        *posts.Service
 	Comments     *comments.Service
-	Likes        *likes.Service
 	CommentLikes *comment_likes.Service
 	Follows      *follow.Service
+	Likes        *likes.Service
 	Messaging    *messaging.Service
+	Posts        *posts.Service
+	Search       *search.Service
+	Users        *users.Service
 }

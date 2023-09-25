@@ -26,6 +26,7 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		Secret:          cfg.Secret,
 		AuthTokenTTL:    cfg.AuthTokenTTL,
 		RefreshTokenTTL: cfg.RefreshTokenTTL,
+		UserUpdated:     broker.Exchange(auth.UserUpdatedEvent{}).Publisher(),
 		Database:        m.Database("auth"),
 		Logger:          log,
 	}
@@ -109,12 +110,13 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 
 	return &services.Services{
 		Auth:         authService,
-		Users:        usersService,
-		Posts:        postsService,
 		Comments:     commentsService,
-		Likes:        likesService,
-		Follows:      followsService,
 		CommentLikes: comment_LikesService,
+		Follows:      followsService,
+		Likes:        likesService,
 		Messaging:    messagingService,
+		Posts:        postsService,
+		Search:       searchService,
+		Users:        usersService,
 	}, nil
 }

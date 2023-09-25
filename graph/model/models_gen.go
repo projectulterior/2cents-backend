@@ -3,7 +3,6 @@
 package model
 
 import (
-	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 )
 
@@ -65,9 +64,4 @@ type UserUpdateInput struct {
 	Birthday *format.Birthday `json:"birthday,omitempty"`
 	Profile  *string          `json:"profile,omitempty"`
 	Cover    *string          `json:"cover,omitempty"`
-}
-
-type Users struct {
-	Users []*resolver.User `json:"users"`
-	Next  string           `json:"next"`
 }
