@@ -71,6 +71,7 @@ type Mutation {
 
     passwordUpdate(old: String!, new: String!): Boolean!
     centsUpdate(amount: Int!): Cents!
+    centsTransfer(amount: Int!): Cents!
 
     postCreate(input: PostCreateInput!): Post!
     postUpdate(id: ID!, input: PostUpdateInput!): Post!

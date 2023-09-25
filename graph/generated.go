@@ -143,6 +143,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CentsTransfer     func(childComplexity int, amount int) int
 		CentsUpdate       func(childComplexity int, amount int) int
 		ChannelAddMembers func(childComplexity int, id string, input model.AddMembersInput) int
 		ChannelCreate     func(childComplexity int, input model.ChannelCreateInput) int
@@ -239,10 +240,8 @@ type ComplexityRoot struct {
 
 type CentsResolver interface {
 	Total(ctx context.Context, obj *resolver.Cents) (int, error)
-	Deposited(ctx context.Context, obj *resolver.Cents) (int, error)
+
 	Earned(ctx context.Context, obj *resolver.Cents) (int, error)
-	Given(ctx context.Context, obj *resolver.Cents) (int, error)
-	UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error)
 }
 type MutationResolver interface {
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error)
@@ -250,6 +249,7 @@ type MutationResolver interface {
 	UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error)
 	PasswordUpdate(ctx context.Context, old string, new string) (bool, error)
 	CentsUpdate(ctx context.Context, amount int) (*resolver.Cents, error)
+	CentsTransfer(ctx context.Context, amount int) (*resolver.Cents, error)
 	PostCreate(ctx context.Context, input model.PostCreateInput) (*resolver.Post, error)
 	PostUpdate(ctx context.Context, id string, input model.PostUpdateInput) (*resolver.Post, error)
 	PostDelete(ctx context.Context, id string) (*resolver.Post, error)
@@ -664,6 +664,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Messages.Next(childComplexity), true
+
+	case "Mutation.centsTransfer":
+		if e.complexity.Mutation.CentsTransfer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_centsTransfer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CentsTransfer(childComplexity, args["amount"].(int)), true
 
 	case "Mutation.centsUpdate":
 		if e.complexity.Mutation.CentsUpdate == nil {
@@ -1586,6 +1598,7 @@ type Mutation {
 
     passwordUpdate(old: String!, new: String!): Boolean!
     centsUpdate(amount: Int!): Cents!
+    centsTransfer(amount: Int!): Cents!
 
     postCreate(input: PostCreateInput!): Post!
     postUpdate(id: ID!, input: PostUpdateInput!): Post!
@@ -1870,6 +1883,21 @@ func (ec *executionContext) field_Comment_commentLikes_args(ctx context.Context,
 		}
 	}
 	args["page"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_centsTransfer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["amount"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["amount"] = arg0
 	return args, nil
 }
 
@@ -2890,7 +2918,7 @@ func (ec *executionContext) _Cents_deposited(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Cents().Deposited(rctx, obj)
+		return obj.Deposited(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2902,9 +2930,9 @@ func (ec *executionContext) _Cents_deposited(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Cents_deposited(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2912,7 +2940,7 @@ func (ec *executionContext) fieldContext_Cents_deposited(ctx context.Context, fi
 		Object:     "Cents",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -2978,7 +3006,7 @@ func (ec *executionContext) _Cents_given(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Cents().Given(rctx, obj)
+		return obj.Given(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2990,9 +3018,9 @@ func (ec *executionContext) _Cents_given(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Cents_given(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3000,7 +3028,7 @@ func (ec *executionContext) fieldContext_Cents_given(ctx context.Context, field 
 		Object:     "Cents",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -3022,7 +3050,7 @@ func (ec *executionContext) _Cents_updatedAt(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Cents().UpdatedAt(rctx, obj)
+		return obj.UpdatedAt(ctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3041,7 +3069,7 @@ func (ec *executionContext) fieldContext_Cents_updatedAt(ctx context.Context, fi
 		Object:     "Cents",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
 		},
@@ -5460,6 +5488,73 @@ func (ec *executionContext) fieldContext_Mutation_centsUpdate(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_centsUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_centsTransfer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_centsTransfer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CentsTransfer(rctx, fc.Args["amount"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*resolver.Cents)
+	fc.Result = res
+	return ec.marshalNCents2ᚖgithubᚗcomᚋprojectulteriorᚋ2centsᚑbackendᚋgraphᚋresolverᚐCents(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_centsTransfer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_Cents_total(ctx, field)
+			case "deposited":
+				return ec.fieldContext_Cents_deposited(ctx, field)
+			case "earned":
+				return ec.fieldContext_Cents_earned(ctx, field)
+			case "given":
+				return ec.fieldContext_Cents_given(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Cents_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Cents", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_centsTransfer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -13873,6 +13968,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "centsTransfer":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_centsTransfer(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "postCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_postCreate(ctx, field)
@@ -16301,6 +16403,27 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

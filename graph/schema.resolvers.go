@@ -32,24 +32,9 @@ func (r *centsResolver) Total(ctx context.Context, obj *resolver.Cents) (int, er
 	panic(fmt.Errorf("not implemented: Total - total"))
 }
 
-// Deposited is the resolver for the deposited field.
-func (r *centsResolver) Deposited(ctx context.Context, obj *resolver.Cents) (int, error) {
-	panic(fmt.Errorf("not implemented: Deposited - deposited"))
-}
-
 // Earned is the resolver for the earned field.
 func (r *centsResolver) Earned(ctx context.Context, obj *resolver.Cents) (int, error) {
 	panic(fmt.Errorf("not implemented: Earned - earned"))
-}
-
-// Given is the resolver for the given field.
-func (r *centsResolver) Given(ctx context.Context, obj *resolver.Cents) (int, error) {
-	panic(fmt.Errorf("not implemented: Given - given"))
-}
-
-// UpdatedAt is the resolver for the updatedAt field.
-func (r *centsResolver) UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
 }
 
 // UserUpdate is the resolver for the userUpdate field.
@@ -149,6 +134,11 @@ func (r *mutationResolver) PasswordUpdate(ctx context.Context, old string, new s
 // CentsUpdate is the resolver for the centsUpdate field.
 func (r *mutationResolver) CentsUpdate(ctx context.Context, amount int) (*resolver.Cents, error) {
 	panic(fmt.Errorf("not implemented: CentsUpdate - centsUpdate"))
+}
+
+// CentsTransfer is the resolver for the centsTransfer field.
+func (r *mutationResolver) CentsTransfer(ctx context.Context, amount int) (*resolver.Cents, error) {
+	panic(fmt.Errorf("not implemented: CentsTransfer - centsTransfer"))
 }
 
 // PostCreate is the resolver for the postCreate field.
@@ -845,3 +835,19 @@ type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *centsResolver) Deposited(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Deposited - deposited"))
+}
+func (r *centsResolver) Given(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Given - given"))
+}
+func (r *centsResolver) UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+}

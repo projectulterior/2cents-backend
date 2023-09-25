@@ -12,9 +12,8 @@ import (
 )
 
 type TransferCentsRequest struct {
-	UserID        format.UserID
-	CentsSent     int
-	CentsReceived int
+	UserID format.UserID
+	Amount int
 }
 
 type TransferCentsResponse = Cents
@@ -22,14 +21,14 @@ type TransferCentsResponse = Cents
 func (s *Service) TransferCents(ctx context.Context, req TransferCentsRequest) (*TransferCentsResponse, error) {
 	inc := bson.M{}
 
-	if req.CentsSent != 0 {
-		inc["total"] = req.CentsSent
-		inc["given"] = (-req.CentsSent)
-	}
-
-	if req.CentsReceived != 0 {
-		inc["total"] = req.CentsReceived
-		inc["earned_cents"] = req.CentsReceived
+	if req.Amount != 0 {
+		inc["total"] = req.Amount
+		if req.Amount < 0 {
+			inc["given"] = (-req.Amount)
+		}
+		if req.Amount > 0 {
+			inc["earned_cents"] = req.Amount
+		}
 	}
 
 	var cents Cents

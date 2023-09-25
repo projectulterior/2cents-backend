@@ -12,9 +12,8 @@ import (
 )
 
 type UpdateCentsRequest struct {
-	UserID        format.UserID
-	AddCents      int
-	WithdrawCents int
+	UserID format.UserID
+	Amount int
 }
 
 type UpdateCentsResponse = Cents
@@ -22,13 +21,11 @@ type UpdateCentsResponse = Cents
 func (s *Service) UpdateCents(ctx context.Context, req UpdateCentsRequest) (*UpdateCentsResponse, error) {
 	inc := bson.M{}
 
-	if req.AddCents != 0 {
-		inc["total"] = req.AddCents
-		inc["deposited"] = req.AddCents
-	}
-
-	if req.WithdrawCents != 0 {
-		inc["total"] = req.WithdrawCents
+	if req.Amount != 0 {
+		inc["total"] = req.Amount
+		if req.Amount > 0 {
+			inc["deposited"] = req.Amount
+		}
 	}
 
 	var cents Cents
