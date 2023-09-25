@@ -70,6 +70,7 @@ type Mutation {
     userFollow(id: ID!, isFollow: Boolean!): Follow!
 
     passwordUpdate(old: String!, new: String!): Boolean!
+    centsUpdate(amount: Int!): Cents!
 
     postCreate(input: PostCreateInput!): Post!
     postUpdate(id: ID!, input: PostUpdateInput!): Post!
@@ -124,6 +125,7 @@ type Cents {
     deposited: Int!
     earned: Int!
     given: Int!
+    updatedAt: Time
 }
 
 type Users {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
@@ -25,6 +26,31 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// Total is the resolver for the total field.
+func (r *centsResolver) Total(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Total - total"))
+}
+
+// Deposited is the resolver for the deposited field.
+func (r *centsResolver) Deposited(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Deposited - deposited"))
+}
+
+// Earned is the resolver for the earned field.
+func (r *centsResolver) Earned(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Earned - earned"))
+}
+
+// Given is the resolver for the given field.
+func (r *centsResolver) Given(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Given - given"))
+}
+
+// UpdatedAt is the resolver for the updatedAt field.
+func (r *centsResolver) UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+}
 
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
@@ -118,6 +144,11 @@ func (r *mutationResolver) PasswordUpdate(ctx context.Context, old string, new s
 	}
 
 	return true, nil
+}
+
+// CentsUpdate is the resolver for the centsUpdate field.
+func (r *mutationResolver) CentsUpdate(ctx context.Context, amount int) (*resolver.Cents, error) {
+	panic(fmt.Errorf("not implemented: CentsUpdate - centsUpdate"))
 }
 
 // PostCreate is the resolver for the postCreate field.
@@ -794,6 +825,9 @@ func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *re
 	return ch, nil
 }
 
+// Cents returns CentsResolver implementation.
+func (r *Resolver) Cents() CentsResolver { return &centsResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -806,6 +840,7 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type centsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

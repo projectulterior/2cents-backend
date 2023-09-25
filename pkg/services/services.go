@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
@@ -20,6 +21,7 @@ type Services struct {
 	Likes        *likes.Service
 	Messaging    *messaging.Service
 	Posts        *posts.Service
+	Cents        *cents.Service
 	Search       *search.Service
 	Users        *users.Service
 }

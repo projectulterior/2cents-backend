@@ -5,6 +5,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
@@ -47,6 +48,14 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 
 	postsService := &posts.Service{
 		Database: m.Database("posts"),
+		Logger:   log,
+	}
+	if err := postsService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
+	centsService := &cents.Service{
+		Database: m.Database("cents"),
 		Logger:   log,
 	}
 	if err := postsService.Setup(ctx); err != nil {
@@ -116,6 +125,7 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		Likes:        likesService,
 		Messaging:    messagingService,
 		Posts:        postsService,
+		Cents:        centsService,
 		Search:       searchService,
 		Users:        usersService,
 	}, nil
