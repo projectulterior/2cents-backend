@@ -67,6 +67,8 @@ type Mutation {
 
     userFollow(id: ID!, isFollow: Boolean!): Follow!
 
+    passwordUpdate(old: String!, new: String!): Boolean!
+
     postCreate(input: PostCreateInput!): Post!
     postUpdate(id: ID!, input: PostUpdateInput!): Post!
     postDelete(id: ID!): Post!

@@ -11,6 +11,7 @@ import (
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
@@ -98,6 +99,25 @@ func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow b
 	}
 
 	return resolver.NewFollowByID(r.Services, followID), nil
+}
+
+// PasswordUpdate is the resolver for the passwordUpdate field.
+func (r *mutationResolver) PasswordUpdate(ctx context.Context, old string, new string) (bool, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return false, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	err = r.Auth.UpdatePassword(ctx, auth.UpdatePasswordRequest{
+		UserID:      authID,
+		OldPassword: old,
+		NewPassword: new,
+	})
+	if err != nil {
+		return false, e(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return true, nil
 }
 
 // PostCreate is the resolver for the postCreate field.

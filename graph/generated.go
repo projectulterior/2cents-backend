@@ -152,6 +152,7 @@ type ComplexityRoot struct {
 		MessageDelete     func(childComplexity int, id string) int
 		MessageRead       func(childComplexity int, id string) int
 		MessageUpdate     func(childComplexity int, id string, input model.MessageUpdateInput) int
+		PasswordUpdate    func(childComplexity int, old string, new string) int
 		PostCreate        func(childComplexity int, input model.PostCreateInput) int
 		PostDelete        func(childComplexity int, id string) int
 		PostLike          func(childComplexity int, id string, isLike bool) int
@@ -235,6 +236,7 @@ type MutationResolver interface {
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error)
 	UserDelete(ctx context.Context) (*resolver.User, error)
 	UserFollow(ctx context.Context, id string, isFollow bool) (*resolver.Follow, error)
+	PasswordUpdate(ctx context.Context, old string, new string) (bool, error)
 	PostCreate(ctx context.Context, input model.PostCreateInput) (*resolver.Post, error)
 	PostUpdate(ctx context.Context, id string, input model.PostUpdateInput) (*resolver.Post, error)
 	PostDelete(ctx context.Context, id string) (*resolver.Post, error)
@@ -772,6 +774,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MessageUpdate(childComplexity, args["id"].(string), args["input"].(model.MessageUpdateInput)), true
+
+	case "Mutation.passwordUpdate":
+		if e.complexity.Mutation.PasswordUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_passwordUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PasswordUpdate(childComplexity, args["old"].(string), args["new"].(string)), true
 
 	case "Mutation.postCreate":
 		if e.complexity.Mutation.PostCreate == nil {
@@ -1515,6 +1529,8 @@ type Mutation {
 
     userFollow(id: ID!, isFollow: Boolean!): Follow!
 
+    passwordUpdate(old: String!, new: String!): Boolean!
+
     postCreate(input: PostCreateInput!): Post!
     postUpdate(id: ID!, input: PostUpdateInput!): Post!
     postDelete(id: ID!): Post!
@@ -1996,6 +2012,30 @@ func (ec *executionContext) field_Mutation_messageUpdate_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_passwordUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["old"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("old"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["old"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["new"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("new"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["new"] = arg1
 	return args, nil
 }
 
@@ -5159,6 +5199,61 @@ func (ec *executionContext) fieldContext_Mutation_userFollow(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_userFollow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_passwordUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_passwordUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PasswordUpdate(rctx, fc.Args["old"].(string), fc.Args["new"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_passwordUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_passwordUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -13290,6 +13385,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "userFollow":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_userFollow(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "passwordUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_passwordUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
