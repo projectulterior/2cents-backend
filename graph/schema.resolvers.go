@@ -8,9 +8,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
+	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
@@ -24,6 +26,16 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// Total is the resolver for the total field.
+func (r *centsResolver) Total(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Total - total"))
+}
+
+// Earned is the resolver for the earned field.
+func (r *centsResolver) Earned(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Earned - earned"))
+}
 
 // UserUpdate is the resolver for the userUpdate field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*resolver.User, error) {
@@ -98,6 +110,35 @@ func (r *mutationResolver) UserFollow(ctx context.Context, id string, isFollow b
 	}
 
 	return resolver.NewFollowByID(r.Services, followID), nil
+}
+
+// PasswordUpdate is the resolver for the passwordUpdate field.
+func (r *mutationResolver) PasswordUpdate(ctx context.Context, old string, new string) (bool, error) {
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return false, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	err = r.Auth.UpdatePassword(ctx, auth.UpdatePasswordRequest{
+		UserID:      authID,
+		OldPassword: old,
+		NewPassword: new,
+	})
+	if err != nil {
+		return false, e(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return true, nil
+}
+
+// CentsUpdate is the resolver for the centsUpdate field.
+func (r *mutationResolver) CentsUpdate(ctx context.Context, amount int) (*resolver.Cents, error) {
+	panic(fmt.Errorf("not implemented: CentsUpdate - centsUpdate"))
+}
+
+// CentsTransfer is the resolver for the centsTransfer field.
+func (r *mutationResolver) CentsTransfer(ctx context.Context, amount int) (*resolver.Cents, error) {
+	panic(fmt.Errorf("not implemented: CentsTransfer - centsTransfer"))
 }
 
 // PostCreate is the resolver for the postCreate field.
@@ -779,6 +820,9 @@ func (r *subscriptionResolver) OnChannelUpdated(ctx context.Context) (<-chan *re
 	return ch, nil
 }
 
+// Cents returns CentsResolver implementation.
+func (r *Resolver) Cents() CentsResolver { return &centsResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -791,7 +835,24 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type centsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *centsResolver) Deposited(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Deposited - deposited"))
+}
+func (r *centsResolver) Given(ctx context.Context, obj *resolver.Cents) (int, error) {
+	panic(fmt.Errorf("not implemented: Given - given"))
+}
+func (r *centsResolver) UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
+}
