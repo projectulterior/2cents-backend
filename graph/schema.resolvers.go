@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
@@ -840,19 +839,3 @@ type mutationResolver struct{ *Resolver }
 type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *centsResolver) Deposited(ctx context.Context, obj *resolver.Cents) (int, error) {
-	panic(fmt.Errorf("not implemented: Deposited - deposited"))
-}
-func (r *centsResolver) Given(ctx context.Context, obj *resolver.Cents) (int, error) {
-	panic(fmt.Errorf("not implemented: Given - given"))
-}
-func (r *centsResolver) UpdatedAt(ctx context.Context, obj *resolver.Cents) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented: UpdatedAt - updatedAt"))
-}
