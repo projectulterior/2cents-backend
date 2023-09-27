@@ -6,6 +6,14 @@ const (
 
 type TransactionIDType int
 
+const (
+	Deposit FollowIDType = iota + 1
+	Withdrawal
+	Post
+	Like
+	Follow
+)
+
 func (t TransactionIDType) IDMethod() IDMethod {
 	return IDMETHOD_HASH
 }
