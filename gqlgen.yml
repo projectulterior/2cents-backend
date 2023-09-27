@@ -74,6 +74,9 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Time:
+    model:
+      - github.com/projectulterior/2cents-backend/graph/resolver.Time
   Pagination:
     model:
       - github.com/projectulterior/2cents-backend/graph/resolver.Pagination

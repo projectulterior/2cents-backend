@@ -220,6 +220,7 @@ type ComplexityRoot struct {
 		Email    func(childComplexity int) int
 		Follows  func(childComplexity int, page resolver.Pagination) int
 		ID       func(childComplexity int) int
+		IsMe     func(childComplexity int) int
 		Likes    func(childComplexity int, page resolver.Pagination) int
 		Name     func(childComplexity int) int
 		Posts    func(childComplexity int, page resolver.Pagination) int
@@ -1277,6 +1278,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.isMe":
+		if e.complexity.User.IsMe == nil {
+			break
+		}
+
+		return e.complexity.User.IsMe(childComplexity), true
+
 	case "User.likes":
 		if e.complexity.User.Likes == nil {
 			break
@@ -1572,6 +1580,8 @@ type Subscription {
 type User {
     id: ID!
 
+    isMe: Boolean
+
     username: String
     name: String
     email: String
@@ -1766,7 +1776,6 @@ input CommentUpdateInput {
 
 input MessageCreateInput {
     channelID: ID!
-    senderID: ID!
     content: String
     contentType: ContentType
 }
@@ -3003,6 +3012,8 @@ func (ec *executionContext) fieldContext_Channel_members(ctx context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -3455,6 +3466,8 @@ func (ec *executionContext) fieldContext_Comment_author(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -3720,6 +3733,8 @@ func (ec *executionContext) fieldContext_CommentLike_liker(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -4069,6 +4084,8 @@ func (ec *executionContext) fieldContext_Follow_follower(ctx context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -4136,6 +4153,8 @@ func (ec *executionContext) fieldContext_Follow_followee(ctx context.Context, fi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -4446,6 +4465,8 @@ func (ec *executionContext) fieldContext_Like_liker(ctx context.Context, field g
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -4875,6 +4896,8 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -5041,6 +5064,8 @@ func (ec *executionContext) fieldContext_Mutation_userUpdate(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -5122,6 +5147,8 @@ func (ec *executionContext) fieldContext_Mutation_userDelete(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -6633,6 +6660,8 @@ func (ec *executionContext) fieldContext_Post_author(ctx context.Context, field 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -6980,6 +7009,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -8409,6 +8440,8 @@ func (ec *executionContext) fieldContext_Subscription_onUserUpdated(ctx context.
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -8558,6 +8591,47 @@ func (ec *executionContext) fieldContext_User_id(ctx context.Context, field grap
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_isMe(ctx context.Context, field graphql.CollectedField, obj *resolver.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_isMe(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsMe(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_isMe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9124,6 +9198,8 @@ func (ec *executionContext) fieldContext_Users_users(ctx context.Context, field 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
+			case "isMe":
+				return ec.fieldContext_User_isMe(ctx, field)
 			case "username":
 				return ec.fieldContext_User_username(ctx, field)
 			case "name":
@@ -11185,7 +11261,7 @@ func (ec *executionContext) unmarshalInputMessageCreateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"channelID", "senderID", "content", "contentType"}
+	fieldsInOrder := [...]string{"channelID", "content", "contentType"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11201,15 +11277,6 @@ func (ec *executionContext) unmarshalInputMessageCreateInput(ctx context.Context
 				return it, err
 			}
 			it.ChannelID = data
-		case "senderID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("senderID"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SenderID = data
 		case "content":
 			var err error
 
@@ -14653,6 +14720,39 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "isMe":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_isMe(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "username":
 			field := field
 
@@ -16725,7 +16825,7 @@ func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalTime(v)
+	res, err := resolver.UnmarshalTime(v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -16733,7 +16833,7 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalTime(*v)
+	res := resolver.MarshalTime(*v)
 	return res
 }
 

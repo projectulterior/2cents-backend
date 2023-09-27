@@ -101,6 +101,8 @@ type Subscription {
 type User {
     id: ID!
 
+    isMe: Boolean
+
     username: String
     name: String
     email: String
@@ -295,7 +297,6 @@ input CommentUpdateInput {
 
 input MessageCreateInput {
     channelID: ID!
-    senderID: ID!
     content: String
     contentType: ContentType
 }

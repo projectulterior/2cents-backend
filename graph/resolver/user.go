@@ -2,7 +2,9 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/projectulterior/2cents-backend/cmd/daemon/middleware"
 	"github.com/projectulterior/2cents-backend/pkg/auth"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/services"
@@ -81,6 +83,15 @@ func NewUserWithData(svc *services.Services, data *users.User) *User {
 
 func (u *User) ID(ctx context.Context) (string, error) {
 	return u.userID.String(), nil
+}
+
+func (u *User) IsMe(ctx context.Context) (bool, error) {
+	userID, ok := ctx.Value(middleware.AUTH_USER_CONTEXT_KEY).(format.UserID)
+	if !ok {
+		return false, fmt.Errorf("no auth user")
+	}
+
+	return u.userID == userID, nil
 }
 
 func (u *User) Username(ctx context.Context) (*string, error) {

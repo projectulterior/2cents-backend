@@ -29,7 +29,6 @@ type CommentUpdateInput struct {
 
 type MessageCreateInput struct {
 	ChannelID   string              `json:"channelID"`
-	SenderID    string              `json:"senderID"`
 	Content     *string             `json:"content,omitempty"`
 	ContentType *format.ContentType `json:"contentType,omitempty"`
 }

@@ -691,7 +691,12 @@ func (r *queryResolver) ChannelByMembers(ctx context.Context, members []string) 
 
 // Channels is the resolver for the channels field.
 func (r *queryResolver) Channels(ctx context.Context, page resolver.Pagination) (*resolver.Channels, error) {
-	panic(fmt.Errorf("not implemented: Channels - channels"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	return resolver.NewChannels(resolver.NewUserChannels(r.Services, authID, page)), nil
 }
 
 // Messages is the resolver for the messages field.
