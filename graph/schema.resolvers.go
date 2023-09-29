@@ -554,6 +554,11 @@ func (r *queryResolver) Users(ctx context.Context, page resolver.Pagination) (*r
 	panic(fmt.Errorf("not implemented: Users - users"))
 }
 
+// Cents is the resolver for the cents field.
+func (r *queryResolver) Cents(ctx context.Context, id *string) (*resolver.Cents, error) {
+	panic(fmt.Errorf("not implemented: Cents - cents"))
+}
+
 // Post is the resolver for the post field.
 func (r *queryResolver) Post(ctx context.Context, id string) (*resolver.Post, error) {
 	_, err := authUserID(ctx)
