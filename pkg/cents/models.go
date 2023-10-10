@@ -12,12 +12,12 @@ const (
 )
 
 type Cents struct {
-	UserID      format.UserID `bson:"_id"`
-	TotalCents  int           `bson:"total_cents"`
-	Deposited   int           `bson:"deposited"`
-	EarnedCents int           `bson:"earned_cents"`
-	Given       int           `bson:"given"`
-	UpdatedAt   time.Time     `bson:"updated_at"`
+	UserID    format.UserID `bson:"_id"`
+	Total     int           `bson:"total"`
+	Deposited int           `bson:"deposited"`
+	Received  int           `bson:"received"`
+	Sent      int           `bson:"sent"`
+	UpdatedAt time.Time     `bson:"updated_at"`
 }
 
 func (s *Service) Setup(ctx context.Context) error {

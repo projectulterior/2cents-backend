@@ -57,7 +57,7 @@ func (c *Cents) TotalCents(ctx context.Context) (*int, error) {
 		return nil, err
 	}
 
-	return &reply.TotalCents, nil
+	return &reply.Total, nil
 }
 
 func (c *Cents) Deposited(ctx context.Context) (*int, error) {
@@ -75,7 +75,7 @@ func (c *Cents) EarnedCents(ctx context.Context) (*int, error) {
 		return nil, err
 	}
 
-	return &reply.EarnedCents, nil
+	return &reply.Received, nil
 }
 
 func (c *Cents) Given(ctx context.Context) (*int, error) {
@@ -84,7 +84,7 @@ func (c *Cents) Given(ctx context.Context) (*int, error) {
 		return nil, err
 	}
 
-	return &reply.Given, nil
+	return &reply.Sent, nil
 }
 
 func (c *Cents) UpdatedAt(ctx context.Context) (*time.Time, error) {

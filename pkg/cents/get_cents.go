@@ -2,6 +2,7 @@ package cents
 
 import (
 	"context"
+	"time"
 
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,17 +18,29 @@ type GetCentsRequest struct {
 type GetCentsResponse = Cents
 
 func (s *Service) GetCents(ctx context.Context, req GetCentsRequest) (*GetCentsResponse, error) {
-	var cents Cents
+	return s.getCents(ctx, req.UserID)
+}
 
+func (s *Service) getCents(ctx context.Context, userID format.UserID) (*Cents, error) {
+	now := time.Now()
+
+	var cents Cents
 	err := s.Collection(CENTS_COLLECTION).
-		FindOne(ctx, bson.M{"_id": req.UserID.String()}).
+		FindOne(ctx, bson.M{"_id": userID.String()}).
 		Decode(&cents)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		return nil, status.Error(codes.NotFound, err.Error())
+		return &Cents{
+			UserID:    userID,
+			Total:     0,
+			Deposited: 0,
+			Received:  0,
+			Sent:      0,
+			UpdatedAt: now,
+		}, nil
 	}
 
 	return &cents, nil

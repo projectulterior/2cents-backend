@@ -17,11 +17,6 @@ type Query {
     users(page: Pagination!): Users!
 
     """
-    Returns the user's cents specified by the userID.
-    """
-    cents(id: ID): Cents!
-
-    """
     Returns the post specified by id
     """
     post(id: ID!): Post!

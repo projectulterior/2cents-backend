@@ -12,6 +12,7 @@ import (
 	"github.com/projectulterior/2cents-backend/graph/model"
 	"github.com/projectulterior/2cents-backend/graph/resolver"
 	"github.com/projectulterior/2cents-backend/pkg/auth"
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/comment_likes"
 	"github.com/projectulterior/2cents-backend/pkg/comments"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
@@ -132,7 +133,20 @@ func (r *mutationResolver) PasswordUpdate(ctx context.Context, old string, new s
 
 // CentsUpdate is the resolver for the centsUpdate field.
 func (r *mutationResolver) CentsUpdate(ctx context.Context, amount int) (*resolver.Cents, error) {
-	panic(fmt.Errorf("not implemented: CentsUpdate - centsUpdate"))
+	authID, err := authUserID(ctx)
+	if err != nil {
+		return nil, e(ctx, http.StatusForbidden, err.Error())
+	}
+
+	reply, err := r.Services.Cents.UpdateCents(ctx, cents.UpdateCentsRequest{
+		UserID: authID,
+		Amount: amount,
+	})
+	if err != nil {
+		return nil, e(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	return resolver.NewCentsWithData(r.Services, reply), nil
 }
 
 // CentsTransfer is the resolver for the centsTransfer field.
@@ -552,11 +566,6 @@ func (r *queryResolver) User(ctx context.Context, id *string) (*resolver.User, e
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, page resolver.Pagination) (*resolver.Users, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
-}
-
-// Cents is the resolver for the cents field.
-func (r *queryResolver) Cents(ctx context.Context, id *string) (*resolver.Cents, error) {
-	panic(fmt.Errorf("not implemented: Cents - cents"))
 }
 
 // Post is the resolver for the post field.

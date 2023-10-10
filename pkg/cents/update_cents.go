@@ -21,25 +21,31 @@ type UpdateCentsResponse = Cents
 func (s *Service) UpdateCents(ctx context.Context, req UpdateCentsRequest) (*UpdateCentsResponse, error) {
 	inc := bson.M{}
 
-	if req.Amount != 0 {
-		inc["total"] = req.Amount
-		if req.Amount > 0 {
-			inc["deposited"] = req.Amount
-		}
+	if req.Amount == 0 {
+		return s.getCents(ctx, req.UserID)
+	}
+
+	inc["total"] = req.Amount
+	if req.Amount > 0 {
+		inc["deposited"] = req.Amount
 	}
 
 	var cents Cents
-
 	err := s.Collection(CENTS_COLLECTION).
 		FindOneAndUpdate(ctx,
 			bson.M{"_id": req.UserID.String()},
 			bson.M{
 				"$inc": inc,
+				"$setOnInsert": bson.M{
+					"received": 0,
+					"sent":     0,
+				},
 				"$currentDate": bson.M{
 					"updated_at": true,
 				},
 			},
 			options.FindOneAndUpdate().
+				SetUpsert(true).
 				SetReturnDocument(options.After),
 		).Decode(&cents)
 	if err != nil {

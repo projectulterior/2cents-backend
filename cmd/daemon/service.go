@@ -58,7 +58,7 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		Database: m.Database("cents"),
 		Logger:   log,
 	}
-	if err := postsService.Setup(ctx); err != nil {
+	if err := centsService.Setup(ctx); err != nil {
 		return nil, err
 	}
 

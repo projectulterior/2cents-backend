@@ -12,45 +12,87 @@ import (
 )
 
 type TransferCentsRequest struct {
-	UserID format.UserID
-	Amount int
+	SenderID   format.UserID
+	ReceiverID format.UserID
+	Amount     int
 }
 
-type TransferCentsResponse = Cents
+type TransferCentsResponse = Cents // sender's cents
 
 func (s *Service) TransferCents(ctx context.Context, req TransferCentsRequest) (*TransferCentsResponse, error) {
-	inc := bson.M{}
+	if req.Amount < 1 {
+		return nil, status.Error(codes.InvalidArgument, "amount must be greater than 0")
+	}
 
-	if req.Amount != 0 {
-		inc["total"] = req.Amount
-		if req.Amount < 0 {
-			inc["given"] = (-req.Amount)
-		}
-		if req.Amount > 0 {
-			inc["earned_cents"] = req.Amount
-		}
+	session, err := s.Database.Client().StartSession()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	var cents Cents
+	_, err = session.WithTransaction(ctx, func(ctx mongo.SessionContext) (interface{}, error) {
+		/*
+			- Check if sender has sufficient funds
+				- _id = senderID, cents.Total >= amount
+			- Update Sender's document by:
+				total = total - amount
+				sent += amount
+				updatedAt = now
+			- Update Receiver's document by:
+				total += amount
+				received += amount
+				updatedAt = now
+		*/
 
-	err := s.Collection(CENTS_COLLECTION).
-		FindOneAndUpdate(ctx,
-			bson.M{"_id": req.UserID.String()},
+		err := s.Collection(CENTS_COLLECTION).
+			FindOneAndUpdate(ctx,
+				bson.M{
+					"_id":   req.SenderID.String(),
+					"total": bson.M{"$gte": req.Amount},
+				},
+				bson.M{
+					"$inc": bson.M{
+						"total": (-req.Amount),
+						"sent":  req.Amount,
+					},
+					"$currentDate": bson.M{
+						"updated_at": true,
+					},
+				},
+				options.FindOneAndUpdate().
+					SetReturnDocument(options.After),
+			).Decode(&cents)
+		if err != nil {
+			if err != mongo.ErrNoDocuments {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
+			// sender doc not found
+			return nil, status.Error(codes.FailedPrecondition, "insufficient funds")
+		}
+
+		err = s.Collection(CENTS_COLLECTION).FindOneAndUpdate(ctx,
 			bson.M{
-				"$inc": inc,
+				"_id": req.ReceiverID.String(),
+			},
+			bson.M{
+				"$inc": bson.M{
+					"total":    req.Amount,
+					"received": req.Amount,
+				},
 				"$currentDate": bson.M{
 					"updated_at": true,
 				},
 			},
 			options.FindOneAndUpdate().
-				SetReturnDocument(options.After),
-		).Decode(&cents)
-	if err != nil {
-		if err != mongo.ErrNoDocuments {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+				SetReturnDocument(options.After).
+				SetUpsert(true),
+		).Err()
 
-		return nil, status.Error(codes.NotFound, err.Error())
+		return nil, err
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &cents, nil
