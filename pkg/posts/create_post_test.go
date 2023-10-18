@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/format"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,12 @@ func TestCreatePost(t *testing.T) {
 }
 
 func createPost(t *testing.T, svc *posts.Service, authorID format.UserID) *posts.Post {
+	_, err := svc.Cents.UpdateCents(context.Background(), cents.UpdateCentsRequest{
+		UserID: authorID,
+		Amount: 2,
+	})
+	assert.NoError(t, err)
+
 	visibilityPublic := format.PUBLIC
 	content := "hello"
 	contentType := format.TEXT

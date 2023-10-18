@@ -50,7 +50,7 @@ func (s *Service) DeleteComment(ctx context.Context, req DeleteCommentRequest) (
 		}
 
 		// here: comment does exist, must check post for author_id
-		post, err := s.GetPost(ctx, posts.GetPostRequest{
+		post, err := s.Posts.GetPost(ctx, posts.GetPostRequest{
 			PostID: comment.PostID,
 		})
 		if err != nil {

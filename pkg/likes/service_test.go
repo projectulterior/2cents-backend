@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/likes"
 	"github.com/projectulterior/2cents-backend/pkg/logger"
+	"github.com/projectulterior/2cents-backend/pkg/posts"
 
 	"github.com/kelseyhightower/envconfig"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -52,7 +54,17 @@ func TestMain(m *testing.M) {
 func setup(t *testing.T) *likes.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
+	cents := &cents.Service{
+		Database: client.Database(name + "-cents"),
+		Logger:   log,
+	}
 	return &likes.Service{
+		Cents: cents,
+		Posts: &posts.Service{
+			Cents:    cents,
+			Database: client.Database(name + "-posts"),
+			Logger:   log,
+		},
 		Database: client.Database(name),
 		Logger:   log,
 	}

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/follow"
 	"github.com/projectulterior/2cents-backend/pkg/logger"
 
@@ -53,6 +54,10 @@ func setup(t *testing.T) *follow.Service {
 	name := fmt.Sprintf("%s-%s", t.Name(), time.Now().Format("01-02--15:04:05"))
 
 	return &follow.Service{
+		Cents: &cents.Service{
+			Database: client.Database(name + "-cents"),
+			Logger:   log,
+		},
 		Database: client.Database(name),
 		Logger:   log,
 	}

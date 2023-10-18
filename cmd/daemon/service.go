@@ -46,14 +46,6 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		return nil, err
 	}
 
-	postsService := &posts.Service{
-		Database: m.Database("posts"),
-		Logger:   log,
-	}
-	if err := postsService.Setup(ctx); err != nil {
-		return nil, err
-	}
-
 	centsService := &cents.Service{
 		Database: m.Database("cents"),
 		Logger:   log,
@@ -62,7 +54,18 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		return nil, err
 	}
 
+	postsService := &posts.Service{
+		Cents:    centsService,
+		Database: m.Database("posts"),
+		Logger:   log,
+	}
+	if err := postsService.Setup(ctx); err != nil {
+		return nil, err
+	}
+
 	likesService := &likes.Service{
+		Cents:    centsService,
+		Posts:    postsService,
 		Database: m.Database("likes"),
 		Logger:   log,
 	}
@@ -78,7 +81,8 @@ func initServices(ctx context.Context, cfg Config, m *mongo.Client, es *elastics
 		return nil, err
 	}
 	commentsService := &comments.Service{
-		Service:  postsService,
+		Cents:    centsService,
+		Posts:    postsService,
 		Database: m.Database("comments"),
 		Logger:   log,
 	}

@@ -28,8 +28,11 @@ func (s *Service) TransferCents(ctx context.Context, req TransferCentsRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	defer session.EndSession(ctx)
 
 	var cents Cents
+
+	// TODO(cp): move to create_posts/likes/etc level to hold the transaction context throughout the transfer process
 	_, err = session.WithTransaction(ctx, func(ctx mongo.SessionContext) (interface{}, error) {
 		/*
 			- Check if sender has sufficient funds

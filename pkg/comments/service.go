@@ -1,6 +1,7 @@
 package comments
 
 import (
+	"github.com/projectulterior/2cents-backend/pkg/cents"
 	"github.com/projectulterior/2cents-backend/pkg/posts"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -8,7 +9,8 @@ import (
 )
 
 type Service struct {
-	*posts.Service
+	Cents *cents.Service
+	Posts *posts.Service
 
 	*mongo.Database
 	*zap.Logger
